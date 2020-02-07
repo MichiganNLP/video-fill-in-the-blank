@@ -81,7 +81,7 @@ def getTextFeatures(textFile):
         textFeature = torch.zeros(1, 1000)
         for j in range(1000):
             if sorted_words[j][0] in data[i][3]:
-                textFeature[j] = 1
+                textFeature[0,j] = 1
         data[i].append(textFeature)
     
     return data
