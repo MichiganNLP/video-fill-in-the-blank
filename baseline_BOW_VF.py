@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-class baseline_BOW_VF(nn.module):
+class baseline_BOW_VF(nn.Module):
     def __init__(self, W_D_in, V_D_in, D_out):
         """
         In the constructor we instantiate two nn.Linear modules and assign them as
