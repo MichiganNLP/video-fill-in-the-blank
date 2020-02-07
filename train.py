@@ -21,7 +21,7 @@ valTextFile = 'val.json'
 wordDict = {}
 answerWordDict = {}
 THRESHOLD = 500
-wordID = 0
+wordID = 1
 
 def getVideoFeatures(key, startFrame, endFrame):
     feature_h5 = videoFeature[key]['c3d_features']
@@ -92,7 +92,11 @@ def getFeatures(textData):
     features = []
     for data in textData:
         videoFeature = getVideoFeatures(data[0], data[1], data[2])
-        features.append([data[5], videoFeature, torch.tensor([wordDict[data[4]]["id"]])])
+        if data[4] in wordDict:
+            label = torch.tensor([wordDict[data[4]]["id"]])]
+        else:
+            label = torch.tensor([0])
+        features.append([data[5], videoFeature, label)
     return features
 
 
