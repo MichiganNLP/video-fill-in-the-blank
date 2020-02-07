@@ -91,7 +91,7 @@ def getFeatures(textData):
     features = []
     for data in textData:
         videoFeature = getVideoFeatures(data[0], data[1], data[2])
-        features.append(data[5], videoFeature, torch.tensor(wordDict[data[4]]["id"]))
+        features.append([data[5], videoFeature, torch.tensor(wordDict[data[4]]["id"])])
     return features
 
 
