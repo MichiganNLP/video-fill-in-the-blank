@@ -1,6 +1,5 @@
 from torch.utils.data import Dataset
 from nltk.corpus import wordnet
-from transformers import BertTokenizer
 import json
 import math
 import nltk
