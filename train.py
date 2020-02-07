@@ -5,6 +5,7 @@ from data_loader import ActivityNetCaptionDataset
 
 import numpy as np
 import h5py
+import json
 from baseline_BOW_VF import baseline_BOW_VF
 
 videoFeature = h5py.File("/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
