@@ -13,10 +13,10 @@ import random
 from baseline_BOW_VF import baseline_BOW_VF
 
 videoFeature = h5py.File("/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
-# trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
-# valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
-trainTextFile = 'train.json'
-valTextFile = 'val.json'
+trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
+valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
+# trainTextFile = 'train.json'
+# valTextFile = 'val.json'
 
 wordDict = {}
 answerWordDict = {}
@@ -91,7 +91,7 @@ def getTextFeatures(textFile, isTrain=True):
     sorted_words = sorted(wordDict.items(), key= lambda k : k[1]["freq"], reverse=True)
 
     for i in range(len(data)):
-        featureDim = 10
+        featureDim = 1000
         textFeature = torch.zeros(1, featureDim)
         for j in range(featureDim):
             for word in data[i][3]:
@@ -157,7 +157,7 @@ valText = getTextFeatures(valTextFile, isTrain=False)
 valFeatures = getFeatures(valText)
 print("successfully load val")
 
-model = baseline_BOW_VF(10, 500, len(wordDict))
+model = baseline_BOW_VF(1000, 500, len(wordDict))
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 max_epoch = 3
