@@ -78,8 +78,9 @@ def getTextFeatures(textFile):
     sorted_words = sorted(wordDict.items(), key= lambda k : k[1]["freq"], reverse=True)
 
     for i in range(len(data)):
-        textFeature = torch.zeros(1, 1000)
-        for j in range(1000):
+        featureDim = min(1000, len(wordDict))
+        textFeature = torch.zeros(1, featureDim)
+        for j in range(featureDim):
             if sorted_words[j][0] in data[i][3]:
                 textFeature[0,j] = 1
         data[i].append(textFeature)
@@ -134,7 +135,8 @@ trainFeatures = getFeatures(trainText)
 valText = getTextFeatures(valTextFile)
 valFeatures = getFeatures(valText)
 
-model = baseline_BOW_VF(1000, 500, len(wordDict))
+
+model = baseline_BOW_VF(min(1000, len(wordDict)), 500, len(wordDict))
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 max_epoch = 10
