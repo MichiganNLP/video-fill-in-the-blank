@@ -67,7 +67,15 @@ def getTextFeatures(textFile, isTrain=True):
         raw = json.load(f)
     
     data = []
+
+    counter = 0
     for key in raw.keys():
+        if isTrain:
+            if counter > 1000:
+                break
+            else if counter > 100:
+                break
+        counter += 1
         total_events = len(raw[key]['sentences'])
         for i in range(total_events):
             start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
@@ -86,8 +94,11 @@ def getTextFeatures(textFile, isTrain=True):
         featureDim = 1000
         textFeature = torch.zeros(1, featureDim)
         for j in range(featureDim):
-            if sorted_words[j][0] in data[i][3]:
-                textFeature[0,j] = 1
+            for word in data[i][3]:
+                if word == sorted_words[j][0]:
+                    textFeature[0, j] += 1
+            # if sorted_words[j][0] in data[i][3]:
+            #     textFeature[0,j] = 1
         data[i].append(textFeature)
     
     return data
