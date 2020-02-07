@@ -31,7 +31,7 @@ def getVideoFeatures(key, startFrame, endFrame):
     feature = feature_np.mean(axis=0)
     return torch.tensor(feature).view(1, -1)
 
-def gen(text, parsed_sentence):
+def gen(text, parsed_sentence, isTrain):
     position = []
     for i in range(len(parsed_sentence)):
         if parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] == 'NN':
@@ -39,27 +39,28 @@ def gen(text, parsed_sentence):
 
     while len(position): 
         idx = random.sample(position, 1)[0]
-        if text[idx] in answerWordDict and answerWordDict[text[idx]] >= THRESHOLD:
+        if text[idx] in answerWordDict and answerWordDict[text[idx]] >= THRESHOLD and isTrain:
             position.remove(idx)
             continue
         new_sentence = text[:]
 
         correct_word = new_sentence[idx]
-        if correct_word in answerWordDict:
-            answerWordDict[correct_word] += 1
-        else:
-            answerWordDict[correct_word] = 1
-
-        for word in text:
-            if word in wordDict:
-                wordDict[word]["freq"] += 1
+        if isTrain:
+            if correct_word in answerWordDict:
+                answerWordDict[correct_word] += 1
             else:
-                wordDict[word] = {"id": wordID, "freq": 1}
+                answerWordDict[correct_word] = 1
+
+            for word in text:
+                if word in wordDict:
+                    wordDict[word]["freq"] += 1
+                else:
+                    wordDict[word] = {"id": wordID, "freq": 1}
 
         new_sentence[idx] = '[MASK]'
         return new_sentence, correct_word
 
-def getTextFeatures(textFile):
+def getTextFeatures(textFile, isTrain=True):
     with open(textFile, 'r') as f:
         raw = json.load(f)
     
@@ -72,7 +73,7 @@ def getTextFeatures(textFile):
             sentence = raw[key]['sentences'][i]
             text = nltk.word_tokenize(sentence.strip().lower())
             parsed_sentence = nltk.pos_tag(text)
-            masked_sentence, label = gen(text, parsed_sentence)
+            masked_sentence, label = gen(text, parsed_sentence, isTrain)
             data.append([key, start_frame, end_frame, masked_sentence, label])
     
     sorted_words = sorted(wordDict.items(), key= lambda k : k[1]["freq"], reverse=True)
