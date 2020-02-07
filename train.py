@@ -8,8 +8,11 @@ import h5py
 from baseline_BOW_VF import baseline_BOW_VF
 
 videoFeature = h5py.File("/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
-trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
-valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val.json"
+# trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
+# valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
+trainTextFile = 'train.json'
+valTextFile = 'val.json'
+
 wordDict = {}
 answerWordDict = {}
 THRESHOLD = 500
@@ -51,7 +54,7 @@ def gen(text, parsed_sentence):
         new_sentence[idx] = '[MASK]'
         return new_sentence, correct_word
 
-def getTextFeatures():
+def getTextFeatures(textFile):
     with open(textFile, 'r') as f:
         raw = json.load(f)
     
@@ -105,7 +108,7 @@ def train(data, max_epoch, model, optimizer, criterion):
                 running_loss = 0
     return model
 
-def eval(test_data, model):
+def evaluation(test_data, model):
     model.eval()
     correct = 0
     total_num = 0
@@ -120,9 +123,18 @@ def eval(test_data, model):
     acc = correct / total_num
     print(acc)
 
-textData = getTextFeatures()
-features = getFeatures(textData)
+trainText = getTextFeatures(trainTextFile)
+trainFeatures = getFeatures(trainText)
+
+valText = getTextFeatures(valTextFile)
+valFeatures = getFeatures(valText)
 
 model = baseline_BOW_VF(1000, 500, len(wordDict))
 criterion = nn.CrossEntropyLoss()
-optimizer = 
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+max_epoch = 10
+
+model = train(trainFeatures, max_epoch, model, optimizer, criterion)
+evaluation(valFeatures, model)
+
+
