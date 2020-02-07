@@ -133,7 +133,7 @@ def evaluation(test_data, model):
 trainText = getTextFeatures(trainTextFile)
 trainFeatures = getFeatures(trainText)
 
-valText = getTextFeatures(valTextFile)
+valText = getTextFeatures(valTextFile, isTrain=False)
 valFeatures = getFeatures(valText)
 
 
