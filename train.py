@@ -59,6 +59,8 @@ def gen(text, parsed_sentence, isTrain):
 
         new_sentence[idx] = '[MASK]'
         return new_sentence, correct_word
+    
+    return ()
 
 def getTextFeatures(textFile, isTrain=True):
     with open(textFile, 'r') as f:
