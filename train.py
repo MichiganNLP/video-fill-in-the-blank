@@ -29,7 +29,7 @@ def getVideoFeatures(key, startFrame, endFrame):
     feature_np = np.zeros(shape)
     feature_h5.read_direct(feature_np)
     feature = feature_np.mean(axis=0)
-    return torch.tensor(feature).view(1, -1)
+    return torch.LongTensor(feature).view(1, -1)
 
 def gen(text, parsed_sentence, isTrain):
     position = []
