@@ -29,7 +29,7 @@ def getVideoFeatures(key, startFrame, endFrame):
     feature_np = np.zeros(shape)
     feature_h5.read_direct(feature_np)
     feature = feature_np.mean(axis=0)
-    return torch.tensor(feature)
+    return torch.tensor(feature).view(1, -1)
 
 def gen(text, parsed_sentence):
     position = []
@@ -91,7 +91,7 @@ def getFeatures(textData):
     features = []
     for data in textData:
         videoFeature = getVideoFeatures(data[0], data[1], data[2])
-        features.append([data[5], videoFeature, torch.tensor(wordDict[data[4]]["id"])])
+        features.append([data[5], videoFeature, torch.tensor([wordDict[data[4]]["id"]])])
     return features
 
 
