@@ -70,7 +70,7 @@ def getTextFeatures(textFile):
             sentence = raw[key]['sentences'][i]
             text = nltk.word_tokenize(sentence.strip().lower())
             parsed_sentence = nltk.pos_tag(text)
-            masked_sentence, label = self.gen(text, parsed_sentence)
+            masked_sentence, label = gen(text, parsed_sentence)
             data.append([key, start_frame, end_frame, masked_sentence, label])
     
     sorted_words = sorted(wordDict.items(), key= lambda k : k[1]["freq"], reverse=True)
