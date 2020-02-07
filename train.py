@@ -13,10 +13,10 @@ import random
 from baseline_BOW_VF import baseline_BOW_VF
 
 videoFeature = h5py.File("/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
-trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
-valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
-# trainTextFile = 'train.json'
-# valTextFile = 'val.json'
+# trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
+# valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
+trainTextFile = 'train.json'
+valTextFile = 'val.json'
 
 wordDict = {}
 answerWordDict = {}
@@ -142,7 +142,7 @@ def evaluation(test_data, model):
     for data in test_data:
         text_feature, video_feature, label = data
         output = model(text_feature, video_feature)
-        if torch.argmax(output).item == label.item():
+        if torch.argmax(output).item() == label.item():
             correct += 1
         total_num += 1
 
