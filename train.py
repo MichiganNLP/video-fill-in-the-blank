@@ -73,7 +73,7 @@ def getTextFeatures(textFile, isTrain=True):
         if isTrain:
             if counter > 1000:
                 break
-            else if counter > 100:
+            elif counter > 100:
                 break
         counter += 1
         total_events = len(raw[key]['sentences'])
