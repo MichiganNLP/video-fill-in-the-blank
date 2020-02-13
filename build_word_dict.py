@@ -2,8 +2,8 @@ import pickle
 import json
 import nltk
 
-trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
-valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
+trainTextFile = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/train.json"
+valTextFile = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/val_1.json"
 word_dict = {}
 wordID = 0
 

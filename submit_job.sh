@@ -20,5 +20,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python train.py
+python -u train.py
 echo done
