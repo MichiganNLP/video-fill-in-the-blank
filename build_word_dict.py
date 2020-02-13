@@ -19,7 +19,7 @@ def count_words(data):
             sentence = data[key]['sentences'][i]
             word_list = sentence.strip().split(' ')
             for word in word_list:
-                if word in wordDict:
+                if word in word_dict:
                     wordDict[word]["freq"] += 1
                 else:
                     wordDict[word] = {"id": wordID, "freq": 1}
