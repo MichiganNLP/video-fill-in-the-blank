@@ -12,6 +12,8 @@ import random
 
 from baseline_BOW_VF import baseline_BOW_VF
 
+print("Very begin")
+
 videoFeature = h5py.File("/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
 valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
@@ -70,11 +72,11 @@ def getTextFeatures(textFile, isTrain=True):
 
     counter = 0
     for key in raw.keys():
-        # if isTrain:
-        #     if counter > 1000:
-        #         break
-        # elif counter > 100:
-        #     break
+        if isTrain:
+            if counter > 5000:
+                break
+        elif counter > 500:
+            break
         counter += 1
         total_events = len(raw[key]['sentences'])
         for i in range(total_events):
@@ -148,6 +150,8 @@ def evaluation(test_data, model):
 
     acc = correct / total_num
     print(acc)
+
+print("start")
 
 trainText = getTextFeatures(trainTextFile)
 trainFeatures = getFeatures(trainText)
