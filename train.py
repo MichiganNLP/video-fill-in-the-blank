@@ -66,7 +66,7 @@ def getTextFeatures(textFile, isTrain=True):
     
     data = []
 
-    counter = 0
+    for key in raw.keys():
         total_events = len(raw[key]['sentences'])
         for i in range(total_events):
             start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
