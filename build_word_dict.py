@@ -31,5 +31,5 @@ def count_words(data, startWordID):
 wordID = count_words(train_data, wordID)
 count_words(val_data, wordID)
 
-def build_BoW_features():
-    return
+with open("word_dict.pkl", 'wb') as f:
+    pickle.dump(word_dict, f)
