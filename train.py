@@ -9,6 +9,7 @@ import json
 import math
 import nltk
 import random
+import pickle
 
 from baseline_BOW_VF import baseline_BOW_VF
 
@@ -20,7 +21,9 @@ valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val
 # trainTextFile = 'train.json'
 # valTextFile = 'val.json'
 
-wordDict = {}
+with open('word_dict.pkl', 'rb') as f:
+    wordDict = pickle.load(f)
+
 answerWordDict = {}
 THRESHOLD = 500
 wordID = 1
@@ -52,12 +55,6 @@ def gen(text, parsed_sentence, isTrain):
                 answerWordDict[correct_word] += 1
             else:
                 answerWordDict[correct_word] = 1
-
-            for word in text:
-                if word in wordDict:
-                    wordDict[word]["freq"] += 1
-                else:
-                    wordDict[word] = {"id": wordID, "freq": 1}
 
         new_sentence[idx] = '[MASK]'
         return new_sentence, correct_word
@@ -112,7 +109,7 @@ def getFeatures(textData):
         if data[4] in wordDict:
             label = torch.tensor([wordDict[data[4]]["id"]])
         else:
-            label = torch.tensor([0])
+            label = torch.tensor([21086]) #should not happen just in case
         features.append([data[5], videoFeature, label])
     return features
 
