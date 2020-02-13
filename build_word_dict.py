@@ -20,9 +20,9 @@ def count_words(data):
             word_list = sentence.strip().split(' ')
             for word in word_list:
                 if word in word_dict:
-                    wordDict[word]["freq"] += 1
+                    word_dict[word]["freq"] += 1
                 else:
-                    wordDict[word] = {"id": wordID, "freq": 1}
+                    word_dict[word] = {"id": wordID, "freq": 1}
                     wordID += 1
 
 count_words(train_data)
