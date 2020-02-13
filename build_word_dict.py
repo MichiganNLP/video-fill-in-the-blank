@@ -12,7 +12,8 @@ with open(trainTextFile, 'r') as f:
 with open(valTextFile, 'r') as f:
     val_data = json.load(f)
 
-def count_words(data):
+def count_words(data, startWordID):
+    newWordID = startWordID
     for key in data:
         total_events = len(data[key]['sentences'])
         for i in range(total_events):
@@ -22,11 +23,12 @@ def count_words(data):
                 if word in word_dict:
                     word_dict[word]["freq"] += 1
                 else:
-                    word_dict[word] = {"id": wordID, "freq": 1}
-                    wordID += 1
+                    word_dict[word] = {"id": newWordID, "freq": 1}
+                    newWordID += 1
+    return newWordID
 
-count_words(train_data)
-count_words(val_data)
+wordID = count_words(train_data, wordID)
+count_words(val_data, wordID)
 
 with open('word_dict.pkl', 'wb') as f:
     pickle.dump(word_dict, f)
