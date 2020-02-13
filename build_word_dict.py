@@ -1,5 +1,6 @@
 import pickle
 import json
+import nltk
 
 trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
 valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
@@ -18,7 +19,7 @@ def count_words(data, startWordID):
         total_events = len(data[key]['sentences'])
         for i in range(total_events):
             sentence = data[key]['sentences'][i]
-            word_list = sentence.strip().split(' ')
+            word_list = nltk.word_tokenize(sentence.strip().lower())
             for word in word_list:
                 if word in word_dict:
                     word_dict[word]["freq"] += 1
@@ -30,5 +31,5 @@ def count_words(data, startWordID):
 wordID = count_words(train_data, wordID)
 count_words(val_data, wordID)
 
-with open('word_dict.pkl', 'wb') as f:
-    pickle.dump(word_dict, f)
+def build_BoW_features():
+    return

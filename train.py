@@ -26,7 +26,6 @@ with open('word_dict.pkl', 'rb') as f:
 
 answerWordDict = {}
 THRESHOLD = 500
-wordID = 1
 
 def getVideoFeatures(key, startFrame, endFrame):
     feature_h5 = videoFeature[key]['c3d_features']
@@ -68,13 +67,6 @@ def getTextFeatures(textFile, isTrain=True):
     data = []
 
     counter = 0
-    for key in raw.keys():
-        if isTrain:
-            if counter > 5000:
-                break
-        elif counter > 500:
-            break
-        counter += 1
         total_events = len(raw[key]['sentences'])
         for i in range(total_events):
             start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
@@ -109,6 +101,7 @@ def getFeatures(textData):
         if data[4] in wordDict:
             label = torch.tensor([wordDict[data[4]]["id"]])
         else:
+            print(data[4])
             label = torch.tensor([21086]) #should not happen just in case
         features.append([data[5], videoFeature, label])
     return features
