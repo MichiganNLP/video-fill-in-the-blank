@@ -15,9 +15,9 @@ from baseline_BOW_VF import baseline_BOW_VF
 
 print("Very begin")
 
-videoFeature = h5py.File("/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
-trainTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/train.json"
-valTextFile = "/scratch/mihalcea_root/mihalcea1/ruoyaow/ActivityNet_Captions/val_1.json"
+videoFeature = h5py.File("/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
+trainTextFile = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/train.json"
+valTextFile = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/val_1.json"
 # trainTextFile = 'train.json'
 # valTextFile = 'val.json'
 
