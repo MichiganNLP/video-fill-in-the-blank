@@ -97,7 +97,7 @@ class ActivityNetCaptionDataset(Dataset):
     def getFeatures(self, textData):
         features = []
         for data in textData:
-            videoFeature = getVideoFeatures(data[0], data[1], data[2])
+            videoFeature = self.getVideoFeatures(data[0], data[1], data[2])
             if data[4] in self.word_dict:
                 label = torch.tensor([self.word_dict[data[4]]["id"]])
             else:
