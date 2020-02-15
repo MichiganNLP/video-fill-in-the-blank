@@ -24,7 +24,7 @@ valTextFile = f"{folder}/val_1.json"
 # valTextFile = 'val.json'
 
 with open('word_dict.pkl', 'rb') as f:
-    wordDict = pickle.load(f)
+    word_dict = pickle.load(f)
 
 # answerWordDict = {}
 # THRESHOLD = 500
@@ -153,7 +153,7 @@ valDataset = ActivityNetCaptionDataset(valTextFile, word_dict, isTrain=False)
 valLoader = DataLoader(valDataset, batch_size=16, shuffle=True, num_workers=4)
 print("successfully load val")
 
-model = baseline_BOW_VF(1000, 500, len(wordDict))
+model = baseline_BOW_VF(1000, 500, len(word_dict))
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 max_epoch = 3
