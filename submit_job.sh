@@ -13,11 +13,12 @@
 #SBATCH --partition=standard
 # The application(s) to execute along with its input arguments and options:
 echo Started!
-module load python3.6-anaconda
-echo hook:
+# Use your own conda because Great Lakes ones are old and thus problematic.
+source ~/.bashrc
+echo Hooking
 eval "$(conda shell.bash hook)"
 echo Sourcing
-conda activate NLPenv0
+conda activate lqam
 echo Sourced
-python train.py
+python -u train.py
 echo done
