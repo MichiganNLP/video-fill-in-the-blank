@@ -118,6 +118,7 @@ def train(data, max_epoch, model, optimizer, criterion):
             text_feature, video_feature, label = batch           
             
             output = model(text_feature, video_feature)
+            output = output.squeeze(dim=1)
             loss = criterion(output, label)
             loss.backward()
             optimizer.step()
