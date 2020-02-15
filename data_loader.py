@@ -79,7 +79,7 @@ class ActivityNetCaptionDataset(Dataset):
                     masked_sentence, label = out
                     data.append([key, start_frame, end_frame, masked_sentence, label])
         
-        sorted_words = sorted(wordDict.items(), key= lambda k : k[1]["freq"], reverse=True)
+        sorted_words = sorted(self.word_dict.items(), key= lambda k : k[1]["freq"], reverse=True)
 
         for i in range(len(data)):
             featureDim = 1000
@@ -98,8 +98,8 @@ class ActivityNetCaptionDataset(Dataset):
         features = []
         for data in textData:
             videoFeature = getVideoFeatures(data[0], data[1], data[2])
-            if data[4] in wordDict:
-                label = torch.tensor([wordDict[data[4]]["id"]])
+            if data[4] in self.word_dict:
+                label = torch.tensor([self.word_dict[data[4]]["id"]])
             else:
                 print(data[4])
                 label = torch.tensor([21086]) #should not happen just in case
