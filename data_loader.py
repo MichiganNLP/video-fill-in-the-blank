@@ -11,7 +11,7 @@ import h5py
 
 class ActivityNetCaptionDataset(Dataset):
 
-    def __init__(self, textFile, word_dict, isTrain=True):
+    def __init__(self, textFile, videoFeatures, word_dict, isTrain=True):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -19,17 +19,16 @@ class ActivityNetCaptionDataset(Dataset):
             transform (callable, optional): Optional transform to be applied
                 on a sample.
         """
-        self.textFile = textFile
         self.word_dict = word_dict
         self.answerWordDict = {}
         self.isTrain = isTrain
         self.THRESHOLD = 500
 
         textFeature = self.getTextFeatures(textFile, isTrain)
-        data = self.getFeatures(textFeature)
+        data = self.getFeatures(textFeature, videoFeatures)
 
-    def getVideoFeatures(self, key, startFrame, endFrame):
-        feature_h5 = videoFeature[key]['c3d_features']
+    def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures):
+        feature_h5 = videoFeatures[key]['c3d_features']
         shape = feature_h5.shape
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
@@ -94,10 +93,10 @@ class ActivityNetCaptionDataset(Dataset):
         
         return data
 
-    def getFeatures(self, textData):
+    def getFeatures(self, textData, videoFeatures):
         features = []
         for data in textData:
-            videoFeature = self.getVideoFeatures(data[0], data[1], data[2])
+            videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures)
             if data[4] in self.word_dict:
                 label = torch.tensor([self.word_dict[data[4]]["id"]])
             else:
