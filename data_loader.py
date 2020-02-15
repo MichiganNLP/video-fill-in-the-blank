@@ -33,7 +33,7 @@ class ActivityNetCaptionDataset(Dataset):
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
         feature = feature_np.mean(axis=0)
-        return torch.FloatTensor(feature).view(1, -1)
+        return torch.FloatTensor(feature).view(-1)
     
     def gen(self, text, parsed_sentence, isTrain):
         position = []
@@ -88,11 +88,11 @@ class ActivityNetCaptionDataset(Dataset):
 
         for i in range(len(data)):
             featureDim = 1000
-            textFeature = torch.zeros(1, featureDim)
+            textFeature = torch.zeros(featureDim)
             for j in range(featureDim):
                 for word in data[i][3]:
                     if word == sorted_words[j][0]:
-                        textFeature[0, j] += 1
+                        textFeature[j] += 1
                 # if sorted_words[j][0] in data[i][3]:
                 #     textFeature[0,j] = 1
             data[i].append(textFeature)
@@ -104,10 +104,10 @@ class ActivityNetCaptionDataset(Dataset):
         for data in textData:
             videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures)
             if data[4] in self.word_dict:
-                label = torch.tensor([self.word_dict[data[4]]["id"]])
+                label = torch.tensor(self.word_dict[data[4]]["id"])
             else:
                 print(data[4])
-                label = torch.tensor([21086]) #should not happen just in case
+                label = torch.tensor(21086) #should not happen just in case
             features.append([data[5], videoFeature, label])
         return features
 
