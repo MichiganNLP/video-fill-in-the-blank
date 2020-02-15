@@ -136,9 +136,11 @@ def evaluation(test_data, model):
     for data in test_data:
         text_feature, video_feature, label = data
         output = model(text_feature, video_feature)
-        if torch.argmax(output).item() == label.item():
-            correct += 1
-        total_num += 1
+        batch_size = output.shape[0]
+        for i in range(batch_size):
+            if torch.argmax(output[i]).item() == label[i].item():
+                correct += 1
+            total_num += 1
 
     acc = correct / total_num
     print(acc)
