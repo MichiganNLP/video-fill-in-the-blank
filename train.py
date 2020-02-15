@@ -8,7 +8,6 @@ import h5py
 import json
 import math
 import nltk
-import random
 import pickle
 
 from baseline_BOW_VF import baseline_BOW_VF
@@ -17,7 +16,7 @@ print("Very begin")
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
-videoFeature = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
+videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 trainTextFile = f"{folder}/train.json"
 valTextFile = f"{folder}/val_1.json"
 # trainTextFile = 'train.json'
@@ -145,11 +144,11 @@ def evaluation(test_data, model):
 
 print("start")
 
-trainDataset = ActivityNetCaptionDataset(trainTextFile, word_dict)
+trainDataset = ActivityNetCaptionDataset(trainTextFile, videoFeatures, word_dict)
 trainLoader = DataLoader(trainDataset, batch_size=16, shuffle=True, num_workers=4)
 print("successfully load train")
 
-valDataset = ActivityNetCaptionDataset(valTextFile, word_dict, isTrain=False)
+valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, word_dict, isTrain=False)
 valLoader = DataLoader(valDataset, batch_size=16, shuffle=True, num_workers=4)
 print("successfully load val")
 
