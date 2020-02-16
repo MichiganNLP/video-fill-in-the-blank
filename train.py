@@ -140,7 +140,7 @@ def evaluation(test_data, model):
 
     for data in test_data:
         text_feature, video_feature, label = data
-        
+
         text_feature = text_feature.cuda()
         video_feature = video_feature.cuda()
         label = label.cuda()
@@ -158,7 +158,7 @@ def evaluation(test_data, model):
 print("start")
 
 trainDataset = ActivityNetCaptionDataset(trainTextFile, videoFeatures, word_dict)
-trainLoader = DataLoader(trainDataset, batch_size=16, shuffle=True, num_workers=4)
+trainLoader = DataLoader(trainDataset, batch_size=32, shuffle=True, num_workers=4)
 print("successfully load train")
 
 valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, word_dict, isTrain=False)
@@ -167,8 +167,8 @@ print("successfully load val")
 
 model = baseline_BOW_VF(1000, 500, len(word_dict)).cuda()
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
-max_epoch = 3
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
+max_epoch = 20
 
 model = train(trainLoader, max_epoch, model, optimizer, criterion)
 evaluation(valLoader, model)
