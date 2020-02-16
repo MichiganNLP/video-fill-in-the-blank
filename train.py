@@ -115,8 +115,13 @@ def train(data, max_epoch, model, optimizer, criterion):
     for epoch in range(max_epoch):
         for n, batch in enumerate(data):
             optimizer.zero_grad()
-            text_feature, video_feature, label = batch           
-            
+            text_feature, video_feature, label = batch
+
+            #use GPU
+            text_feature = text_feature.cuda()
+            video_feature = video_feature.cuda()
+            label = label.cuda()
+
             output = model(text_feature, video_feature)
             # output = output.squeeze(dim=1)
             loss = criterion(output, label)
@@ -135,6 +140,11 @@ def evaluation(test_data, model):
 
     for data in test_data:
         text_feature, video_feature, label = data
+        
+        text_feature = text_feature.cuda()
+        video_feature = video_feature.cuda()
+        label = label.cuda()
+
         output = model(text_feature, video_feature)
         batch_size = output.shape[0]
         for i in range(batch_size):
@@ -155,7 +165,7 @@ valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, word_dict, is
 valLoader = DataLoader(valDataset, batch_size=16, shuffle=True, num_workers=4)
 print("successfully load val")
 
-model = baseline_BOW_VF(1000, 500, len(word_dict))
+model = baseline_BOW_VF(1000, 500, len(word_dict)).cuda()
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
 max_epoch = 3
