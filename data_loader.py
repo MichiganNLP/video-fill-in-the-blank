@@ -67,11 +67,11 @@ class ActivityNetCaptionDataset(Dataset):
         data = []
         # debug_count = 0
         for key in raw.keys():
-            # if debug_count >= 1000 and isTrain:
-            #     break
-            # if debug_count >= 100 and not isTrain:
-            #     break
-            # debug_count += 1
+            if debug_count >= 1000 and isTrain:
+                break
+            if debug_count >= 100 and not isTrain:
+                break
+            debug_count += 1
             total_events = len(raw[key]['sentences'])
             for i in range(total_events):
                 start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
@@ -102,7 +102,8 @@ class ActivityNetCaptionDataset(Dataset):
     def getFeatures(self, textData, videoFeatures):
         features = []
         for data in textData:
-            videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures)
+            # videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures)
+            videoFeatures = torch.zeros(500)
             if data[4] in self.word_dict:
                 label = torch.tensor(self.word_dict[data[4]]["id"])
             else:
