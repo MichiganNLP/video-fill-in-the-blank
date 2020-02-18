@@ -65,7 +65,7 @@ class ActivityNetCaptionDataset(Dataset):
             raw = json.load(f)
         
         data = []
-        # debug_count = 0
+        debug_count = 0
         for key in raw.keys():
             if debug_count >= 1000 and isTrain:
                 break
