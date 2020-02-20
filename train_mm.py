@@ -55,7 +55,7 @@ def batchPadding(batch):
 
     return (textFeatures, videoFeatures, attention_mask, segments_tensor, labels, mask_positions)
 
-def train(data, max_epoch, model, optimizer, scheduler, PATH):
+def train(data, max_epoch, model, optimizer, PATH):
     
     model.train()
     running_loss = 0
@@ -74,7 +74,6 @@ def train(data, max_epoch, model, optimizer, scheduler, PATH):
             loss = output[0]
             loss.backward()
             optimizer.step()
-            scheduler.step()
             running_loss += loss.item()
             if n%50 == 0 and n != 0:
                 print("Epoch {}, batch {}: loss = {}".format(epoch, n, running_loss/50))
@@ -101,9 +100,7 @@ def main():
     if torch.cuda.is_available():
         model = model.cuda()
 
-    optimizer = AdamW(model.parameters(), lr=lr)
-    scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, max_epoch)
-    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=5, total_epoch=max_epoch, after_scheduler=scheduler_cosine)    
+    optimizer = AdamW(model.parameters(), lr=lr)  
 
     trainDataset = ActivityNetCaptionDataset(trainTextFile, videoFeatures)
     valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
@@ -113,7 +110,7 @@ def main():
 
     
 
-    train(train_dataLoader, max_epoch, model, optimizer, scheduler_warmup, PATH)
+    train(train_dataLoader, max_epoch, model, optimizer, PATH)
 
 if __name__ == "__main__":
     main()
