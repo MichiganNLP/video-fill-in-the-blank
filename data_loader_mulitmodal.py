@@ -33,8 +33,7 @@ class ActivityNetCaptionDataset(Dataset):
         shape = feature_h5.shape
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
-        feature = feature_np.mean(axis=0)
-        return torch.FloatTensor(feature).view(-1)
+        return torch.FloatTensor(feature_h5)
     
     def gen(self, text, parsed_sentence, isTrain):
         position = []
@@ -94,7 +93,7 @@ class ActivityNetCaptionDataset(Dataset):
         features = []
         for data in textData:
             videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures)
-            features.append([data[3], videoFeature, label, data[5]])
+            features.append([data[3], videoFeature, data[4], data[5]])
         return features
 
     def __len__(self):
