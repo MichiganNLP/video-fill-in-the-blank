@@ -22,7 +22,7 @@ class ActivityNetCaptionDataset(Dataset):
         self.answerWordDict = {}
         self.isTrain = isTrain
         self.THRESHOLD = 500
-        self.tokenizor = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         self.text_embedding = BertForMaskedLM.from_pretrained('bert-base-uncased').bert.embeddings
 
         textFeature = self.getTextFeatures(textFile, isTrain)
