@@ -84,7 +84,7 @@ class ActivityNetCaptionDataset(Dataset):
                 text = nltk.word_tokenize(sentence.strip().lower())
                 parsed_sentence = nltk.pos_tag(text)
                 out = self.gen(text, parsed_sentence, isTrain)
-                if len(out)==2:
+                if len(out)==3:
                     masked_sentence, label, masked_position = out
                     data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
                 
