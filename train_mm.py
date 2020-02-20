@@ -97,6 +97,10 @@ def main():
     batch_size = 32
     lr = 0.0001
 
+    model = multi_modal_model(bertModel, 500, embedding_size)
+    if torch.cuda.is_available():
+        model = model.cuda()
+
     optimizer = AdamW(model.parameters(), lr=lr)
     scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, max_epoch)
     scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=5, total_epoch=max_epoch, after_scheduler=scheduler_cosine)    
@@ -107,9 +111,7 @@ def main():
     train_dataLoader = DataLoader(trainDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
     val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
 
-    model = multi_modal_model(bertModel, 500, embedding_size)
-    if torch.cuda.is_available():
-        model = model.cuda()
+    
 
     train(train_dataLoader, max_epoch, model, optimizer, scheduler_warmup, PATH)
 
