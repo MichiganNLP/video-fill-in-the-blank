@@ -168,7 +168,7 @@ print("successfully load val")
 model = baseline_BOW_VF(1000, 500, len(word_dict)).cuda()
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
-max_epoch = 20
+max_epoch = 30
 
 model = train(trainLoader, max_epoch, model, optimizer, criterion)
 evaluation(valLoader, model)
