@@ -7,7 +7,7 @@ import nltk
 import random
 import numpy as np
 import h5py
-from transformers import BertTokenizer, BertForMaskedLM
+from transformers import BertTokenizer, BertModel
 
 class ActivityNetCaptionDataset(Dataset):
 
@@ -23,7 +23,7 @@ class ActivityNetCaptionDataset(Dataset):
         self.isTrain = isTrain
         self.THRESHOLD = 500
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        self.text_embedding = BertForMaskedLM.from_pretrained('bert-base-uncased').bert.embeddings
+        self.text_embedding = BertModel.from_pretrained('bert-base-uncased').get_input_embeddings()
 
         textFeature = self.getTextFeatures(textFile, isTrain)
         self.data = self.getFeatures(textFeature, videoFeatures)
