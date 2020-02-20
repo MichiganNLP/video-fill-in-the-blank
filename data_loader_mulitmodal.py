@@ -58,7 +58,7 @@ class ActivityNetCaptionDataset(Dataset):
 
             new_sentence[idx] = '[MASK]'
             sequence_id = self.tokenizer.build_inputs_with_special_tokens(self.tokenizer.convert_tokens_to_ids(new_sentence))
-            embedded_sentence = self.text_embedding(sequence_id)
+            embedded_sentence = self.text_embedding(torch.tensor(sequence_id))
             correct_word_id = self.tokenizer.convert_tokens_to_ids(correct_word)
             return embedded_sentence, correct_word_id, idx+1
         
