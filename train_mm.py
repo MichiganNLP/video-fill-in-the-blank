@@ -112,8 +112,5 @@ def main():
 
     train(train_dataLoader, max_epoch, model, optimizer, scheduler_warmup, PATH)
 
-
-    
-
-if __name__ == 'main':
+if __name__ == "__main__":
     main()
