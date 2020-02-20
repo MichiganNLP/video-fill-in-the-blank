@@ -3,8 +3,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from data_loader_mulitmodal import ActivityNetCaptionDataset
 from multi_modal_model import multi_modal_model
-
 from transformers import BertTokenizer, BertForMaskedLM, AdamW
+import h5py
+
 
 def batchPadding(batch):
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
