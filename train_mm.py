@@ -20,7 +20,7 @@ def batchPadding(batch):
     max_video_len = 0
     for i in range(batch_size):
         data = batch[i]
-        text = text_Features.append(data[0])
+        text = textFeatures.append(data[0])
         video = videoFeatures.append(data[1])
         labels.append(data[2])
         mask_positions.append(data[3])
