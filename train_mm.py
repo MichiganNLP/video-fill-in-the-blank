@@ -1,0 +1,119 @@
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from data_loader_mulitmodal import ActivityNetCaptionDataset
+from multi_modal_model import multi_modal_model
+
+from transformers import BertTokenizer, BertForMaskedLM, AdamW
+
+def batchPadding(batch):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    batch_size = len(batch)
+
+    textFeatures = []
+    videoFeatures = []
+    labels = []
+    mask_positions = []
+
+    max_text_len = 0
+    max_video_len = 0
+    for i in range(batch_size):
+        data = batch[i]
+        text = text_Features.append(data[0])
+        video = videoFeatures.append(data[1])
+        labels.append(data[2])
+        mask_positions.append(data[3])
+
+        total_text_len = text.shape[1]
+        total_video_len = video.shape[1]
+        if total_text_len > max_text_len:
+            max_text_len = total_text_len
+        if total_video_len > max_video_len:
+            max_video_len = total_video_len
+    
+    text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
+    video_tensor = torch.zeros(batch_size, max_video_len, dtype=torch.long)
+
+    segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long), torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
+    attention_mask = torch.zeros(batch_size, max_text_len + max_video_len)
+    
+
+    for i in range(batch_size):
+        text = textFeatures[i]
+        video = videoFeatures[i]
+        text_len = len(text)
+        video_len = len(video)
+
+        text_tensor[i, :text_len-1] = text[0,:-1]
+        text_tensor[i, -1] = text[0,-1]
+
+        video_tensor[i, :video_len] = video[0,:]
+
+        attention_mask[i, :text_len-1] = 1
+        attention_mask[max_text_len-1:max_text_len+video_len] = 1
+
+    return (textFeatures, videoFeatures, attention_mask, segments_tensor, labels, mask_positions)
+
+def train(data, max_epoch, model, optimizer, scheduler, PATH):
+    
+    model.train()
+    running_loss = 0
+    for epoch in range(max_epoch):
+
+        for n, batch in enumerate(data):
+            optimizer.zero_grad()
+            textFeatures, videoFeatures, attention_mask, segment_mask, labels, mask_positions = batch
+            if torch.cuda.is_available():
+                textFeatures = textFeatures.cuda()
+                videoFeatures = videoFeatures.cuda()
+                attention_mask = attention_mask.cuda()
+                labels = labels.cuda()          
+            
+            output = model(textFeatures, videoFeatures, attention_mask, segment_mask)
+            loss = output[0]
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
+            running_loss += loss.item()
+            if n%50 == 0 and n != 0:
+                print("Epoch {}, batch {}: loss = {}".format(epoch, n, running_loss/50))
+                running_loss = 0
+        model.save_pretrained(PATH)
+    return model
+
+def main():
+    PATH = '/home/ruoyaow/LifeQA-Methodology'
+    folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
+
+    videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
+    trainTextFile = f"{folder}/train.json"
+    valTextFile = f"{folder}/val_1.json"
+
+    batch_size = 32
+    bertModel = BertForMaskedLM.from_pretrained(pretrained, output_hidden_states=True, output_attentions=False)
+    embedding_size = 768
+    max_epoch = 10
+    batch_size = 32
+    lr = 0.0001
+
+    optimizer = AdamW(model.parameters(), lr=lr)
+    scheduler_cosine = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, max_epoch)
+    scheduler_warmup = GradualWarmupScheduler(optimizer, multiplier=5, total_epoch=max_epoch, after_scheduler=scheduler_cosine)    
+
+    trainDataset = ActivityNetCaptionDataset(trainTextFile, videoFeatures)
+    valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
+
+    train_dataLoader = DataLoader(trainDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
+    val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
+
+    model = multi_modal_model(bertModel, 500, embedding_size)
+    if torch.cuda.is_available():
+        model = model.cuda()
+
+    train(train_dataLoader, max_epoch, model, optimizer, scheduler_warmup, PATH)
+
+
+    
+
+if __name__ == 'main':
+    main()
