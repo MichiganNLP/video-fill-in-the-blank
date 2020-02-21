@@ -54,9 +54,9 @@ def batchPadding(batch):
         video_tensor[i, :video_len] = video[i,:]
 
         attention_mask[i, :text_len-1] = 1
-        attention_mask[max_text_len-1:max_text_len+video_len] = 1
+        attention_mask[i, max_text_len-1:max_text_len+video_len] = 1
 
-    return (textFeatures, videoFeatures, attention_mask, segments_tensor, labels, mask_positions)
+    return (text_tensor, video_tensor, attention_mask, segments_tensor, labels, mask_positions)
 
 def train(data, max_epoch, model, optimizer, PATH):
     
