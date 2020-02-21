@@ -18,5 +18,5 @@ class multi_modal_model(nn.Module):
         text_feature_embeddings = self.text_embedding(text_feature)
 
         input_feature = torch.cat([text_feature_embeddings, video_feature_embeddings], dim=1)
-        out = self.bert_model(inputs_embeds=input_feature, attention_mask=attention_mask, segment_mask=segment_mask)
+        out = self.bert_model(inputs_embeds=input_feature, attention_mask=attention_mask, token_type_ids=segment_mask)
         return out
