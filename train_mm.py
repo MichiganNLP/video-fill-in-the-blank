@@ -25,7 +25,7 @@ def batchPadding(batch):
         video = data[1]
         labels.append(data[2])
         mask_positions.append(data[3])
-        mask_lm_labels.append(torch.tensor(data[4], dtype=torch.long)_
+        mask_lm_labels.append(torch.tensor(data[4], dtype=torch.long))
         
         textFeatures.append(text)
         videoFeatures.append(video)
