@@ -33,10 +33,10 @@ class ActivityNetCaptionDataset(Dataset):
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
         
-        if feature_np.shape[0] > 300:
-            feature = np.zeros((300, feature_np.shape[1]))
-            for i in range(300):
-                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/299)]
+        if feature_np.shape[0] > 250:
+            feature = np.zeros((250, feature_np.shape[1]))
+            for i in range(250):
+                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/249)]
         else:
             feature = feature_np
 
@@ -74,13 +74,13 @@ class ActivityNetCaptionDataset(Dataset):
             raw = json.load(f)
         
         data = []
-        debug_count = 0
+        # debug_count = 0
         for key in raw.keys():
-            if debug_count >= 100 and isTrain:
-                break
-            if debug_count >= 10 and not isTrain:
-                break
-            debug_count += 1
+            # if debug_count >= 100 and isTrain:
+            #     break
+            # if debug_count >= 10 and not isTrain:
+            #     break
+            # debug_count += 1
             total_events = len(raw[key]['sentences'])
             for i in range(total_events):
                 start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
