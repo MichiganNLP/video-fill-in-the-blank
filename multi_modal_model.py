@@ -11,11 +11,12 @@ class multi_modal_model(nn.Module):
         super(multi_modal_model, self).__init__()
         self.video_embedding = nn.Linear(V_D_in, embedding_size)
         self.text_embedding = BertModel.from_pretrained('bert-base-uncased').get_input_embeddings()
+        self.bert_model = bert_model
 
     def forward(self, text_feature, video_feature, attention_mask, segment_mask):
         video_feature_embeddings = self.video_embedding(video_feature)
         text_feature_embeddings = self.text_embedding(text_feature)
 
-        input_feature = torch.cat([text_feature, video_feature_embeddings], dim=1)
-        out = bert_model(input_embeds=input_feature, attention_mask=attention_mask, segment_mask=segment_mask)
+        input_feature = torch.cat([text_feature_embeddings, video_feature_embeddings], dim=1)
+        out = self.bert_model(inputs_embeds=input_feature, attention_mask=attention_mask, segment_mask=segment_mask)
         return out
