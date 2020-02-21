@@ -90,11 +90,11 @@ def train(data, max_epoch, model, optimizer, PATH):
             if n%50 == 0 and n != 0:
                 print("Epoch {}, batch {}: loss = {}".format(epoch, n, running_loss/50))
                 running_loss = 0
-        model.save_pretrained(PATH)
+        torch.save(model.state_dict(), PATH)
     return model
 
 def main():
-    PATH = '/home/ruoyaow/LifeQA-Methodology'
+    PATH = '/home/ruoyaow/LifeQA-Methodology/checkpoints/ckp'
     folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
     videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
