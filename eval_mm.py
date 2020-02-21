@@ -6,6 +6,64 @@ from multi_modal_model import multi_modal_model
 from transformers import BertTokenizer, BertForMaskedLM, AdamW
 import h5py
 
+def batchPadding(batch):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    batch_size = len(batch)
+
+    textFeatures = []
+    videoFeatures = []
+    labels = []
+    mask_positions = []
+    lm_labels = []
+
+    max_text_len = 0
+    max_video_len = 0
+    for i in range(batch_size):
+        data = batch[i]
+        text = torch.tensor(data[0])
+        video = data[1]
+        labels.append(data[2])
+        mask_positions.append(data[3])
+        lm_labels.append(torch.tensor(data[4], dtype=torch.long))
+        
+        textFeatures.append(text)
+        videoFeatures.append(video)
+
+        total_text_len = len(text)
+        total_video_len = video.shape[0]
+        if total_text_len > max_text_len:
+            max_text_len = total_text_len
+        if total_video_len > max_video_len:
+            max_video_len = total_video_len
+    
+    text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
+    video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.float)
+
+    segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long), torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
+    attention_mask = torch.zeros(batch_size, max_text_len + max_video_len)
+    masked_lm_labels = torch.ones(batch_size, max_text_len + max_video_len, dtype=torch.long) * (-100)
+    
+
+    for i in range(batch_size):
+        text = textFeatures[i]
+        video = videoFeatures[i]
+        text_len = len(text)
+        video_len = video.shape[0]
+
+        text_tensor[i, :text_len-1] = text[:-1]
+        text_tensor[i, -1] = text[-1]
+
+        video_tensor[i, :video_len] = video
+
+        attention_mask[i, :text_len-1] = 1
+        attention_mask[i, max_text_len-1:max_text_len+video_len] = 1
+
+        masked_lm_labels[i, :text_len - 1] = lm_labels[i][:-1]
+        masked_lm_labels[i, max_text_len - 1] = lm_labels[i][-1]
+
+
+    return (text_tensor, video_tensor, attention_mask, segments_tensor, torch.tensor(labels), mask_positions, masked_lm_labels)
+
 PATH = 'Checkpoint'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
