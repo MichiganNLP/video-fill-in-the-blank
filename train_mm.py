@@ -71,6 +71,7 @@ def train(data, max_epoch, model, optimizer, PATH):
                 textFeatures = textFeatures.cuda()
                 videoFeatures = videoFeatures.cuda()
                 attention_mask = attention_mask.cuda()
+                segment_mask = segment_mask.cuda()
                 labels = labels.cuda()          
             
             output = model(textFeatures, videoFeatures, attention_mask, segment_mask)
