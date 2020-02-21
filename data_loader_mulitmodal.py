@@ -23,17 +23,24 @@ class ActivityNetCaptionDataset(Dataset):
         self.isTrain = isTrain
         self.THRESHOLD = 500
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        self.text_embedding = BertModel.from_pretrained('bert-base-uncased').get_input_embeddings()
 
         textFeature = self.getTextFeatures(textFile, isTrain)
         self.data = self.getFeatures(textFeature, videoFeatures)
 
-    def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures):
+    def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures, textLen):
         feature_h5 = videoFeatures[key]['c3d_features']
         shape = feature_h5.shape
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
-        return torch.FloatTensor(feature_h5)
+        
+        if feature_h5.shape[0] > 400:
+            feature = torch.zeros(400, feature_h5.shape[1])
+            for i in range(400):
+                feature[i] = feature_h5[round((i * feature_h5.shape[0])/399))]
+        else:
+            feature = feature_h5
+
+        return torch.FloatTensor(feature)
     
     def gen(self, text, parsed_sentence, isTrain):
         position = []
@@ -57,9 +64,8 @@ class ActivityNetCaptionDataset(Dataset):
 
             new_sentence[idx] = '[MASK]'
             sequence_id = self.tokenizer.build_inputs_with_special_tokens(self.tokenizer.convert_tokens_to_ids(new_sentence))
-            embedded_sentence = self.text_embedding(torch.tensor(sequence_id))
             correct_word_id = self.tokenizer.convert_tokens_to_ids(correct_word)
-            return embedded_sentence, correct_word_id, idx+1
+            return sequence_id, correct_word_id, idx+1
         
         return ()
 
@@ -92,7 +98,7 @@ class ActivityNetCaptionDataset(Dataset):
     def getFeatures(self, textData, videoFeatures):
         features = []
         for data in textData:
-            videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures)
+            videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures, textLen)
             features.append([data[3], videoFeature, data[4], data[5]])
         return features
 
