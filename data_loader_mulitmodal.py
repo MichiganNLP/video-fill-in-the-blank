@@ -40,7 +40,7 @@ class ActivityNetCaptionDataset(Dataset):
         else:
             feature = feature_h5
 
-        return torch.FloatTensor(feature)
+        return torch.LongTensor(feature)
     
     def gen(self, text, parsed_sentence, isTrain):
         position = []
