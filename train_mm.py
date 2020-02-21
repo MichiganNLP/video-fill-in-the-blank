@@ -46,7 +46,7 @@ def batchPadding(batch):
         text = textFeatures[i]
         video = videoFeatures[i]
         text_len = len(text)
-        video_len = len(video)
+        video_len = video.shape[0]
 
         text_tensor[i, :text_len-1] = text[0,:-1]
         text_tensor[i, -1] = text[0,-1]
