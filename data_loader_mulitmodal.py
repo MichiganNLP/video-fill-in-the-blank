@@ -34,7 +34,7 @@ class ActivityNetCaptionDataset(Dataset):
         feature_h5.read_direct(feature_np)
         
         if feature_h5.shape[0] > 400:
-            feature = torch.zeros(400, feature_h5.shape[1])
+            feature = np.zeros((400, feature_h5.shape[1]))
             for i in range(400):
                 feature[i] = feature_h5[round((i * feature_h5.shape[0])/399)]
         else:
