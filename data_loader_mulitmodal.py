@@ -76,9 +76,9 @@ class ActivityNetCaptionDataset(Dataset):
         data = []
         debug_count = 0
         for key in raw.keys():
-            if debug_count >= 3000 and isTrain:
+            if debug_count >= 1000 and isTrain:
                 break
-            if debug_count >= 1000 and not isTrain:
+            if debug_count >= 500 and not isTrain:
                 break
             debug_count += 1
             total_events = len(raw[key]['sentences'])
