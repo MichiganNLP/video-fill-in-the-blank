@@ -33,12 +33,12 @@ class ActivityNetCaptionDataset(Dataset):
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
         
-        if feature_h5.shape[0] > 400:
-            feature = np.zeros((400, feature_h5.shape[1]))
+        if feature_np.shape[0] > 400:
+            feature = np.zeros((400, feature_np.shape[1]))
             for i in range(400):
-                feature[i] = feature_h5[round(i * (feature_h5.shape[0]-1)/399)]
+                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/399)]
         else:
-            feature = feature_h5
+            feature = feature_np
 
         return torch.LongTensor(feature)
     
