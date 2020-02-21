@@ -59,8 +59,8 @@ def batchPadding(batch):
         attention_mask[i, :text_len-1] = 1
         attention_mask[i, max_text_len-1:max_text_len+video_len] = 1
 
-        masked_lm_labels[i, :text_len - 1] = lm_labels[:-1]
-        masked_lm_labels[i, max_text_len - 1] = lm_labels[-1]
+        masked_lm_labels[i, :text_len - 1] = lm_labels[i,:-1]
+        masked_lm_labels[i, max_text_len - 1] = lm_labels[i,-1]
 
 
     return (text_tensor, video_tensor, attention_mask, segments_tensor, torch.tensor(labels), mask_positions, masked_lm_labels)
