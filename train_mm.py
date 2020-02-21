@@ -93,7 +93,7 @@ def main():
     trainTextFile = f"{folder}/train.json"
     valTextFile = f"{folder}/val_1.json"
 
-    batch_size = 16
+    batch_size = 8
     bertModel = BertForMaskedLM.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=False)
     embedding_size = 768
     max_epoch = 10
