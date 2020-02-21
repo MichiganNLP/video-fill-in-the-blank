@@ -77,7 +77,8 @@ batch_size = 16
 model = multi_modal_model(bertModel, 500, embedding_size)
 
 model.load_state_dict(torch.load(PATH))
-
+if torch.cuda.is_available():
+    model = model.cuda()
 model.eval()
 
 valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
