@@ -36,9 +36,9 @@ def batchPadding(batch):
             max_video_len = total_video_len
     
     text_tensor = torch.zeros(batch_size, max_text_len)
-    video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.long)
+    video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.float)
 
-    segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long), torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
+    segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len), torch.ones(batch_size, max_video_len, dtype=torch)], dim=1)
     attention_mask = torch.zeros(batch_size, max_text_len + max_video_len)
     
 
