@@ -98,6 +98,7 @@ class ActivityNetCaptionDataset(Dataset):
     def getFeatures(self, textData, videoFeatures):
         features = []
         for data in textData:
+            textLen = len(data[3])
             videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures, textLen)
             features.append([data[3], videoFeature, data[4], data[5]])
         return features
