@@ -33,10 +33,10 @@ class ActivityNetCaptionDataset(Dataset):
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
         
-        if feature_np.shape[0] > 300:
-            feature = np.zeros((300, feature_np.shape[1]))
-            for i in range(300):
-                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/299)]
+        if feature_np.shape[0] > 200:
+            feature = np.zeros((200, feature_np.shape[1]))
+            for i in range(200):
+                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/199)]
         else:
             feature = feature_np
 
