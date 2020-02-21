@@ -114,12 +114,10 @@ def main():
     optimizer = AdamW(model.parameters(), lr=lr)  
 
     trainDataset = ActivityNetCaptionDataset(trainTextFile, videoFeatures)
-    valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
+    # valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
 
     train_dataLoader = DataLoader(trainDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
-    val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
-
-    
+    # val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
 
     train(train_dataLoader, max_epoch, model, optimizer, PATH)
 
