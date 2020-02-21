@@ -65,13 +65,13 @@ class ActivityNetCaptionDataset(Dataset):
             raw = json.load(f)
         
         data = []
-        # debug_count = 0
+        debug_count = 0
         for key in raw.keys():
-            # if debug_count >= 1000 and isTrain:
-            #     break
-            # if debug_count >= 100 and not isTrain:
-            #     break
-            # debug_count += 1
+            if debug_count >= 1000 and isTrain:
+                break
+            if debug_count >= 100 and not isTrain:
+                break
+            debug_count += 1
             total_events = len(raw[key]['sentences'])
             for i in range(total_events):
                 start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
