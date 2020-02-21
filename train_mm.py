@@ -28,7 +28,7 @@ def batchPadding(batch):
         textFeatures.append(text)
         videoFeatures.append(video)
 
-        total_text_len = text.shape[0]
+        total_text_len = len(text)
         total_video_len = video.shape[0]
         if total_text_len > max_text_len:
             max_text_len = total_text_len
