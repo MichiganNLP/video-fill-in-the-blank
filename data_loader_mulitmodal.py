@@ -33,10 +33,10 @@ class ActivityNetCaptionDataset(Dataset):
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
         
-        if feature_np.shape[0] > 200:
-            feature = np.zeros((200, feature_np.shape[1]))
-            for i in range(200):
-                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/199)]
+        if feature_np.shape[0] > 300:
+            feature = np.zeros((300, feature_np.shape[1]))
+            for i in range(300):
+                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/299)]
         else:
             feature = feature_np
 
@@ -91,7 +91,8 @@ class ActivityNetCaptionDataset(Dataset):
                 out = self.gen(text, parsed_sentence, isTrain)
                 if len(out)==3:
                     masked_sentence, label, masked_position = out
-                    data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
+                    masked_lm_labels = masked_sentence[:]
+                    data.append([key, start_frame, end_frame, masked_sentence, label, masked_position, masked_lm_labels])
                 
         return data
 
@@ -100,7 +101,7 @@ class ActivityNetCaptionDataset(Dataset):
         for data in textData:
             textLen = len(data[3])
             videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures, textLen)
-            features.append([data[3], videoFeature, data[4], data[5]])
+            features.append([data[3], videoFeature, data[4], data[5], data[6]])
         return features
 
     def __len__(self):

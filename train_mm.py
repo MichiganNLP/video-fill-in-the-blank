@@ -15,6 +15,7 @@ def batchPadding(batch):
     videoFeatures = []
     labels = []
     mask_positions = []
+    mask_lm_labels = []
 
     max_text_len = 0
     max_video_len = 0
@@ -24,6 +25,7 @@ def batchPadding(batch):
         video = data[1]
         labels.append(data[2])
         mask_positions.append(data[3])
+        mask_lm_labels.append(torch.tensor(data[4], dtype=torch.long)_
         
         textFeatures.append(text)
         videoFeatures.append(video)
@@ -40,6 +42,7 @@ def batchPadding(batch):
 
     segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long), torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
     attention_mask = torch.zeros(batch_size, max_text_len + max_video_len)
+    mask_lm_labels = torch.ones(batch_size, max_text_len + max_video_len) * (-100)
     
 
     for i in range(batch_size):
@@ -56,7 +59,11 @@ def batchPadding(batch):
         attention_mask[i, :text_len-1] = 1
         attention_mask[i, max_text_len-1:max_text_len+video_len] = 1
 
-    return (text_tensor, video_tensor, attention_mask, segments_tensor, torch.tensor(labels), mask_positions)
+        mask_lm_labels[i, :text_len - 1] = mask_lm_labels[:-1]
+        mask_lm_labels[i, max_text_len - 1] = mask_lm_labels[-1]
+
+
+    return (text_tensor, video_tensor, attention_mask, segments_tensor, torch.tensor(labels), mask_positions, mask_lm_labels)
 
 def train(data, max_epoch, model, optimizer, PATH):
     
@@ -66,15 +73,16 @@ def train(data, max_epoch, model, optimizer, PATH):
 
         for n, batch in enumerate(data):
             optimizer.zero_grad()
-            textFeatures, videoFeatures, attention_mask, segment_mask, labels, mask_positions = batch
+            textFeatures, videoFeatures, attention_mask, segment_mask, labels, mask_positions, mask_lm_labels = batch
             if torch.cuda.is_available():
                 textFeatures = textFeatures.cuda()
                 videoFeatures = videoFeatures.cuda()
                 attention_mask = attention_mask.cuda()
                 segment_mask = segment_mask.cuda()
+                mask_lm_labels = mask_lm_labels.cuda()
                 labels = labels.cuda()          
             
-            output = model(textFeatures, videoFeatures, attention_mask, segment_mask)
+            output = model(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels)
             loss = output[0]
             loss.backward()
             optimizer.step()
@@ -93,11 +101,10 @@ def main():
     trainTextFile = f"{folder}/train.json"
     valTextFile = f"{folder}/val_1.json"
 
-    batch_size = 4
     bertModel = BertForMaskedLM.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=False)
     embedding_size = 768
     max_epoch = 10
-    batch_size = 32
+    batch_size = 16
     lr = 0.0001
 
     model = multi_modal_model(bertModel, 500, embedding_size)
