@@ -81,6 +81,8 @@ if torch.cuda.is_available():
     model = model.cuda()
 model.eval()
 
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
 valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
 val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
 
