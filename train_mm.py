@@ -48,10 +48,10 @@ def batchPadding(batch):
         text_len = len(text)
         video_len = video.shape[0]
 
-        text_tensor[i, :text_len-1] = text[0,:-1]
-        text_tensor[i, -1] = text[0,-1]
+        text_tensor[i, :text_len-1] = text[:-1]
+        text_tensor[i, -1] = text[-1]
 
-        video_tensor[i, :video_len] = video[0,:]
+        video_tensor[i, :video_len] = video[i,:]
 
         attention_mask[i, :text_len-1] = 1
         attention_mask[max_text_len-1:max_text_len+video_len] = 1
