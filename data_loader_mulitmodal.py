@@ -54,7 +54,6 @@ class ActivityNetCaptionDataset(Dataset):
                 position.remove(idx)
                 continue
             new_sentence = text[:]
-
             correct_word = new_sentence[idx]
             if isTrain:
                 if correct_word in self.answerWordDict:
@@ -64,8 +63,8 @@ class ActivityNetCaptionDataset(Dataset):
 
             new_sentence[idx] = '[MASK]'
             sequence_id = self.tokenizer.build_inputs_with_special_tokens(self.tokenizer.convert_tokens_to_ids(new_sentence))
-            correct_word_id = self.tokenizer.convert_tokens_to_ids(correct_word)
-            return sequence_id, correct_word_id, idx+1
+            masked_lm_labels = self.tokenizer.build_inputs_with_special_tokens(self.tokenizer.convert_tokens_to_ids(text))
+            return sequence_id, correct_word, idx+1, masked_lm_labels
         
         return ()
 
@@ -76,9 +75,9 @@ class ActivityNetCaptionDataset(Dataset):
         data = []
         debug_count = 0
         for key in raw.keys():
-            if debug_count >= 1000 and isTrain:
+            if debug_count >= 500 and isTrain:
                 break
-            if debug_count >= 500 and not isTrain:
+            if debug_count >= 100 and not isTrain:
                 break
             debug_count += 1
             total_events = len(raw[key]['sentences'])
@@ -89,9 +88,8 @@ class ActivityNetCaptionDataset(Dataset):
                 text = nltk.word_tokenize(sentence.strip().lower())
                 parsed_sentence = nltk.pos_tag(text)
                 out = self.gen(text, parsed_sentence, isTrain)
-                if len(out)==3:
-                    masked_sentence, label, masked_position = out
-                    masked_lm_labels = masked_sentence[:]
+                if len(out)==4:
+                    masked_sentence, label, masked_position, masked_lm_labels = out
                     data.append([key, start_frame, end_frame, masked_sentence, label, masked_position, masked_lm_labels])
                 
         return data
