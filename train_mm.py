@@ -63,7 +63,7 @@ def batchPadding(batch):
         masked_lm_labels[i, max_text_len - 1] = lm_labels[i][-1]
 
 
-    return (text_tensor, video_tensor, attention_mask, segments_tensor, torch.tensor(labels), mask_positions, masked_lm_labels)
+    return (text_tensor, video_tensor, attention_mask, segments_tensor, labels, mask_positions, masked_lm_labels)
 
 def train(data, max_epoch, model, optimizer, PATH):
     
@@ -80,7 +80,6 @@ def train(data, max_epoch, model, optimizer, PATH):
                 attention_mask = attention_mask.cuda()
                 segment_mask = segment_mask.cuda()
                 mask_lm_labels = mask_lm_labels.cuda()
-                labels = labels.cuda()          
             
             output = model(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels)
             loss = output[0]
