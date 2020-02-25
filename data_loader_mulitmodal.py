@@ -63,8 +63,7 @@ class ActivityNetCaptionDataset(Dataset):
 
             new_sentence[idx] = '[MASK]'
             sequence_id = self.tokenizer.build_inputs_with_special_tokens(self.tokenizer.convert_tokens_to_ids(new_sentence))
-            masked_lm_labels = self.tokenizer.build_inputs_with_special_tokens(self.tokenizer.convert_tokens_to_ids(text))
-            return sequence_id, correct_word, idx+1, masked_lm_labels
+            return sequence_id, correct_word, idx+1
         
         return ()
 
@@ -73,13 +72,13 @@ class ActivityNetCaptionDataset(Dataset):
             raw = json.load(f)
         
         data = []
-        # debug_count = 0
+        debug_count = 0
         for key in raw.keys():
-            # if debug_count >= 500 and isTrain:
-            #     break
-            # if debug_count >= 100 and not isTrain:
-            #     break
-            # debug_count += 1
+            if debug_count >= 500 and isTrain:
+                break
+            if debug_count >= 100 and not isTrain:
+                break
+            debug_count += 1
             total_events = len(raw[key]['sentences'])
             for i in range(total_events):
                 start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
@@ -88,9 +87,9 @@ class ActivityNetCaptionDataset(Dataset):
                 text = nltk.word_tokenize(sentence.strip().lower())
                 parsed_sentence = nltk.pos_tag(text)
                 out = self.gen(text, parsed_sentence, isTrain)
-                if len(out)==4:
-                    masked_sentence, label, masked_position, masked_lm_labels = out
-                    data.append([key, start_frame, end_frame, masked_sentence, label, masked_position, masked_lm_labels])
+                if len(out)==3:
+                    masked_sentence, label, masked_position = out
+                    data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
                 
         return data
 
@@ -99,7 +98,7 @@ class ActivityNetCaptionDataset(Dataset):
         for data in textData:
             textLen = len(data[3])
             videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures, textLen)
-            features.append([data[3], videoFeature, data[4], data[5], data[6]])
+            features.append([data[3], videoFeature, data[4], data[5]])
         return features
 
     def __len__(self):

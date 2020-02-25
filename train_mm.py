@@ -25,7 +25,6 @@ def batchPadding(batch):
         video = data[1]
         labels.append(data[2])
         mask_positions.append(data[3])
-        lm_labels.append(torch.tensor(data[4], dtype=torch.long))
         
         textFeatures.append(text)
         videoFeatures.append(video)
@@ -59,8 +58,7 @@ def batchPadding(batch):
         attention_mask[i, :text_len-1] = 1
         attention_mask[i, max_text_len-1:max_text_len+video_len] = 1
 
-        masked_lm_labels[i, :text_len - 1] = lm_labels[i][:-1]
-        masked_lm_labels[i, max_text_len - 1] = lm_labels[i][-1]
+        masked_lm_labels[mask_positions[i]] = tokenizer.convert_tokens_to_ids(labels[i])
 
 
     return (text_tensor, video_tensor, attention_mask, segments_tensor, labels, mask_positions, masked_lm_labels)
