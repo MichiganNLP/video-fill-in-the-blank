@@ -100,7 +100,7 @@ def main():
 
     bertModel = BertForMaskedLM.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=False)
     embedding_size = 768
-    max_epoch = 1
+    max_epoch = 20
     batch_size = 16
     lr = 0.0001
 
