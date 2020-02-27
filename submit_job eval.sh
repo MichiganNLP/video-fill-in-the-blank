@@ -9,7 +9,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem-per-cpu=32000m 
 #SBATCH --gres=gpu:1
-#SBATCH --time=03-5:00:00
+#SBATCH --time=01-5:00:00
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 # The application(s) to execute along with its input arguments and options:
@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u train_mm.py
+python -u eval_mm.py
 echo done
