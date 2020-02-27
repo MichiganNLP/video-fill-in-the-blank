@@ -62,7 +62,7 @@ def batchPadding(batch):
 
     return (text_tensor, video_tensor, attention_mask, segments_tensor, labels, mask_positions, masked_lm_labels)
 
-PATH = 'Checkpoint'
+PATH = 'checkpoints/Checkpoint'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
 videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
