@@ -19,6 +19,12 @@ class ActivityNetCaptionDataset(Dataset):
             textFile: text file path
             videoFeatures: video feature hd5 data
             isTrain: true for training, false for eval
+        Output data structure:
+            masked sentence
+            video feature
+            label
+            mask position
+            video url
         """
         self.answerWordDict = {}
         self.isTrain = isTrain
@@ -101,7 +107,7 @@ class ActivityNetCaptionDataset(Dataset):
         for data in textData:
             textLen = len(data[3])
             videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures, textLen)
-            features.append([data[3], videoFeature, data[4], data[5]])
+            features.append([data[3], videoFeature, data[4], data[5],data[0]])
         return features
 
     def __len__(self):
