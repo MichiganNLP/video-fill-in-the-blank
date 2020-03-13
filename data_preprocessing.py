@@ -1,4 +1,5 @@
 from data_loader_mulitmodal import ActivityNetCaptionDataset
+import h5py
 
 PATH = 'Checkpoint'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
