@@ -9,15 +9,16 @@ import numpy as np
 import h5py
 from transformers import BertTokenizer, BertModel
 
+import pickle
+
 class ActivityNetCaptionDataset(Dataset):
 
     def __init__(self, textFile, videoFeatures, isTrain=True):
         """
         Args:
-            csv_file (string): Path to the csv file with annotations.
-            root_dir (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
+            textFile: text file path
+            videoFeatures: video feature hd5 data
+            isTrain: true for training, false for eval
         """
         self.answerWordDict = {}
         self.isTrain = isTrain
@@ -26,6 +27,8 @@ class ActivityNetCaptionDataset(Dataset):
 
         textFeature = self.getTextFeatures(textFile, isTrain)
         self.data = self.getFeatures(textFeature, videoFeatures)
+        with open("data.pkl", 'wb') as f:
+            pickle.dump(self.data, f)
 
     def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures, textLen):
         feature_h5 = videoFeatures[key]['c3d_features']
