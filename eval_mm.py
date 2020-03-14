@@ -99,6 +99,14 @@ for batch in val_dataLoader:
     batch_size = textFeatures.shape[0]
     score = output[1]
     predicted_index = torch.argmax(score[list(range(batch_size)), mask_positions], dim=1)
+
+    top5=score[list(range(batch_size)), mask_positions].topk(5, dim=1)[1]
+    for i in range(batch_size):
+        print(''.join(tokenizer.convert_ids_to_tokens(textFeatures[i])))
+        print(tokenizer.convert_ids_to_tokens(list(top5[i])))
+        print(labels[i])
+        print()
+
     out_text = tokenizer.convert_ids_to_tokens(predicted_index.tolist())
     total_num += batch_size
     for i in range(batch_size):

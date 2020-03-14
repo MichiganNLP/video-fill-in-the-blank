@@ -25,7 +25,7 @@ class ActivityNetCaptionDataset(Dataset):
         self.THRESHOLD = 500
 
         textFeature = self.getTextFeatures(textFile, isTrain)
-        self.data = self.getFeatures(textFeature, videoFeatures)
+        # self.data = self.getFeatures(textFeature, videoFeatures)
 
     def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures):
         feature_h5 = videoFeatures[key]['c3d_features']
