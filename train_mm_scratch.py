@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from data_loader_multimodal import ActivityNetCaptionDataset
 from multi_modal_model import multi_modal_model
-from transformers import BertTokenizer, BertForMaskedLM, AdamW
+from transformers import BertConfig, BertTokenizer, BertForMaskedLM, AdamW
 import h5py
 from utils import batchPadding
 
@@ -42,9 +42,9 @@ def main():
     # videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
     trainFile = f"{folder}/train.pkl"
 
-    bertModel = BertForMaskedLM.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=False)
+    bertModel = BertForMaskedLM(BertConfig)
     embedding_size = 768
-    max_epoch = 10
+    max_epoch = 20
     batch_size = 16
     lr = 0.0001
 
