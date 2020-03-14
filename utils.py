@@ -40,8 +40,8 @@ def batchPadding(batch):
     segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long), torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
     attention_mask = torch.zeros(batch_size, max_text_len + max_video_len)
     masked_lm_labels = torch.ones(batch_size, max_text_len + max_video_len, dtype=torch.long) * (-100)
-    position_embedding = torch.cat([torch.arange(max_text_len, dtype=torch.long), torch.arange(max_video_len, dtype=torch.long)], dim=1)
-    position_embedding = position_embedding.repeat(batch_size)
+    position_embedding = torch.cat([torch.arange(max_text_len, dtype=torch.long), torch.arange(max_video_len, dtype=torch.long)], dim=0)
+    position_embedding = position_embedding.view(1,-1).repeat(batch_size, 1)
 
     for i in range(batch_size):
         text = textFeatures[i]
