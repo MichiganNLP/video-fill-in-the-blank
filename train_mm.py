@@ -40,8 +40,7 @@ def main():
     folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
     # videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
-    trainTextFile = f"{folder}/train.pkl"
-    valTextFile = f"{folder}/val_1.pkl"
+    trainFile = f"{folder}/train.pkl"
 
     bertModel = BertForMaskedLM.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=False)
     embedding_size = 768
@@ -55,11 +54,9 @@ def main():
 
     optimizer = AdamW(model.parameters(), lr=lr)  
 
-    trainDataset = ActivityNetCaptionDataset(trainTextFile, videoFeatures)
-    # valDataset = ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
+    trainDataset = ActivityNetCaptionDataset(trainFile)
 
     train_dataLoader = DataLoader(trainDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
-    # val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
 
     train(train_dataLoader, max_epoch, model, optimizer, PATH)
 
