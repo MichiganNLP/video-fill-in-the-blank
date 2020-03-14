@@ -33,8 +33,6 @@ class ActivityNetCaptionDataset(Dataset):
 
         textFeature = self.getTextFeatures(textFile, isTrain)
         self.data = self.getFeatures(textFeature, videoFeatures)
-        with open("data.pkl", 'wb') as f:
-            pickle.dump(self.data, f)
 
     def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures, textLen):
         feature_h5 = videoFeatures[key]['c3d_features']
