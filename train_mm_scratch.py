@@ -42,7 +42,8 @@ def main():
     # videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
     trainFile = f"{folder}/train.pkl"
 
-    bertModel = BertForMaskedLM(BertConfig)
+    config = BertConfig()
+    bertModel = BertForMaskedLM(config)
     embedding_size = 768
     max_epoch = 20
     batch_size = 16
