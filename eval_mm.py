@@ -39,7 +39,7 @@ for batch in val_dataLoader:
         segment_mask = segment_mask.cuda()
         mask_lm_labels = mask_lm_labels.cuda()   
     
-    output = model(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels)             
+    output = model(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels, position_embedding)             
     batch_size = textFeatures.shape[0]
     score = output[1]
     predicted_index = torch.argmax(score[list(range(batch_size)), mask_positions], dim=1)
