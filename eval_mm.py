@@ -37,7 +37,8 @@ for batch in val_dataLoader:
         videoFeatures = videoFeatures.cuda()
         attention_mask = attention_mask.cuda()
         segment_mask = segment_mask.cuda()
-        mask_lm_labels = mask_lm_labels.cuda()   
+        mask_lm_labels = mask_lm_labels.cuda()
+        position_embedding = position_embedding.cuda()   
     
     output = model(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels, position_embedding)             
     batch_size = textFeatures.shape[0]
