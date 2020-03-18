@@ -10,7 +10,7 @@ from utils import batchPadding
 PATH = 'Checkpoint'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
-valTextFile = f"{folder}/val.pickle"
+valTextFile = f"{folder}/val.pkl"
 
 bertModel = BertForMaskedLM.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=False)
 embedding_size = 768
