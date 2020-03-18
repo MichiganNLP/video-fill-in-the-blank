@@ -5,7 +5,7 @@ from data_loader_multimodal import ActivityNetCaptionDataset
 from multi_modal_model import multi_modal_model
 from transformers import BertTokenizer, BertForMaskedLM, AdamW
 
-import batchPadding from utils
+from utils import batchPadding
 
 PATH = 'Checkpoint'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
