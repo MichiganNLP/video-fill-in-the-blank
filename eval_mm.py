@@ -52,7 +52,7 @@ for batch in val_dataLoader:
             f.write('\n')
             f.write(' '.join(tokenizer.convert_ids_to_tokens(textFeatures[i])))
             f.write('\n')
-            f.write(' '.jonin(tokenizer.convert_ids_to_tokens(list(top5[i]))))
+            f.write(' '.join(tokenizer.convert_ids_to_tokens(list(top5[i]))))
             f.write('\n')
             f.write(labels[i])
             f.write('\n\n')
