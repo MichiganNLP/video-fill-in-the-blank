@@ -26,7 +26,7 @@ model.eval()
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 valDataset = ActivityNetCaptionDataset(valTextFile)
-val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding)
+val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding, num_workers=4)
 
 correct = 0
 total_num = 0
