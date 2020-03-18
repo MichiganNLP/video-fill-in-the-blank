@@ -48,11 +48,11 @@ for batch in val_dataLoader:
     top5=score[list(range(batch_size)), mask_positions].topk(5, dim=1)[1]
     with open("eval_out", 'a') as f:
         for i in range(batch_size):
-            f.write(key)
+            f.write(key[i])
             f.write('\n')
             f.write(' '.join(tokenizer.convert_ids_to_tokens(textFeatures[i])))
             f.write('\n')
-            f.write(tokenizer.convert_ids_to_tokens(list(top5[i])))
+            f.write(' '.jonin(tokenizer.convert_ids_to_tokens(list(top5[i]))))
             f.write('\n')
             f.write(labels[i])
             f.write('\n\n')
