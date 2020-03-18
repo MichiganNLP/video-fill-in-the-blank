@@ -1,4 +1,4 @@
-from data_loader_mulitmodal import ActivityNetCaptionDataset
+from data_loader_multimodal_old import ActivityNetCaptionDataset
 import h5py
 
 PATH = 'Checkpoint'

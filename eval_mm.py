@@ -45,7 +45,7 @@ for batch in val_dataLoader:
     predicted_index = torch.argmax(score[list(range(batch_size)), mask_positions], dim=1)
 
     top5=score[list(range(batch_size)), mask_positions].topk(5, dim=1)[1]
-    with open("eval_out", 'a') as f
+    with open("eval_out", 'a') as f:
         for i in range(batch_size):
             f.write(key)
             f.write('\n')
