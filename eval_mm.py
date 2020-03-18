@@ -7,7 +7,7 @@ from transformers import BertTokenizer, BertForMaskedLM, AdamW
 
 from utils import batchPadding
 
-PATH = 'Checkpoint'
+PATH = 'Checkpoint_pretrain'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
 valTextFile = f"{folder}/val.pkl"
