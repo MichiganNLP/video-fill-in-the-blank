@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from data_loader_multimodal import ActivityNetCaptionDataset
 from multi_modal_model import multi_modal_model
-from transformers import BertTokenizer, BertForMaskedLM, AdamWeightDecay, get_linear_schedule_with_warmup
+from transformers import BertTokenizer, BertForMaskedLM, AdamW, get_linear_schedule_with_warmup
 import h5py
 from utils import batchPadding
 
@@ -53,7 +53,7 @@ def main():
     if torch.cuda.is_available():
         model = model.cuda()
 
-    optimizer = AdamWeightDecay(model.parameters(), lr=lr)  
+    optimizer = AdamW(model.parameters(), lr=lr, weight_decay=0.1)  
 
     trainDataset = ActivityNetCaptionDataset(trainFile)
 
