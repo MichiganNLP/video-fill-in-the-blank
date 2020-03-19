@@ -69,7 +69,7 @@ class ActivityNetCaptionDataset(Dataset):
                     self.answerWordDict[correct_word] = 1
 
             new_sentence[idx] = '[MASK]'
-            sequence_id = self.tokenizer.build_inputs_with_special_tokens(self.tokenizer.convert_tokens_to_ids(new_sentence))
+            sequence_id = self.tokenizer.encode(' '.join(new_sentence))
             return sequence_id, correct_word, idx+1
         
         return ()
