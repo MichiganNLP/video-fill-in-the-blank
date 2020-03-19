@@ -7,7 +7,7 @@ from transformers import BertTokenizer, BertForMaskedLM, AdamW, get_linear_sched
 import h5py
 from utils import batchPadding
 
-def train(data, max_epoch, model, optimizer, scheduler PATH):
+def train(data, max_epoch, model, optimizer, scheduler, PATH):
     
     model.train()
     running_loss = 0
