@@ -2,7 +2,7 @@
 
 #“#SBATCH” directives that convey submission options:
 
-#SBATCH --job-name=baseline_test
+#SBATCH --job-name=scheduler
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=4
 #SBATCH --nodes=1
@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u train_mm_scratch.py
+python -u train_mm_scheduler.py
 echo done
