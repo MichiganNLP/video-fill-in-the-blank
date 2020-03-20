@@ -2,7 +2,7 @@
 
 #“#SBATCH” directives that convey submission options:
 
-#SBATCH --job-name=baseline_test
+#SBATCH --job-name=eval scheduler l2
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=4
 #SBATCH --nodes=1
@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u eval_mm.py
+python -u eval_mm_l2.py
 echo done
