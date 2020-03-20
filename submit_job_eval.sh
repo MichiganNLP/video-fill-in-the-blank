@@ -2,7 +2,7 @@
 
 #“#SBATCH” directives that convey submission options:
 
-#SBATCH --job-name=baseline_test
+#SBATCH --job-name=eval_scheduler
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=4
 #SBATCH --nodes=1
