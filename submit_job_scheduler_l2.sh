@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u eval_mm_scheduler_l2.py
+python -u eval_mm.py
 echo done
