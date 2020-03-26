@@ -42,7 +42,7 @@ class MultiModalLightningModel(LightningModule):
         #     mask_lm_labels = mask_lm_labels.cuda()
         #     position_embedding = position_embedding.cuda()
         
-        output = model(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels,position_embedding)
+        output = self.forward(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels,position_embedding)
         loss_val = output[0]
         acc1 = self.__accuracy(textFeatures, output[1], mask_positions)
 
@@ -66,7 +66,7 @@ class MultiModalLightningModel(LightningModule):
         #     mask_lm_labels = mask_lm_labels.cuda()
         #     position_embedding = position_embedding.cuda()   
         
-        output = model(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels, position_embedding)
+        output = self.forward(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels, position_embedding)
         loss_val = output[0]
         acc1 = self.__accuracy(textFeatures, output[1], mask_positions)
 
