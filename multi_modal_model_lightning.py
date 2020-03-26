@@ -7,7 +7,7 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 
-from transformers import BertModel, BertForMaskedLM, AdamW, get_linear_schedule_with_warmup
+from transformers import BertTokenizer, BertModel, BertForMaskedLM, AdamW, get_linear_schedule_with_warmup
 from data_loader_multimodal import ActivityNetCaptionDataset
 from utils import batchPadding
 from torch.utils.data import DataLoader
@@ -23,6 +23,7 @@ class MultiModalLightningModel(LightningModule):
         self.video_embedding = nn.Linear(self.hparams.V_D_in, self.hparams.embedding_size)
         self.text_embedding = BertModel.from_pretrained('bert-base-uncased').get_input_embeddings()
         self.bert_model = BertForMaskedLM.from_pretrained('bert-base-uncased', output_hidden_states=True, output_attentions=False)
+        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
     def forward(self, text_feature, video_feature, attention_mask, segment_mask, mask_lm_labels, position_embedding):
         video_feature_embeddings = self.video_embedding(video_feature)
@@ -105,7 +106,7 @@ class MultiModalLightningModel(LightningModule):
 
             top5=score[list(range(batch_size)), mask_positions].topk(5, dim=1)[1]
 
-            out_text = tokenizer.convert_ids_to_tokens(predicted_index.tolist())
+            out_text = self.tokenizer.convert_ids_to_tokens(predicted_index.tolist())
             total_num += batch_size
             for i in range(batch_size):
                 if labels[i] == out_text[i]:
