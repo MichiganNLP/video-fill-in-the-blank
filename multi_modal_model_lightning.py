@@ -104,16 +104,7 @@ class MultiModalLightningModel(LightningModule):
             predicted_index = torch.argmax(score[list(range(batch_size)), mask_positions], dim=1)
 
             top5=score[list(range(batch_size)), mask_positions].topk(5, dim=1)[1]
-            with open("eval_out_scheduler_l2", 'a') as f:
-                for i in range(batch_size):
-                    f.write(key[i])
-                    f.write('\n')
-                    f.write(' '.join(tokenizer.convert_ids_to_tokens(textFeatures[i])))
-                    f.write('\n')
-                    f.write(' '.join(tokenizer.convert_ids_to_tokens(list(top5[i]))))
-                    f.write('\n')
-                    f.write(labels[i])
-                    f.write('\n\n')
+
             out_text = tokenizer.convert_ids_to_tokens(predicted_index.tolist())
             total_num += batch_size
             for i in range(batch_size):
