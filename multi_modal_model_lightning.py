@@ -95,7 +95,7 @@ class MultiModalLightningModel(LightningModule):
         return result
 
     @classmethod
-    def __accuracy(textFeatures, score, mask_positions):
+    def __accuracy(cls, textFeatures, score, mask_positions):
         """Computes the accuracy over the k top predictions for the specified values of k"""
         with torch.no_grad():
             correct = 0
