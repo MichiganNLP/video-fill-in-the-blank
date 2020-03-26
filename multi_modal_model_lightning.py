@@ -95,7 +95,6 @@ class MultiModalLightningModel(LightningModule):
         result = {'progress_bar': tqdm_dict, 'log': tqdm_dict, 'val_loss': tqdm_dict["val_loss"]}
         return result
 
-    @classmethod
     def __accuracy(self, textFeatures, score, mask_positions):
         """Computes the accuracy over the k top predictions for the specified values of k"""
         with torch.no_grad():
