@@ -15,13 +15,6 @@ from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.core import LightningModule
 
-# pull out resnet names from torchvision models
-MODEL_NAMES = sorted(
-    name for name in models.__dict__
-    if name.islower() and not name.startswith("__") and callable(models.__dict__[name])
-)
-
-
 class MultiModalLightningModel(LightningModule):
     def __init__(self, hparams):
 
