@@ -45,7 +45,7 @@ class MultiModalLightningModel(LightningModule):
         
         output = self.forward(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels,position_embedding)
         loss_val = output[0]
-        acc1 = self.__accuracy(textFeatures, output[1], mask_positions)
+        acc1 = self.__accuracy(textFeatures, output[1], labels, mask_positions)
 
         tqdm_dict = {'train_loss': loss_val}
         output = OrderedDict({
@@ -69,7 +69,7 @@ class MultiModalLightningModel(LightningModule):
         
         output = self.forward(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels, position_embedding)
         loss_val = output[0]
-        acc1 = self.__accuracy(textFeatures, output[1], mask_positions)
+        acc1 = self.__accuracy(textFeatures, output[1], labels, mask_positions)
 
         output = OrderedDict({
             'val_loss': loss_val,
@@ -95,7 +95,7 @@ class MultiModalLightningModel(LightningModule):
         result = {'progress_bar': tqdm_dict, 'log': tqdm_dict, 'val_loss': tqdm_dict["val_loss"]}
         return result
 
-    def __accuracy(self, textFeatures, score, mask_positions):
+    def __accuracy(self, textFeatures, score, labels, mask_positions):
         """Computes the accuracy over the k top predictions for the specified values of k"""
         with torch.no_grad():
             correct = 0
