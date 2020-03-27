@@ -22,8 +22,7 @@ class MultiModalLightningModel(LightningModule):
         super().__init__()
         self.hparams = hparams
 
-        self.transformer = AutoModelForPreTraining.from_pretrained(self.hparams.model_name, output_hidden_states=True,
-                                                                   output_attentions=False)
+        self.transformer = AutoModelForPreTraining.from_pretrained(self.hparams.model_name)
         self.text_embedding = self.transformer.get_input_embeddings()
 
         embedding_size = self.text_embedding.embedding_dim
