@@ -1,8 +1,7 @@
 import torch
-from transformers import AutoTokenizer
 
 
-def batchPadding(batch, model_name: str, tokenizer):
+def batchPadding(batch, tokenizer):
     batch_size = len(batch)
 
     textFeatures = []
