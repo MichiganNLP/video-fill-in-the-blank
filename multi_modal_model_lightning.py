@@ -21,7 +21,6 @@ class MultiModalLightningModel(LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
-        print(hparams)
 
         self.transformer = AutoModelWithLMHead.from_pretrained(self.hparams.model_name)
         self.text_embedding = self.transformer.get_input_embeddings()
