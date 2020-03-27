@@ -21,6 +21,7 @@ class MultiModalLightningModel(LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
+        print(hparams)
 
         self.transformer = AutoModelForPreTraining.from_pretrained(self.hparams.model_name)
         self.text_embedding = self.transformer.get_input_embeddings()
@@ -161,8 +162,7 @@ class MultiModalLightningModel(LightningModule):
                             help='beta2 for adam optimizer')
         parser.add_argument('--V-D-in', default=500, type=int, metavar='V',
                             help='input video feature dimension')
-        parser.add_argument('--num_workers', default=8, type=float,
-                            help='number of workers used for data loading')
+        parser.add_argument('--num_workers', default=8, type=int, help='number of workers used for data loading')
         parser.add_argument('--wd', '--weight_decay', default=1e-4, type=float,
                             metavar='W', help='weight decay',
                             dest='weight_decay')
@@ -171,7 +171,7 @@ class MultiModalLightningModel(LightningModule):
                                      for key in config.pretrained_config_archive_map])
         parser.add_argument('--model-name', help='transformer model to use', choices=model_name_choices,
                             default='bert-base-uncased')
-        parser.add_argument('--lr-scheduling', choices=['linear_with_warmup'])
+        parser.add_argument('--lr-scheduling', choices=['linear_with_warmup', ''], default='linear_with_warmup')
         return parser
 
 
