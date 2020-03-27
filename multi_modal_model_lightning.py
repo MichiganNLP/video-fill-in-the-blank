@@ -169,7 +169,7 @@ class MultiModalLightningModel(LightningModule):
                             dest='weight_decay')
         parser.add_argument('--pretrained', action='store_true',
                             help='use pre-trained model')
-        parser.add_argument('--model-name', help='transformer model to use')
+        parser.add_argument('--model-name', help='transformer model to use', default='bert-base-uncased')
         parser.add_argument('--lr-scheduling', choices=['linear_with_warmup'])
         return parser
 
