@@ -168,8 +168,6 @@ class MultiModalLightningModel(LightningModule):
         parser.add_argument('--wd', '--weight_decay', default=1e-4, type=float,
                             metavar='W', help='weight decay',
                             dest='weight_decay')
-        parser.add_argument('--pretrained', action='store_true',
-                            help='use pre-trained model')
         model_name_choices = sorted([key
                                      for config in MODEL_FOR_PRETRAINING_MAPPING
                                      for key in config.pretrained_config_archive_map])
