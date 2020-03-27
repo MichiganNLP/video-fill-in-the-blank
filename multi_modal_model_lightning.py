@@ -39,22 +39,28 @@ class MultiModalLightningModel(LightningModule):
                                masked_lm_labels=mask_lm_labels, position_ids=position_embedding)
         return out
 
-    def training_step(self, batch, batch_idx):
-        textFeatures, videoFeatures, attention_mask, segment_mask, labels, mask_positions, mask_lm_labels, position_embedding, _ = batch
+    def _step(self, batch):
+        text_features, video_features, attention_mask, segment_mask, labels, mask_positions, mask_lm_labels, \
+            position_embedding, _ = batch
 
-        output = self.forward(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels,
+        output = self.forward(text_features, video_features, attention_mask, segment_mask, mask_lm_labels,
                               position_embedding)
-        loss_val = output[0]
-        accuracy = self.__accuracy(textFeatures, output[1], labels, mask_positions)
+        loss = output[0]
+        accuracy = self.__accuracy(text_features, output[1], labels, mask_positions)
 
         # in DP mode (default) make sure if result is scalar, there's another dim in the beginning
         if self.trainer.use_dp or self.trainer.use_ddp2:
-            loss_val = loss_val.unsqueeze(0)
+            loss = loss.unsqueeze(0)
             accuracy = accuracy.unsqueeze(0)
 
-        tqdm_dict = {'train_loss': loss_val}
+        return accuracy, loss
+
+    def training_step(self, batch, batch_idx):
+        accuracy, loss = self._step(batch)
+
+        tqdm_dict = {'train_loss': loss}
         output = OrderedDict({
-            'loss': loss_val,
+            'loss': loss,
             'accuracy': accuracy,
             'progress_bar': tqdm_dict,
             'log': tqdm_dict
@@ -63,20 +69,10 @@ class MultiModalLightningModel(LightningModule):
         return output
 
     def validation_step(self, batch, batch_idx):
-        textFeatures, videoFeatures, attention_mask, segment_mask, labels, mask_positions, mask_lm_labels, position_embedding, key = batch
-
-        output = self.forward(textFeatures, videoFeatures, attention_mask, segment_mask, mask_lm_labels,
-                              position_embedding)
-        loss_val = output[0]
-        accuracy = self.__accuracy(textFeatures, output[1], labels, mask_positions)
-
-        # in DP mode (default) make sure if result is scalar, there's another dim in the beginning
-        if self.trainer.use_dp or self.trainer.use_ddp2:
-            loss_val = loss_val.unsqueeze(0)
-            accuracy = accuracy.unsqueeze(0)
+        accuracy, loss = self._step(batch)
 
         output = OrderedDict({
-            'val_loss': loss_val,
+            'val_loss': loss,
             'val_accuracy': accuracy,
         })
 
@@ -105,7 +101,6 @@ class MultiModalLightningModel(LightningModule):
             total_num = 0
             batch_size = textFeatures.shape[0]
             predicted_index = torch.argmax(score[list(range(batch_size)), mask_positions], dim=1)
-            # TODO: fix for distributed training
 
             out_text = self.tokenizer.convert_ids_to_tokens(predicted_index.tolist())
             total_num += batch_size
@@ -131,18 +126,18 @@ class MultiModalLightningModel(LightningModule):
             return [optimizer]
 
     def train_dataloader(self):
-        trainDataset = ActivityNetCaptionDataset(self.hparams.data_path)
-        train_loader = DataLoader(trainDataset, batch_size=self.hparams.batch_size, shuffle=True,
+        train_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
+        train_loader = DataLoader(train_dataset, batch_size=self.hparams.batch_size, shuffle=True,
                                   collate_fn=lambda b: batchPadding(b, model_name=self.hparams.model_name,
                                                                     tokenizer=self.tokenizer),
                                   num_workers=self.hparams.num_workers)
         return train_loader
 
     def val_dataloader(self):
-        valDataset = ActivityNetCaptionDataset(self.hparams.data_path)
-        val_loader = DataLoader(valDataset, batch_size=self.hparams.batch_size, shuffle=True,
-                                  collate_fn=lambda b: batchPadding(b, model_name=self.hparams.model_name,
-                                                                    tokenizer=self.tokenizer),
+        val_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
+        val_loader = DataLoader(val_dataset, batch_size=self.hparams.batch_size, shuffle=True,
+                                collate_fn=lambda b: batchPadding(b, model_name=self.hparams.model_name,
+                                                                  tokenizer=self.tokenizer),
                                 num_workers=self.hparams.num_workers)
         return val_loader
 
