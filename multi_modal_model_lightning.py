@@ -148,7 +148,7 @@ class MultiModalLightningModel(LightningModule):
 
     @staticmethod
     def add_model_specific_args(parent_parser):  # pragma: no-cover
-        parser = argparse.ArgumentParser(parents=[parent_parser])
+        parser = ArgumentParserWithDefaults(parents=[parent_parser])
         parser.add_argument('--epochs', default=10, type=int, metavar='N', help='number of total epochs to run')
         parser.add_argument('--seed', type=int, default=42, help='seed for initializing training. ')
         parser.add_argument('-b', '--batch_size', default=16, type=int, metavar='N',
