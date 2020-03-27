@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import argparse
 import random
 from collections import OrderedDict
 
