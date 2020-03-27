@@ -102,13 +102,13 @@ class MultiModalLightningModel(LightningModule):
             batch_size = textFeatures.shape[0]
             predicted_index = torch.argmax(score[list(range(batch_size)), mask_positions], dim=1)
 
-            out_text = self.tokenizer.convert_ids_to_tokens(predicted_index.tolist())
+            out_text = self.tokenizer.decode(predicted_index.tolist())
             total_num += batch_size
             for i in range(batch_size):
                 if labels[i] == out_text[i]:
                     correct += 1
 
-            t = torch.empty_like(score)
+            t = torch.empty(1, dtype=score.dtype, device=score.device)
             t.fill_(correct / total_num)
 
             return t
