@@ -9,7 +9,7 @@ import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from pytorch_lightning.core import LightningModule
 from torch.utils.data import DataLoader
-from transformers import AdamW, AutoTokenizer, AutoModelForPreTraining, get_linear_schedule_with_warmup
+from transformers import AdamW, AutoTokenizer, AutoModelWithLMHead, get_linear_schedule_with_warmup
 from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 
 from argparse_with_defaults import ArgumentParserWithDefaults
@@ -23,7 +23,7 @@ class MultiModalLightningModel(LightningModule):
         self.hparams = hparams
         print(hparams)
 
-        self.transformer = AutoModelForPreTraining.from_pretrained(self.hparams.model_name)
+        self.transformer = AutoModelWithLMHead.from_pretrained(self.hparams.model_name)
         self.text_embedding = self.transformer.get_input_embeddings()
 
         embedding_size = self.text_embedding.embedding_dim
