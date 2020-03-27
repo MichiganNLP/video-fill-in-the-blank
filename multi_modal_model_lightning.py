@@ -11,6 +11,7 @@ import torch.nn as nn
 from pytorch_lightning.core import LightningModule
 from torch.utils.data import DataLoader
 from transformers import AdamW, AutoTokenizer, AutoModelForPreTraining, get_linear_schedule_with_warmup
+from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 
 from argparse_with_defaults import ArgumentParserWithDefaults
 from data_loader_multimodal import ActivityNetCaptionDataset
@@ -169,7 +170,11 @@ class MultiModalLightningModel(LightningModule):
                             dest='weight_decay')
         parser.add_argument('--pretrained', action='store_true',
                             help='use pre-trained model')
-        parser.add_argument('--model-name', help='transformer model to use', default='bert-base-uncased')
+        model_name_choices = sorted([key
+                                     for config in MODEL_FOR_PRETRAINING_MAPPING
+                                     for key in config.pretrained_config_archive_map])
+        parser.add_argument('--model-name', help='transformer model to use', choices=model_name_choices,
+                            default='bert-base-uncased')
         parser.add_argument('--lr-scheduling', choices=['linear_with_warmup'])
         return parser
 
