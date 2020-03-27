@@ -10,7 +10,7 @@ import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from pytorch_lightning.core import LightningModule
 from torch.utils.data import DataLoader
-from transformers import BertForMaskedLM, AdamW, get_linear_schedule_with_warmup, AutoTokenizer
+from transformers import AdamW, AutoTokenizer, AutoModelForPreTraining, get_linear_schedule_with_warmup
 
 from argparse_with_defaults import ArgumentParserWithDefaults
 from data_loader_multimodal import ActivityNetCaptionDataset
@@ -22,8 +22,8 @@ class MultiModalLightningModel(LightningModule):
         super().__init__()
         self.hparams = hparams
 
-        self.transformer = BertForMaskedLM.from_pretrained(self.hparams.model_name, output_hidden_states=True,
-                                                           output_attentions=False)
+        self.transformer = AutoModelForPreTraining.from_pretrained(self.hparams.model_name, output_hidden_states=True,
+                                                                   output_attentions=False)
         self.text_embedding = self.transformer.get_input_embeddings()
 
         embedding_size = self.text_embedding.embedding_dim
