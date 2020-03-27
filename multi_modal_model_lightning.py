@@ -14,7 +14,7 @@ from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 
 from argparse_with_defaults import ArgumentParserWithDefaults
 from data_loader_multimodal import ActivityNetCaptionDataset
-from utils import batchPadding
+from utils import batch_padding
 
 
 class MultiModalLightningModel(LightningModule):
@@ -128,14 +128,14 @@ class MultiModalLightningModel(LightningModule):
     def train_dataloader(self):
         train_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
         train_loader = DataLoader(train_dataset, batch_size=self.hparams.batch_size, shuffle=True,
-                                  collate_fn=lambda b: batchPadding(b, tokenizer=self.tokenizer),
+                                  collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
                                   num_workers=self.hparams.num_workers)
         return train_loader
 
     def val_dataloader(self):
         val_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
         val_loader = DataLoader(val_dataset, batch_size=self.hparams.batch_size, shuffle=True,
-                                collate_fn=lambda b: batchPadding(b, tokenizer=self.tokenizer),
+                                collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
                                 num_workers=self.hparams.num_workers)
         return val_loader
 

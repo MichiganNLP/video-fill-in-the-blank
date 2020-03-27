@@ -5,7 +5,7 @@ from data_loader_multimodal import ActivityNetCaptionDataset
 from multi_modal_model import multi_modal_model
 from transformers import BertTokenizer, BertForMaskedLM, AdamW, get_linear_schedule_with_warmup
 import h5py
-from utils import batchPadding
+from utils import batch_padding
 
 def train(data, max_epoch, model, optimizer, scheduler, PATH):
     
@@ -59,7 +59,7 @@ def main():
 
     scheduler = get_linear_schedule_with_warmup(optimizer, 0.1 * max_epoch, max_epoch)
 
-    train_dataLoader = DataLoader(trainDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding, num_workers=8)
+    train_dataLoader = DataLoader(trainDataset, batch_size=batch_size, shuffle=True, collate_fn=batch_padding, num_workers=8)
 
     train(train_dataLoader, max_epoch, model, optimizer, scheduler, PATH)
 

@@ -5,7 +5,7 @@ from data_loader_multimodal import ActivityNetCaptionDataset
 from multi_modal_model import multi_modal_model
 from transformers import BertTokenizer, BertForMaskedLM, AdamW
 
-from utils import batchPadding
+from utils import batch_padding
 
 PATH = 'Checkpoint_scratch'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
@@ -26,7 +26,7 @@ model.eval()
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 valDataset = ActivityNetCaptionDataset(valTextFile)
-val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batchPadding, num_workers=4)
+val_dataLoader = DataLoader(valDataset, batch_size=batch_size, shuffle=True, collate_fn=batch_padding, num_workers=4)
 
 correct = 0
 total_num = 0
