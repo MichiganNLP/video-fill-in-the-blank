@@ -2,12 +2,12 @@
 
 #“#SBATCH” directives that convey submission options:
 
-#SBATCH --job-name=baseline_test
+#SBATCH --job-name=lightning_mm_model
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=4
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem-per-cpu=8000m 
+#SBATCH --mem-per-cpu=32000m 
 #SBATCH --gres=gpu:1
 #SBATCH --time=03-5:00:00
 #SBATCH --account=mihalcea1
@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u train_mm.py
+python -u multi_modal_model_lightning.py
 echo done
