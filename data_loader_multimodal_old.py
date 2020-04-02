@@ -31,8 +31,8 @@ class ActivityNetCaptionDataset(Dataset):
         self.THRESHOLD = 500
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-        textFeature = self.getTextFeatures(textFile, isTrain)
-        self.data, self.out_text = self.getFeatures(textFeature, videoFeatures)
+        textFeature, self.out_text = self.getTextFeatures(textFile, isTrain)
+        self.data = self.getFeatures(textFeature, videoFeatures)
 
         with open('val1', 'w') as f:
             for line in self.out_text:
