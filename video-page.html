@@ -15,8 +15,8 @@
         // var answerInputInnerHtml = '<input type="text" class="form-control" id="answer" name="answer" minlength="1"' +
         // ' maxlength="20" size="20" required placeholder="answer" autocomplete="off"></input>';
 		var answerInputInnerHtml = '<textarea type="text" class="form-control" id="answer" name="answer"' +
-		'minlength="1" maxlength="30" size="30" rows="2" cols="35" required autocomplete="off" '+ 
-		'placeholder="Please enter one or more possible answers (see instruction). ' +
+		'minlength="1" maxlength="30" size="30" rows="2" cols="30" required autocomplete="off" '+ 
+		'placeholder="Please enter one or more possible answers (See Instruction). ' +
 		'Strat a new line after each answer."></textarea>';
     
         var $question = document.getElementById('question');
@@ -108,41 +108,42 @@
 
 <div class="container">
     <h1>QGen Annotation</h1>
-    
+    <hr>
     <crowd-form>
+		<short-instructions>
+            <p>Fill in the blank based on the video (images and/or audio).</p>
+            <p>You could fill in one or more <u><b> approprate </b></u> 
+			answers, and start a new line for each answer. Please refer to
+			the full Instructions for more details and examples.</p>
+        </short-instructions>
 
-        <details id="instructions">
-            <p>We need help validating this VideoQA dataset, so your help is really useful. Instructions:</p>
-    
-            <summary>Instructions</summary>
-    
-            <ol>
-                <li>
-                    One instance at a time is shown.
-                    You will see a broken sentence with a missing word replaced by a blank ("_____").
-                    You need to guess the missing word.
-                    When you select your answer, hit "Next" and a video will be shown.
-                </li>
-                <li>
-                    After the video is shown, try to fill in the blank the same sentence again,
-                    but this time please do it based on the information from the video (images and/or audio).
-                    The filled word when the video is present could be different from the one when the video isn't present.
-                    When you are done, hit "Submit" and the next instance will be shown.
-                </li>
-            </ol>
-    
-            <p>
-                When there are no more instances available, a message will be displayed.
-                In case the video gets stuck, feel free to refresh the page.
-            </p>
-        </details>
-    
-        <hr>
+        <!-- Use the full-instructions section for more detailed instructions that the 
+              Worker can open while working on the task. Including more detailed 
+              instructions and additional examples of good and bad answers here can
+              help get good results. You can include any HTML here. -->
+        <full-instructions header="Classification Instructions">
+            <p>Fill in the blank based on the video (images and/or audio).</p>
+			
+            <p>You could fill in one or more approprate answers. For example:<br>
+			If you see a <i>small dalmatian</i> in the video, both <i>dalmatian,</i>
+			<i>dog,</i> <i>pet</i> and <i>puppy</i> are approprate answers, but neither 
+			<i>object</i> or <i>cat</i> is approprate.</p>
+			
+			<p>Pay attention to the following<br>
+			<ul>
+			<li>We will check the appropriateness of the answers;</li>
+			<li>Generally speaking, the more answers you provide for each problems, the more likely you are to pass the test;</li>
+			<li>We will give extra rewards to the workers with the highest acceptance rate;</li>
+			<li>Start a new line for each answer;</li>
+			<li>When you enter numbers, please enter digital numbers instead of text. (For example: enter 1 instead of one).</li>
+			</ul>
+			</p>
+        </full-instructions>
     
         <div id="instance">
 		
             <div class="form-inline">
-                <h2 id="question">${question}</h2>
+                <h3 id="question">${question}</h3>
             </div>
 
             <crowd-input type="hidden" id="guess-answer" name="guess_answer"></crowd-input>
@@ -152,7 +153,7 @@
                     <p id="loading-video">Loading video…</p>
                 </div>
 
-                <label for="comments"><h4>Comments</h4></label>
+                <label for="comments"><strong>Comments</strong></label>
                 <textarea class="form-control" id="comments" name="comments" rows="2"
                         placeholder="Please, write any comment/error/suggestion you have."></textarea>
             </div>
