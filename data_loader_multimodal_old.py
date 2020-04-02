@@ -32,10 +32,21 @@ class ActivityNetCaptionDataset(Dataset):
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
         textFeature = self.getTextFeatures(textFile, isTrain)
-        self.data = self.getFeatures(textFeature, videoFeatures)
+        self.data, self.out_text = self.getFeatures(textFeature, videoFeatures)
 
-        with open('val.pkl', 'wb') as f:
+        with open('val1', 'w') as f:
+            for line in self.out_text:
+                f.write(line[0])
+                f.write('\n')
+                f.write(line[1])
+                f.write('\n')
+                f.write(line[2])
+                f.write('\n')
+                f.write('\n')
+
+        with open('val1.pkl', 'wb') as f:
             pickle.dump(self.data, f)
+
 
     def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures, textLen):
         feature_h5 = videoFeatures[key]['c3d_features']
@@ -73,7 +84,7 @@ class ActivityNetCaptionDataset(Dataset):
 
             new_sentence[idx] = '[MASK]'
             sequence_id = self.tokenizer.encode(' '.join(new_sentence))
-            return sequence_id, correct_word, idx+1
+            return sequence_id, correct_word, idx+1, new_sentence
         
         return ()
 
@@ -82,6 +93,7 @@ class ActivityNetCaptionDataset(Dataset):
             raw = json.load(f)
         
         data = []
+        out_text = []
         # debug_count = 0
         for key in raw.keys():
             # if debug_count >= 500 and isTrain:
@@ -97,11 +109,12 @@ class ActivityNetCaptionDataset(Dataset):
                 text = nltk.word_tokenize(sentence.strip().lower())
                 parsed_sentence = nltk.pos_tag(text)
                 out = self.gen(text, parsed_sentence, isTrain)
-                if len(out)==3:
-                    masked_sentence, label, masked_position = out
+                if len(out)==4:
+                    masked_sentence, label, masked_position, original_sentence = out
                     data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
+                    out_text.append([key, original_sentence, label])
                 
-        return data
+        return data, out_text
 
     def getFeatures(self, textData, videoFeatures):
         features = []
