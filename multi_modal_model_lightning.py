@@ -14,14 +14,13 @@ from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 
 from argparse_with_defaults import ArgumentParserWithDefaults
 from data_loader_multimodal import ActivityNetCaptionDataset
-from utils import batchPadding
+from utils import batch_padding
 
 
 class MultiModalLightningModel(LightningModule):
     def __init__(self, hparams):
         super().__init__()
         self.hparams = hparams
-        print(hparams)
 
         self.transformer = AutoModelWithLMHead.from_pretrained(self.hparams.model_name)
         self.text_embedding = self.transformer.get_input_embeddings()
@@ -128,16 +127,14 @@ class MultiModalLightningModel(LightningModule):
     def train_dataloader(self):
         train_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
         train_loader = DataLoader(train_dataset, batch_size=self.hparams.batch_size, shuffle=True,
-                                  collate_fn=lambda b: batchPadding(b, model_name=self.hparams.model_name,
-                                                                    tokenizer=self.tokenizer),
+                                  collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
                                   num_workers=self.hparams.num_workers)
         return train_loader
 
     def val_dataloader(self):
         val_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
         val_loader = DataLoader(val_dataset, batch_size=self.hparams.batch_size, shuffle=True,
-                                collate_fn=lambda b: batchPadding(b, model_name=self.hparams.model_name,
-                                                                  tokenizer=self.tokenizer),
+                                collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
                                 num_workers=self.hparams.num_workers)
         return val_loader
 
@@ -145,7 +142,7 @@ class MultiModalLightningModel(LightningModule):
     def add_model_specific_args(parent_parser):  # pragma: no-cover
         parser = ArgumentParserWithDefaults(parents=[parent_parser])
         parser.add_argument('--epochs', default=10, type=int, metavar='N', help='number of total epochs to run')
-        parser.add_argument('--seed', type=int, default=42, help='seed for initializing training. ')
+        parser.add_argument('--seed', type=int, default=42, help='seed for initializing training')
         parser.add_argument('-b', '--batch_size', default=16, type=int, metavar='N',
                             help='mini-batch size, this is the total '
                                  'batch size of all GPUs on the current node when '
@@ -167,13 +164,13 @@ class MultiModalLightningModel(LightningModule):
                                      for key in config.pretrained_config_archive_map])
         parser.add_argument('--model-name', help='transformer model to use', choices=model_name_choices,
                             default='bert-base-uncased')
-        parser.add_argument('--lr-scheduling', choices=['linear_with_warmup', ''], default='linear_with_warmup')
+        parser.add_argument('--lr-scheduling', choices=['', 'linear_with_warmup'], default='linear_with_warmup')
         return parser
 
 
 def get_args():
     parent_parser = ArgumentParserWithDefaults(add_help=False)
-    parent_parser.add_argument('--data-path', metavar='DIR', help='path to dataset')
+    parent_parser.add_argument('--data-path', metavar='DIR', required=True, help='path to dataset')
     parent_parser.add_argument('--save-path', metavar='DIR', default=".", help='path to save output')
     parent_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
     parent_parser.add_argument('--distributed-backend', default='dp', choices=('dp', 'ddp', 'ddp2'),
@@ -189,18 +186,16 @@ def get_args():
 
 def main(hparams):
     model = MultiModalLightningModel(hparams)
+
     if hparams.seed is not None:
         random.seed(hparams.seed)
         torch.manual_seed(hparams.seed)
         np.random.seed(hparams.seed)
         cudnn.deterministic = True
-    trainer = pl.Trainer(
-        default_save_path=hparams.save_path,
-        gpus=hparams.gpus,
-        max_epochs=hparams.epochs,
-        distributed_backend=hparams.distributed_backend,
-        use_amp=hparams.use_16bit
-    )
+
+    trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpus, max_epochs=hparams.epochs,
+                         distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit)
+
     if hparams.evaluate:
         trainer.run_evaluation()
     else:

@@ -1,12 +1,11 @@
 import torch
-from transformers import AutoTokenizer
 
 
-def batchPadding(batch, model_name: str, tokenizer):
+def batch_padding(batch, tokenizer):
     batch_size = len(batch)
 
-    textFeatures = []
-    videoFeatures = []
+    text_features = []
+    video_features = []
     labels = []
     mask_positions = []
     keys = []
@@ -22,8 +21,8 @@ def batchPadding(batch, model_name: str, tokenizer):
         mask_positions.append(data[3])
         keys.append(data[4])
 
-        textFeatures.append(text)
-        videoFeatures.append(video)
+        text_features.append(text)
+        video_features.append(video)
 
         total_text_len = len(text)
         total_video_len = video.shape[0]
@@ -45,8 +44,8 @@ def batchPadding(batch, model_name: str, tokenizer):
     position_embedding = position_embedding.view(1, -1).repeat(batch_size, 1)
 
     for i in range(batch_size):
-        text = textFeatures[i]
-        video = videoFeatures[i]
+        text = text_features[i]
+        video = video_features[i]
         text_len = len(text)
         video_len = video.shape[0]
 
@@ -64,4 +63,4 @@ def batchPadding(batch, model_name: str, tokenizer):
         masked_lm_labels[i, mask_positions[i]] = tokenizer.convert_tokens_to_ids(labels[i])
 
     return text_tensor, video_tensor, attention_mask, segments_tensor, labels, mask_positions, masked_lm_labels, \
-           position_embedding, keys
+        position_embedding, keys
