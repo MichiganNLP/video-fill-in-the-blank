@@ -38,7 +38,7 @@ class ActivityNetCaptionDataset(Dataset):
             for line in self.out_text:
                 f.write(line[0])
                 f.write('\n')
-                f.write(line[1])
+                f.write(' '.join(line[1]))
                 f.write('\n')
                 f.write(line[2])
                 f.write('\n')
