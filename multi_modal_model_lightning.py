@@ -166,7 +166,7 @@ class MultiModalLightningModel(LightningModule):
 
     def test_dataloader(self):
         test_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
-        test_loader = DataLoader(val_dataset, batch_size=self.hparams.batch_size, shuffle=True,
+        test_loader = DataLoader(test_dataset, batch_size=self.hparams.batch_size, shuffle=True,
                                 collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
                                 num_workers=self.hparams.num_workers)
         return test_loader
