@@ -165,6 +165,7 @@ class MultiModalLightningModel(LightningModule):
         parser.add_argument('--model-name', help='transformer model to use', choices=model_name_choices,
                             default='bert-base-uncased')
         parser.add_argument('--lr-scheduling', choices=['', 'linear_with_warmup'], default='linear_with_warmup')
+        parser.add_argument('--checkpoint', type=str, help= 'path of checkpoint used to resume the model')
         return parser
 
 
@@ -194,7 +195,7 @@ def main(hparams):
         cudnn.deterministic = True
 
     trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpus, max_epochs=hparams.epochs,
-                         distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit)
+                         distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, resume_from_checkpoint=hparams.checkpoint)
 
     if hparams.evaluate:
         trainer.run_evaluation()
