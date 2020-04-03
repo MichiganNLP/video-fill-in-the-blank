@@ -16,21 +16,14 @@
         // ' maxlength="20" size="20" required placeholder="answer" autocomplete="off"></input>';
 		var answerInputInnerHtml = '<textarea type="text" class="form-control" id="answer" name="answer"' +
 		'minlength="1" maxlength="30" size="30" rows="2" cols="30" required autocomplete="off" '+ 
-		'placeholder="Please enter one or more possible answers (See Instruction). ' +
+		'placeholder="Please enter one or more possible answers (View Instruction). ' +
 		'Strat a new line after each answer."></textarea>';
     
         var $question = document.getElementById('question');
-        var $guessAnswer = document.getElementById('guess-answer');
-        var $part2 = document.getElementById('part2');
-        
         $question.innerHTML = '${question}'.replace('_____', answerInputInnerHtml);
-        
         var $answer = document.getElementById('answer');
         
         window.onload = () => {
-            $guessAnswer.value = $answer.value;
-            $answer.value = '';
-            $part2.style.display = 'block';
             var player = new YT.Player('video', {
                 //height: '720',
                 //width: '1280',
@@ -60,6 +53,26 @@
                 }
             });
         };
+		
+		// check input
+		$answer.onblur=function(){
+			if ($answer.value.indexOf(",")!=-1){
+				alert("Please start a new line for each answer");
+			}
+			else if ($answer.value.indexOf(" ")!=-1){
+				alert("Please input only one word for each answer.\n"+
+				"Please start a new line for each answer.\n" +
+				"If you have to enter a space, use '-' instead.");
+			}
+			
+			var $to_check_answers = $answer.value.split("\n");
+			
+			if ($to_check_answers.indexOf("entity")!=-1){
+				alert("Please input natural answer. (View full instruction.)");
+			}
+			
+		};
+		
     }
     
     function main() {
@@ -85,10 +98,6 @@
         text-align: center;
     }
     
-    #part2 {
-        display: none;
-    }
-    
     #video {
         display: block;
         height: 360px;
@@ -101,9 +110,6 @@
         text-align: center;
     }
     
-    button {
-        margin-bottom: 20px;
-    }
 </style>
 
 <div class="container">
@@ -124,39 +130,36 @@
         <full-instructions header="Classification Instructions">
             <p>Fill in the blank based on the video (images and/or audio).</p>
 			
-            <p>You could fill in one or more approprate answers. For example:<br>
-			If you see a <i>small dalmatian</i> in the video, both <i>dalmatian,</i>
-			<i>dog,</i> <i>pet</i> and <i>puppy</i> are approprate answers, but neither 
-			<i>object</i> or <i>cat</i> is approprate.</p>
+            <p>You could fill in one or more valid and natural answers. e.g.<br>
+			If you see a <i>dalmatian</i>, both <i>dalmatian</i> and
+			<i>dog</i> are approprate; but <i>object</i> is unnatural and <i>cat</i> is invalid.</p>
 			
 			<p>Pay attention to the following<br>
 			<ul>
 			<li>We will check the appropriateness of the answers;</li>
-			<li>Generally speaking, the more answers you provide for each problems, the more likely you are to pass the test;</li>
-			<li>We will give extra rewards to the workers with the highest acceptance rate;</li>
+			<li>Generally speaking, the more answers you provide for each problem, the more likely you are to pass the test;</li>
+			<li>We will give extra bonus to the workers with the highest acceptance rate;</li>
 			<li>Start a new line for each answer;</li>
-			<li>When you enter numbers, please enter digital numbers instead of text. (For example: enter 1 instead of one).</li>
+			<li>When you enter numbers, please enter digital numbers instead of text. (e.g. enter 1 instead of one).</li>
 			</ul>
 			</p>
         </full-instructions>
     
-        <div id="instance">
 		
-            <div class="form-inline">
-                <h3 id="question">${question}</h3>
-            </div>
+		<div class="form-inline">
+			<h3 id="question">${question}</h3>
+		</div>
+		
+		<hr/>
+		
+		<div id="video">
+			<p id="loading-video">Loading video…</p>
+		</div>
 
-            <crowd-input type="hidden" id="guess-answer" name="guess_answer"></crowd-input>
-
-            <div id="part2" class="form-group">
-                <div id="video">
-                    <p id="loading-video">Loading video…</p>
-                </div>
-
-                <label for="comments"><strong>Comments</strong></label>
-                <textarea class="form-control" id="comments" name="comments" rows="2"
-                        placeholder="Please, write any comment/error/suggestion you have."></textarea>
-            </div>
-        </div>
+		<label for="comments"><strong>Comments</strong></label>
+		<textarea class="form-control" id="comments" name="comments" rows="2"
+				placeholder="Please, write any comment/error/suggestion you have."></textarea>
+		<br>
+				
     </crowd-form>
 </div>
