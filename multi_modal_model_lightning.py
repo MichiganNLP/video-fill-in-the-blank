@@ -93,6 +93,32 @@ class MultiModalLightningModel(LightningModule):
         result = {'progress_bar': tqdm_dict, 'log': tqdm_dict, 'val_loss': tqdm_dict["val_loss"]}
         return result
 
+    def test_step(self, batch, batch_idx):
+        accuracy, loss = self._step(batch)
+
+        output = OrderedDict({
+            'val_loss': loss,
+            'val_accuracy': accuracy,
+        })
+
+        return output
+
+    def test_epoch_end(self, outputs):
+        tqdm_dict = {}
+
+        for metric_name in outputs[0]:
+            metric_total = 0
+
+            for output in outputs:
+                metric_value = output[metric_name]
+
+                metric_total += metric_value
+
+            tqdm_dict[metric_name] = metric_total / len(outputs)
+
+        result = {'progress_bar': tqdm_dict, 'log': tqdm_dict, 'val_loss': tqdm_dict["val_loss"]}
+        return result
+
     def __accuracy(self, textFeatures, score, labels, mask_positions) -> torch.Tensor:
         """Computes the accuracy over the k top predictions for the specified values of k"""
         with torch.no_grad():
@@ -137,6 +163,13 @@ class MultiModalLightningModel(LightningModule):
                                 collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
                                 num_workers=self.hparams.num_workers)
         return val_loader
+
+    def test_dataloader(self):
+        test_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
+        test_loader = DataLoader(val_dataset, batch_size=self.hparams.batch_size, shuffle=True,
+                                collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
+                                num_workers=self.hparams.num_workers)
+        return test_loader
 
     @staticmethod
     def add_model_specific_args(parent_parser):  # pragma: no-cover
@@ -199,7 +232,7 @@ def main(hparams):
                          resume_from_checkpoint=hparams.resume_from_path)
 
     if hparams.evaluate:
-        trainer.run_evaluation(model)
+        trainer.test(model)
     else:
         trainer.fit(model)
 
