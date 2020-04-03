@@ -165,7 +165,6 @@ class MultiModalLightningModel(LightningModule):
         parser.add_argument('--model-name', help='transformer model to use', choices=model_name_choices,
                             default='bert-base-uncased')
         parser.add_argument('--lr-scheduling', choices=['', 'linear_with_warmup'], default='linear_with_warmup')
-        parser.add_argument('--checkpoint', type=str, help= 'path of checkpoint used to resume the model')
         return parser
 
 
@@ -173,6 +172,7 @@ def get_args():
     parent_parser = ArgumentParserWithDefaults(add_help=False)
     parent_parser.add_argument('--data-path', metavar='DIR', required=True, help='path to dataset')
     parent_parser.add_argument('--save-path', metavar='DIR', default=".", help='path to save output')
+    parent_parser.add_argument('--resume-from-path', metavar='DIR')
     parent_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
     parent_parser.add_argument('--distributed-backend', default='dp', choices=('dp', 'ddp', 'ddp2'),
                                help='supports three options dp, ddp, ddp2')
@@ -195,10 +195,11 @@ def main(hparams):
         cudnn.deterministic = True
 
     trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpus, max_epochs=hparams.epochs,
-                         distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, resume_from_checkpoint=hparams.checkpoint)
+                         distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit,
+                         resume_from_checkpoint=hparams.resume_from_path)
 
     if hparams.evaluate:
-        trainer.run_evaluation()
+        trainer.run_evaluation(model)
     else:
         trainer.fit(model)
 
