@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/environment.txt python
+import argparse
 import random
 from collections import OrderedDict
 
@@ -18,7 +19,7 @@ from utils import batch_padding
 
 
 class MultiModalLightningModel(LightningModule):
-    def __init__(self, hparams):
+    def __init__(self, hparams: argparse.Namespace) -> None:
         super().__init__()
         self.hparams = hparams
 
@@ -38,10 +39,8 @@ class MultiModalLightningModel(LightningModule):
                                masked_lm_labels=mask_lm_labels, position_ids=position_embedding)
         return out
 
-    def _step(self, batch):
-        text_features, video_features, attention_mask, segment_mask, labels, mask_positions, mask_lm_labels, \
-            position_embedding, _ = batch
-
+    def _step(self, text_features, video_features, attention_mask, segment_mask, labels, mask_positions, mask_lm_labels,
+              position_embedding, _):
         output = self.forward(text_features, video_features, attention_mask, segment_mask, mask_lm_labels,
                               position_embedding)
         loss = output[0]
@@ -55,7 +54,7 @@ class MultiModalLightningModel(LightningModule):
         return accuracy, loss
 
     def training_step(self, batch, batch_idx):
-        accuracy, loss = self._step(batch)
+        accuracy, loss = self._step(*batch)
 
         tqdm_dict = {'train_loss': loss}
         output = OrderedDict({
@@ -68,7 +67,7 @@ class MultiModalLightningModel(LightningModule):
         return output
 
     def validation_step(self, batch, batch_idx):
-        accuracy, loss = self._step(batch)
+        accuracy, loss = self._step(*batch)
 
         output = OrderedDict({
             'val_loss': loss,
@@ -78,46 +77,15 @@ class MultiModalLightningModel(LightningModule):
         return output
 
     def validation_epoch_end(self, outputs):
-        tqdm_dict = {}
-
-        for metric_name in outputs[0]:
-            metric_total = 0
-
-            for output in outputs:
-                metric_value = output[metric_name]
-
-                metric_total += metric_value
-
-            tqdm_dict[metric_name] = metric_total / len(outputs)
-
-        result = {'progress_bar': tqdm_dict, 'log': tqdm_dict, 'val_loss': tqdm_dict["val_loss"]}
-        return result
+        tqdm_dict = {metric_name: sum(output[metric_name] for output in outputs) / len(outputs)
+                     for metric_name in outputs[0]}
+        return {'progress_bar': tqdm_dict, 'log': tqdm_dict, 'val_loss': tqdm_dict["val_loss"]}
 
     def test_step(self, batch, batch_idx):
-        accuracy, loss = self._step(batch)
-
-        output = OrderedDict({
-            'val_loss': loss,
-            'val_accuracy': accuracy,
-        })
-
-        return output
+        return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):
-        tqdm_dict = {}
-
-        for metric_name in outputs[0]:
-            metric_total = 0
-
-            for output in outputs:
-                metric_value = output[metric_name]
-
-                metric_total += metric_value
-
-            tqdm_dict[metric_name] = metric_total / len(outputs)
-
-        result = {'progress_bar': tqdm_dict, 'log': tqdm_dict, 'val_loss': tqdm_dict["val_loss"]}
-        return result
+        return self.validation_epoch_end(outputs)
 
     def __accuracy(self, textFeatures, score, labels, mask_positions) -> torch.Tensor:
         """Computes the accuracy over the k top predictions for the specified values of k"""
@@ -167,29 +135,29 @@ class MultiModalLightningModel(LightningModule):
     def test_dataloader(self):
         test_dataset = ActivityNetCaptionDataset(self.hparams.data_path)
         test_loader = DataLoader(test_dataset, batch_size=self.hparams.batch_size, shuffle=True,
-                                collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
-                                num_workers=self.hparams.num_workers)
+                                 collate_fn=lambda b: batch_padding(b, tokenizer=self.tokenizer),
+                                 num_workers=self.hparams.num_workers)
         return test_loader
 
     @staticmethod
     def add_model_specific_args(parent_parser):  # pragma: no-cover
-        parser = ArgumentParserWithDefaults(parents=[parent_parser])
+        parser = ArgumentParserWithDefaults(parents=[parent_parser], add_help=False)
         parser.add_argument('--epochs', default=10, type=int, metavar='N', help='number of total epochs to run')
         parser.add_argument('--seed', type=int, default=42, help='seed for initializing training')
-        parser.add_argument('-b', '--batch_size', default=16, type=int, metavar='N',
+        parser.add_argument('-b', '--batch-size', default=16, type=int, metavar='N',
                             help='mini-batch size, this is the total '
                                  'batch size of all GPUs on the current node when '
                                  'using Data Parallel or Distributed Data Parallel')
         parser.add_argument('--lr', '--learning-rate', default=0.0001, type=float,
                             metavar='LR', help='initial learning rate', dest='lr')
         parser.add_argument('--beta1', default=0.9, type=float, metavar='M1',
-                            help='beta1 for adam optimizer')
+                            help='beta1 for the Adam optimizer')
         parser.add_argument('--beta2', default=0.999, type=float, metavar='M2',
-                            help='beta2 for adam optimizer')
+                            help='beta2 for the Adam optimizer')
         parser.add_argument('--V-D-in', default=500, type=int, metavar='V',
                             help='input video feature dimension')
         parser.add_argument('--num_workers', default=8, type=int, help='number of workers used for data loading')
-        parser.add_argument('--wd', '--weight_decay', default=1e-4, type=float,
+        parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
                             metavar='W', help='weight decay',
                             dest='weight_decay')
         model_name_choices = sorted([key
@@ -201,24 +169,25 @@ class MultiModalLightningModel(LightningModule):
         return parser
 
 
-def get_args():
-    parent_parser = ArgumentParserWithDefaults(add_help=False)
-    parent_parser.add_argument('--data-path', metavar='DIR', required=True, help='path to dataset')
-    parent_parser.add_argument('--save-path', metavar='DIR', default=".", help='path to save output')
-    parent_parser.add_argument('--resume-from-path', metavar='DIR')
-    parent_parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
-    parent_parser.add_argument('--distributed-backend', default='dp', choices=('dp', 'ddp', 'ddp2'),
-                               help='supports three options dp, ddp, ddp2')
-    parent_parser.add_argument('--use-16bit', action='store_true', help='if true uses 16 bit precision')
-    parent_parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
-                               help='evaluate model on validation set')
-    parent_parser.add_argument('--amp-level', choices=('O0', 'O1', 'O2', 'O3'), default='O1')
+def get_args() -> argparse.Namespace:
+    parser = ArgumentParserWithDefaults()
+    parser.add_argument('--data-path', metavar='DIR', required=True, help='path to dataset')
+    parser.add_argument('--save-path', metavar='DIR', default=".", help='path to save output')
+    parser.add_argument('--resume-from-path', metavar='DIR')
+    parser.add_argument('--gpus', type=int, default=1, help='how many gpus')
+    parser.add_argument('--distributed-backend', default='dp', choices=('dp', 'ddp', 'ddp2'),
+                        help='supports three options dp, ddp, ddp2')
+    parser.add_argument('--use-16bit', action='store_true', help='if true uses 16 bit precision')
+    parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+                        help='evaluate model on validation set')
+    parser.add_argument('--amp-level', choices=('O0', 'O1', 'O2', 'O3'), default='O1')
 
-    parser = MultiModalLightningModel.add_model_specific_args(parent_parser)
+    parser = MultiModalLightningModel.add_model_specific_args(parser)
     return parser.parse_args()
 
 
-def main(hparams):
+def main() -> None:
+    hparams = get_args()
     model = MultiModalLightningModel(hparams)
 
     if hparams.seed is not None:
@@ -234,8 +203,9 @@ def main(hparams):
     if hparams.evaluate:
         trainer.test(model)
     else:
+        del hparams.resume_from_path  # It may be None, and thus fail to pass to TensorBoard.
         trainer.fit(model)
 
 
 if __name__ == '__main__':
-    main(get_args())
+    main()
