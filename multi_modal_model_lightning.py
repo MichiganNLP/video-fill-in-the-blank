@@ -199,7 +199,7 @@ def main(hparams):
                          resume_from_checkpoint=hparams.resume_from_path)
 
     if hparams.evaluate:
-        trainer.test(model)
+        trainer.run_evaluation(model)
     else:
         trainer.fit(model)
 
