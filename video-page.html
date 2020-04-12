@@ -1,5 +1,99 @@
-<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<style>
+  #instructions, li {
+    color: gray;
+  }
+
+  #question {
+    margin: auto auto 20px auto;
+    text-align: center;
+  }
+
+  #video {
+    display: block;
+    height: 360px;
+    margin: 10px auto;
+  }
+
+  #loading-video {
+    position: relative;
+    top: 50%;
+    text-align: center;
+  }
+
+  button {
+    margin-bottom: 20px;
+  }
+</style>
+
+<form>
+  <div class="container">
+    <h1>Fill in the blank based on the video</h1>
+
+    <details id="instructions">
+      <summary>Instructions (including <b>bonus</b> information)</summary>
+
+      <br>
+
+      <p>We need help answering ("filling") these blanks based on video information (including the audio).</p>
+
+      <h2>Basic Instructions</h2>
+
+      <ul>
+        <li>Fill in the blank based on the video (including its audio).</li>
+        <li>To "fill in the blank", write in the text field box.</li>
+        <li>Write one or more <b>one-word</b> answers in the text field, <b>one per line</b>.</li>
+        <li>
+          When you enter numbers, please enter digital numbers instead of text
+          (e.g. enter <i>"17"</i> instead of <i>"seventeen"</i>).
+        </li>
+      </ul>
+
+      <h2>How To Answer</h2>
+
+      The answers should be <b>valid</b> and <b>natural</b>.
+
+      <ul>
+        <li>E.g., saying <i>"cat"</i> when there's clearly no cat but a <i>"dog"</i> is considered <u>invalid</u>.</li>
+        <li>Natural in the sense that it's something you would probably say in the situation shown in the video.
+        </li>
+        <li>E.g., <i>"object"</i> and <i>"entity"</i> are not something you'd <u>naturally</u> say.</li>
+        <li>Use your best judgement.</li>
+      </ul>
+
+      <h2>HIT Acceptance</h2>
+
+      Your HITs will be accepted based on how <b>accurate</b> and <b>comprehensive</b> your answers are.
+
+      <ul>
+        <li>Generally speaking, the more answers you provide, the better.</li>
+        <li>But remember, every answer has to be <u>valid</u> and <u>natural</u> for the context.</li>
+        <li>
+          The top performer workers will be awarded a <b>bonus</b>
+          (the ones that provide both the most accurate and natural answers).
+        </li>
+      </ul>
+    </details>
+
+    <hr>
+
+    <div id="instance">
+      <div id="video">
+        <p id="loading-video">Loading video...</p>
+      </div>
+
+      <h2 id="question">Loading question...</h2>
+
+      <label for="answers">Possible one-word answers (one per line; in order):</label>
+      <textarea id="answers" name="answers" rows="6" cols="20" required="required" autocomplete="off"
+                autofocus="autofocus" placeholder="one-word answer 1&#10;one-word answer 2&#10;..."></textarea>
+    </div>
+  </div>
+</form>
+
 <script async src="https://www.youtube.com/iframe_api"></script>
+
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
         crossorigin="anonymous"></script>
@@ -9,157 +103,76 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
-        
+
 <script type="text/javascript">
-    function onDOMContentLoaded() {
-        // var answerInputInnerHtml = '<input type="text" class="form-control" id="answer" name="answer" minlength="1"' +
-        // ' maxlength="20" size="20" required placeholder="answer" autocomplete="off"></input>';
-		var answerInputInnerHtml = '<textarea type="text" class="form-control" id="answer" name="answer"' +
-		'minlength="1" maxlength="30" size="30" rows="2" cols="30" required autocomplete="off" '+ 
-		'placeholder="Please enter one or more possible answers (View Instruction). ' +
-		'Strat a new line after each answer."></textarea>';
-    
-        var $question = document.getElementById('question');
-        $question.innerHTML = '${question}'.replace('_____', answerInputInnerHtml);
-        var $answer = document.getElementById('answer');
-        
-        window.onload = () => {
-            var player = new YT.Player('video', {
-                //height: '720',
-                //width: '1280',
-                videoId: '${video_id}',
-                playerVars: {
-                    autoplay: 1,
-                    controls: 1,
-                    showinfo: 0,
-                    modestbranding: 1,
-                    fs: 1,                  // full screen button
-                    cc_load_policy: 0,      // Hide closed captions
-                    iv_load_policy: 3,      // Hide the Video Annotations
-                    start: parseInt('${video_start_time}'),
-                    end: parseInt('${video_end_time}'),
-                    autohide: 1, // Hide video controls when playing
-                    rel: 0,
-                },
-                events: {
-                    'onStateChange': state => {
-                        if (state.data === YT.PlayerState.ENDED) {
-                            videoWasStopped = true;
-                        } else if (state.data === YT.PlayerState.PLAYING && videoWasStopped) {
-                            player.seekTo(startTime);
-                            videoWasStopped = false;
-                        }
-                    },
-                }
-            });
-        };
-		
-		// check input
-		$answer.onblur=function(){
-			if ($answer.value.indexOf(",")!=-1){
-				alert("Please start a new line for each answer");
-			}
-			else if ($answer.value.indexOf(" ")!=-1){
-				alert("Please input only one word for each answer.\n"+
-				"Please start a new line for each answer.\n" +
-				"If you have to enter a space, use '-' instead.");
-			}
-			
-			var $to_check_answers = $answer.value.split("\n");
-			
-			if ($to_check_answers.indexOf("entity")!=-1){
-				alert("Please input natural answer. (View full instruction.)");
-			}
-			
-		};
-		
+  let videoId = '${video_id}';
+  let startTime = parseInt('${video_start_time}');
+  let endTime = parseInt('${video_end_time}');
+  let question = '${question}';
+
+  // noinspection JSUnusedGlobalSymbols
+  function onYouTubeIframeAPIReady() {
+    let videoEnded = false;
+
+    const player = new YT.Player('video', {
+      videoId: videoId,
+      playerVars: {
+        autoplay: 1,
+        controls: 1,
+        showinfo: 0,
+        modestbranding: 1,
+        fs: 1,                  // full screen button
+        cc_load_policy: 0,      // Hide closed captions
+        iv_load_policy: 3,      // Hide the Video Annotations
+        start: startTime,
+        end: endTime,
+        autohide: 1, // Hide video controls when playing
+        rel: 0,
+      },
+      events: {
+        // TODO: when restarting the video, it's not starting from `startTime` as it should.
+        'onStateChange': state => {
+          if (state.data === YT.PlayerState.ENDED) {
+            videoEnded = true;
+          } else if (state.data === YT.PlayerState.PLAYING && videoEnded) {
+            player.seekTo(startTime);
+            videoEnded = false;
+          }
+        },
+      }
+    });
+
+    function onDomContentLoaded() {
+      const $question = document.getElementById('question');
+      const $answers = document.getElementById('answers');
+      $question.innerText = question;
+      $answers.focus();
+
+      // $answers.onblur=function(){
+      //   if ($answers.value.indexOf(",")!=-1){
+      //     alert("Please start a new line for each answer");
+      //   }
+      //   else if ($answers.value.indexOf(" ")!=-1){
+      //     alert("Please input only one word for each answer.\n"+
+      //         "Please start a new line for each answer.\n" +
+      //         "If you have to enter a space, use '-' instead.");
+      //   }
+      //
+      //   var $to_check_answers = $answers.value.split("\n");
+      //
+      //   if ($to_check_answers.indexOf("entity")!=-1){
+      //     alert("Please input natural answer. (View full instruction.)");
+      //   }
     }
-    
+
     function main() {
-        document.addEventListener('DOMContentLoaded', onDOMContentLoaded);
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', onDomContentLoaded);
+      } else {
+        onDomContentLoaded();
+      }
     }
-    
+
     main();
+  }
 </script>
-
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<style>
-    #instructions, li, #user {
-        color: gray;
-    }
-    
-    #question {
-        margin: auto auto 20px auto;
-        text-align: center;
-    }
-    
-    #answer {
-        text-align: center;
-    }
-    
-    #video {
-        display: block;
-        height: 360px;
-        margin: 10px auto;
-    }
-    
-    #loading-video {
-        position: relative;
-        top: 50%;
-        text-align: center;
-    }
-    
-</style>
-
-<div class="container">
-    <h1>QGen Annotation</h1>
-    <hr>
-    <crowd-form>
-		<short-instructions>
-            <p>Fill in the blank based on the video (images and/or audio).</p>
-            <p>You could fill in one or more <u><b> approprate </b></u> 
-			answers, and start a new line for each answer. Please refer to
-			the full Instructions for more details and examples.</p>
-        </short-instructions>
-
-        <!-- Use the full-instructions section for more detailed instructions that the 
-              Worker can open while working on the task. Including more detailed 
-              instructions and additional examples of good and bad answers here can
-              help get good results. You can include any HTML here. -->
-        <full-instructions header="Classification Instructions">
-            <p>Fill in the blank based on the video (images and/or audio).</p>
-			
-            <p>You could fill in one or more valid and natural answers. e.g.<br>
-			If you see a <i>dalmatian</i>, both <i>dalmatian</i> and
-			<i>dog</i> are approprate; but <i>object</i> is unnatural and <i>cat</i> is invalid.</p>
-			
-			<p>Pay attention to the following<br>
-			<ul>
-			<li>We will check the appropriateness of the answers;</li>
-			<li>Generally speaking, the more answers you provide for each problem, the more likely you are to pass the test;</li>
-			<li>We will give extra bonus to the workers with the highest acceptance rate;</li>
-			<li>Start a new line for each answer;</li>
-			<li>When you enter numbers, please enter digital numbers instead of text. (e.g. enter 1 instead of one).</li>
-			</ul>
-			</p>
-        </full-instructions>
-    
-		
-		<div class="form-inline">
-			<h3 id="question">${question}</h3>
-		</div>
-		
-		<hr/>
-		
-		<div id="video">
-			<p id="loading-video">Loading video…</p>
-		</div>
-
-		<label for="comments"><strong>Comments</strong></label>
-		<textarea class="form-control" id="comments" name="comments" rows="2"
-				placeholder="Please, write any comment/error/suggestion you have."></textarea>
-		<br>
-				
-    </crowd-form>
-</div>

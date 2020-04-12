@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Title</title>
+  <style>
+    iframe {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      z-index: 999999;
+    }
+  </style>
+</head>
+<body>
+
+<iframe src="about:blank">
+  Your browser doesn't support iframes.
+</iframe>
+
+<script type="text/javascript">
+  const xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = () => {
+    if (xhr.readyState === 4) {
+      let htmlContent = xhr.responseText
+          .replace('${video_id}', 'Jcdm9Z7HUr0')
+          .replace('${video_start_time}', '18000')
+          .replace('${video_end_time}', '18060')
+          .replace('${question}', "The ground is full of _____.");
+
+      const doc = document.getElementsByTagName('iframe')[0].contentWindow.document;
+      doc.open();
+      doc.write(htmlContent);
+      doc.close();
+    }
+  };
+  xhr.open('GET', 'video-page.html');
+  xhr.send();
+</script>
+
+</body>
+</html>
