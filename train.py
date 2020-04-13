@@ -1,16 +1,12 @@
+import pickle
+
+import h5py
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from data_loader import ActivityNetCaptionDataset
-
-import numpy as np
-import h5py
-import json
-import math
-import nltk
-import pickle
 
 from baseline_BOW_VF import baseline_BOW_VF
+from data_loader import ActivityNetCaptionDataset
 
 print("Very begin")
 
@@ -25,8 +21,8 @@ valTextFile = f"{folder}/val_1.json"
 with open('word_dict.pkl', 'rb') as f:
     word_dict = pickle.load(f)
 
+
 def train(data, max_epoch, model, optimizer, criterion):
-    
     model.train()
     running_loss = 0
     for epoch in range(max_epoch):
@@ -34,7 +30,7 @@ def train(data, max_epoch, model, optimizer, criterion):
             optimizer.zero_grad()
             text_feature, video_feature, label = batch
 
-            #use GPU
+            # use GPU
             text_feature = text_feature.cuda()
             video_feature = video_feature.cuda()
             label = label.cuda()
@@ -45,10 +41,11 @@ def train(data, max_epoch, model, optimizer, criterion):
             loss.backward()
             optimizer.step()
             running_loss += loss.item()
-            if n%50 == 0 and n != 0:
-                print("Epoch {}, batch {}: loss = {}".format(epoch, n, running_loss/50))
+            if n % 50 == 0 and n != 0:
+                print("Epoch {}, batch {}: loss = {}".format(epoch, n, running_loss / 50))
                 running_loss = 0
     return model
+
 
 def evaluation(test_data, model):
     model.eval()
@@ -72,6 +69,7 @@ def evaluation(test_data, model):
     acc = correct / total_num
     print(acc)
 
+
 print("start")
 
 trainDataset = ActivityNetCaptionDataset(trainTextFile, videoFeatures, word_dict)
@@ -89,5 +87,3 @@ max_epoch = 30
 
 model = train(trainLoader, max_epoch, model, optimizer, criterion)
 evaluation(valLoader, model)
-
-

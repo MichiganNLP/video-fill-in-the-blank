@@ -1,17 +1,16 @@
-from torch.utils.data import Dataset
-import torch
-from nltk.corpus import wordnet
 import json
 import math
-import nltk
 import random
+
+import nltk
 import numpy as np
-import h5py
+import torch
+from torch.utils.data import Dataset
 
 
 class ActivityNetCaptionDataset(Dataset):
 
-    def __init__(self, textFile, videoFeatures, word_dict, isTrain=True):
+    def __init__(self, word_dict, isTrain=True):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -24,10 +23,7 @@ class ActivityNetCaptionDataset(Dataset):
         self.isTrain = isTrain
         self.THRESHOLD = 500
 
-        textFeature = self.getTextFeatures(textFile, isTrain)
-        # self.data = self.getFeatures(textFeature, videoFeatures)
-
-    def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures):
+    def getVideoFeatures(self, key, videoFeatures):
         feature_h5 = videoFeatures[key]['c3d_features']
         shape = feature_h5.shape
         feature_np = np.zeros(shape)
@@ -116,4 +112,4 @@ class ActivityNetCaptionDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx] 
+        return self.data[idx]

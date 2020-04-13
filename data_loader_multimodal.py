@@ -1,13 +1,13 @@
-from torch.utils.data import Dataset
-import torch
 import pickle
 
-class ActivityNetCaptionDataset(Dataset):
+from torch.utils.data import Dataset
 
-    def __init__(self, data):
+
+class ActivityNetCaptionsDataset(Dataset):
+    def __init__(self, pickle_path: str) -> None:
         """
         Args:
-            data: data file name
+            pickle_path: data file name
         Output data structure:
             masked sentence
             video feature
@@ -15,11 +15,11 @@ class ActivityNetCaptionDataset(Dataset):
             mask position
             video url
         """
-        with open(data, 'rb') as f:
-            self.data = pickle.load(f)
+        with open(pickle_path, 'rb') as file:
+            self.data_dict = pickle.load(file)
 
-    def __len__(self):
-        return len(self.data)
+    def __len__(self) -> int:
+        return len(self.data_dict)
 
     def __getitem__(self, idx):
-        return self.data[idx] 
+        return self.data_dict[idx]
