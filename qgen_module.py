@@ -211,7 +211,7 @@ class QGenLightningModel(LightningModule):
                 mask[i, max_text_len - 1:max_text_len + video_len] = True
 
             label_len = len(labels[i])
-            masked_lm_labels[i, mask_positions[i]:mask_positions[i]+label_len] = self.tokenizer.convert_tokens_to_ids(labels[i])
+            masked_lm_labels[i, mask_positions[i]:mask_positions[i]+label_len] = torch.LongTensor(self.tokenizer.convert_tokens_to_ids(labels[i]))
 
         return text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels, position_ids
 
