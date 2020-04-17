@@ -84,7 +84,7 @@ class ActivityNetCaptionDataset(Dataset):
                     self.answerWordDict[correct_word] = 1
 
             correct_word_len = len(correct_word_tokenized)
-            sentence_for_model = new_sentence[0:i] + ['[MASK]'] * correct_word_len + new_sentence[i+1:]
+            sentence_for_model = new_sentence[0:idx] + ['[MASK]'] * correct_word_len + new_sentence[idx+1:]
             new_sentence[idx] = '[MASK]'
 
             sequence_id = self.tokenizer.encode(' '.join(sentence_for_model))
