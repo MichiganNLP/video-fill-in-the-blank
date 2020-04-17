@@ -26,16 +26,12 @@
     text-align:center;
   }
 
-  button {
-    margin-bottom: 20px;
-  }
-
   #container {
     position: relative;
   }
 </style>
 
-<form>
+<crowd-form>
   <div id="container" class="container">
     <h1>Fill in the blank based on the video</h1>
 
@@ -101,8 +97,9 @@
       </div>
     </div>
   </div>
-</form>
+</crowd-form>
 
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
 <script async src="https://www.youtube.com/iframe_api"></script>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
@@ -146,67 +143,67 @@
           if (state.data === YT.PlayerState.ENDED) {
             videoEnded = true;
           } else if (state.data === YT.PlayerState.PLAYING && videoEnded) {
-            player.seekTo(startTime);
+            player.seekTo(startTime,true);
             videoEnded = false;
           }
         },
       }
     });
-
-    function onDomContentLoaded() {
-      const $question = document.getElementById('question');
-      const $answers = document.getElementById('answers');
-      $question.innerText = question;
-      $answers.focus();
-      $($answers).keyup(validateAnswer);
-
-      function validateAnswer() {
-        var $to_check_answers = $answers.value.split("\n");
-
-        var $hasError1 = $answers.value.indexOf(",")!=-1;
-        var $hasError2 = $answers.value.indexOf(" ")!=-1;
-        var $hasError3 = $to_check_answers.indexOf("entity")!=-1;
-        var $errorMsg1 = "Please start a new line for each answer";
-        var $errorMsg2 = "Please input only one word for each answer.\n"+
-          "Please start a new line for each answer.\n" +
-          "If you have to enter a space, use '-' instead.";
-        var $errorMsg3 = "Please input natural answer. (View instruction.)";
-
-        var $hasError = $hasError1 || $hasError2 || $hasError3;
-
-        if (typeof $answers.setCustomValidity === 'function') {
-          $answers.setCustomValidity($hasError1 ? $errorMsg1 : '');
-          $answers.setCustomValidity($hasError2 ? $errorMsg2 : '');
-          $answers.setCustomValidity($hasError3 ? $errorMsg3 : '');
-        } 
-        else {
-          // Not supported by the browser, fallback to manual error display...
-          $($answers).toggleClass('error', !!$hasError);
-          $($answers).toggleClass('ok', !$hasError);
-          if ($hasError1) {
-            $($answers).attr('title', $errorMsg1);
-            }
-          else if ($hasError2){
-            $($answers).attr('title', $errorMsg2);
-            }
-          else if ($hasError3){
-            $($answers).attr('title', $errorMsg3);
-            }
-          else {
-            $($answers).removeAttr('title');
-            }
-        }
-      }
-    }
-
-    function main() {
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', onDomContentLoaded);
-      } else {
-        onDomContentLoaded();
-      }
-    }
-
-    main();
   }
+
+  function onDomContentLoaded() {
+    const $question = document.getElementById('question');
+    const $answers = document.getElementById('answers');
+    $question.innerText = question;
+    $answers.focus();
+    $($answers).keyup(validateAnswer);
+
+    function validateAnswer() {
+      var $to_check_answers = $answers.value.split("\n");
+
+      var $hasError1 = $answers.value.indexOf(",")!=-1;
+      var $hasError2 = $answers.value.indexOf(" ")!=-1;
+      var $hasError3 = $to_check_answers.indexOf("entity")!=-1;
+      var $errorMsg1 = "Please start a new line for each answer";
+      var $errorMsg2 = "Please input only one word for each answer.\n"+
+        "Please start a new line for each answer.\n" +
+        "If you have to enter a space, use '-' instead.";
+      var $errorMsg3 = "Please input natural answer. (View instruction.)";
+
+      var $hasError = $hasError1 || $hasError2 || $hasError3;
+
+      if (typeof $answers.setCustomValidity === 'function') {
+        $answers.setCustomValidity($hasError1 ? $errorMsg1 : '');
+        $answers.setCustomValidity($hasError2 ? $errorMsg2 : '');
+        $answers.setCustomValidity($hasError3 ? $errorMsg3 : '');
+      } 
+      else {
+        // Not supported by the browser, fallback to manual error display...
+        $($answers).toggleClass('error', !!$hasError);
+        $($answers).toggleClass('ok', !$hasError);
+        if ($hasError1) {
+          $($answers).attr('title', $errorMsg1);
+          }
+        else if ($hasError2){
+          $($answers).attr('title', $errorMsg2);
+          }
+        else if ($hasError3){
+          $($answers).attr('title', $errorMsg3);
+          }
+        else {
+          $($answers).removeAttr('title');
+          }
+      }
+    }
+  }
+
+  function main() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', onDomContentLoaded);
+    } else {
+      onDomContentLoaded();
+    }
+  }
+
+  main();
 </script>
