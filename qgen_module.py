@@ -32,10 +32,24 @@ class QGenLightningModel(LightningModule):
         """Computes the accuracy over the k top predictions for the specified values of k"""
         with torch.no_grad():
             batch_size = scores.shape[0]
-            prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
+            # prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
-            predictions = self.tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
-            correct = sum(prediction == label for prediction, label in zip(predictions, labels))
+            # predictions = self.tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+            # correct = sum(prediction == label for prediction, label in zip(predictions, labels))
+            
+            # For now, I also predict a number of word pieces in during test time
+            correct = 0
+            for i in range(batch_size):
+                label_len = len(labels[i])
+                all_correct = True
+                for j in range(label_len):
+                    prediction_index = torch.argmax(scores[i, mask_positions[i]+j])
+                    prediction = self.tokenizer.convert_ids_to_tokens(prediction_index.tolist())
+                    if prediction[0] != labels[i]:
+                        all_correct = False
+                        break
+                if all_correct:
+                    correct += 1
 
             return torch.tensor(correct, dtype=torch.int64, device=scores.device)
 
@@ -196,7 +210,8 @@ class QGenLightningModel(LightningModule):
                 video_tensor[i, :video_len] = video
                 mask[i, max_text_len - 1:max_text_len + video_len] = True
 
-            masked_lm_labels[i, mask_positions[i]] = self.tokenizer.convert_tokens_to_ids(labels[i])
+            label_len = len(labels[i])
+            masked_lm_labels[i, mask_positions[i]:mask_positions[i]+label_len] = self.tokenizer.convert_tokens_to_ids(labels[i])
 
         return text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels, position_ids
 
