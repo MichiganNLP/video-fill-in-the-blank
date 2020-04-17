@@ -45,7 +45,7 @@ class QGenLightningModel(LightningModule):
                 for j in range(label_len):
                     prediction_index = torch.argmax(scores[i, mask_positions[i]+j])
                     prediction = self.tokenizer.convert_ids_to_tokens(prediction_index.tolist())
-                    if prediction[0] != labels[i]:
+                    if prediction != labels[i][j]:
                         all_correct = False
                         break
                 if all_correct:
