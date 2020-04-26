@@ -30,6 +30,9 @@ class ActivityNetCaptionDataset(Dataset):
         self.isTrain = isTrain
         self.THRESHOLD = 500
         self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        self.one_token = 0
+        self.two_tokens = 0
+        self.threemore_tokens = 0
 
         textFeature, self.out_text = self.getTextFeatures(textFile, isTrain)
         self.data = self.getFeatures(textFeature, videoFeatures)
@@ -65,6 +68,8 @@ class ActivityNetCaptionDataset(Dataset):
     
     def gen(self, text, parsed_sentence, isTrain):
         position = []
+        
+
         for i in range(len(parsed_sentence)):
             if parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] == 'NN':
                 position.append(i)
@@ -84,12 +89,19 @@ class ActivityNetCaptionDataset(Dataset):
                     self.answerWordDict[correct_word] = 1
 
             correct_word_len = len(correct_word_tokenized)
+
+            if correct_word_len == 1:
+                self.one_token += 1
+            elif correct_word_len == 2:
+                self.two_tokens += 1
+            else:
+                self.threemore_tokens += 1
+
             sentence_for_model = new_sentence[0:idx] + ['[MASK]'] * correct_word_len + new_sentence[idx+1:]
             new_sentence[idx] = '[MASK]'
 
             sequence_id = self.tokenizer.encode(' '.join(sentence_for_model))
             return sequence_id, correct_word_tokenized, idx+1, new_sentence, correct_word
-        
         return ()
 
     def getTextFeatures(self, textFile, isTrain=True):
