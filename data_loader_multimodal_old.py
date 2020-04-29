@@ -45,14 +45,19 @@ class ActivityNetCaptionDataset(Dataset):
                 f.write('\n')
                 f.write(line[2])
                 f.write('\n')
+                f.write(line[3])
+                f.write(', ')
+                f.write(line[4])
+                f.write('\n')
                 f.write('\n')
 
+        print(self.one_token, self.two_tokens, self.threemore_tokens, len(self.data))
         with open('train.pkl', 'wb') as f:
             pickle.dump(self.data, f)
 
 
     def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures, textLen):
-        feature_h5 = videoFeatures[key]['c3d_features']
+        feature_h5 = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
         shape = feature_h5.shape
         feature_np = np.zeros(shape)
         feature_h5.read_direct(feature_np)
@@ -128,7 +133,7 @@ class ActivityNetCaptionDataset(Dataset):
                 if len(out)==5:
                     masked_sentence, label, masked_position, original_sentence, correct_word = out
                     data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
-                    out_text.append([key, original_sentence, correct_word])
+                    out_text.append([key, original_sentence, correct_word, start_frame, end_frame])
                 
         return data, out_text
 
