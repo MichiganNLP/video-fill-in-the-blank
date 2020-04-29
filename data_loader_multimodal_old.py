@@ -57,10 +57,10 @@ class ActivityNetCaptionDataset(Dataset):
 
 
     def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures, textLen):
-        feature_h5 = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
-        shape = feature_h5.shape
-        feature_np = np.zeros(shape)
-        feature_h5.read_direct(feature_np)
+        feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
+        # shape = feature_h5.shape
+        # feature_np = np.zeros(shape)
+        # feature_h5.read_direct(feature_np)
         
         if feature_np.shape[0] > 200:
             feature = np.zeros((200, feature_np.shape[1]))
