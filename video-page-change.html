@@ -1,5 +1,6 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
       integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
 <style>
   #instructions, li {
     color: gray;
@@ -26,8 +27,20 @@
     text-align:center;
   }
 
+  #answers{
+    margin: auto;
+    width: 250px;
+  }
+
   #container {
     position: relative;
+  }
+
+  #error-message{
+    margin: auto;
+    width: 60%;
+    display:none;
+    text-align:center;
   }
 </style>
 
@@ -88,11 +101,12 @@
       </div>
 
       <h2 id="question">Loading question...</h2>
+      <div class="alert alert-warning" id="error-message"></div>
 
       <div id="answer-block">
         <label style="font-size:18px;" id="answer-label" for="answers">Please view Instructions(including <b>bonus</b> information)). <br> Possible one-word answers (one per line; in order):</label>
         <br>
-        <textarea id="answers" name="answers" rows="6" cols="20" required="required" autocomplete="off"
+        <textarea class="form-control" id="answers" name="answers" rows="6" cols="30" required="required" autocomplete="off"
                 autofocus="autofocus" placeholder="one-word answer 1&#10;one-word answer 2&#10;..."></textarea>
       </div>
     </div>
@@ -100,7 +114,6 @@
 </crowd-form>
 
 <script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
-<script async src="https://www.youtube.com/iframe_api"></script>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
         integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
@@ -111,49 +124,61 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
         integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
         crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 
 <script type="text/javascript">
   let videoId = '${video_id}';
   let startTime = parseInt('${video_start_time}');
   let endTime = parseInt('${video_end_time}');
   let question = '${question}';
+  
+  var tag = document.createElement('script');
+  tag.src = "https://www.youtube.com/iframe_api";
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
+  var player;
   // noinspection JSUnusedGlobalSymbols
   function onYouTubeIframeAPIReady() {
-    let videoEnded = false;
-
-    const player = new YT.Player('video', {
+    player = new YT.Player('video', {
       videoId: videoId,
       playerVars: {
+        enablejsapi: 1,
+        loop: 1,
         autoplay: 1,
         controls: 1,
-        showinfo: 0,
         modestbranding: 1,
-        fs: 1,                  // full screen button
+        fs: 0,                  // full screen button
         cc_load_policy: 0,      // Hide closed captions
         iv_load_policy: 3,      // Hide the Video Annotations
         start: startTime,
         end: endTime,
-        autohide: 1, // Hide video controls when playing
-        rel: 0,
+        autohide: 1, // deprecated now
+        rel: 0, // No use after 9/25/2018
       },
-      events: {
-        // TODO: when restarting the video, it's not starting from `startTime` as it should.
-        'onStateChange': state => {
-          if (state.data === YT.PlayerState.ENDED) {
-            videoEnded = true;
-          } else if (state.data === YT.PlayerState.PLAYING && videoEnded) {
-            player.seekTo(startTime,true);
-            videoEnded = false;
-          }
-        },
+	  events: {
+      'onStateChange':onPlayerStateChange
       }
     });
   }
+  var videoEnded = false;
+  function onPlayerStateChange(event){
+    // alert(event.data)
+    if (event.data == YT.PlayerState.ENDED) {
+      videoEnded = true;
+    } else if (event.data == YT.PlayerState.PLAYING && videoEnded) {
+      event.target.seekTo(startTime,true);
+      videoEnded = false;
+    }
+  }
+
+  // player.getCurrentTime()
 
   function onDomContentLoaded() {
     const $question = document.getElementById('question');
     const $answers = document.getElementById('answers');
+    const $errormessage = document.getElementById('error-message');
     $question.innerText = question;
     $answers.focus();
     $($answers).keyup(validateAnswer);
@@ -161,38 +186,23 @@
     function validateAnswer() {
       var $to_check_answers = $answers.value.split("\n");
 
-      var $hasError1 = $answers.value.indexOf(",")!=-1;
-      var $hasError2 = $answers.value.indexOf(" ")!=-1;
-      var $hasError3 = $to_check_answers.indexOf("entity")!=-1;
       var $errorMsg1 = "Please start a new line for each answer";
       var $errorMsg2 = "Please input only one word for each answer.\n"+
         "Please start a new line for each answer.\n" +
         "If you have to enter a space, use '-' instead.";
       var $errorMsg3 = "Please input natural answer. (View instruction.)";
 
-      var $hasError = $hasError1 || $hasError2 || $hasError3;
-
-      if (typeof $answers.setCustomValidity === 'function') {
-        $answers.setCustomValidity($hasError1 ? $errorMsg1 : '');
-        $answers.setCustomValidity($hasError2 ? $errorMsg2 : '');
-        $answers.setCustomValidity($hasError3 ? $errorMsg3 : '');
-      } 
+      if ($answers.value.indexOf(",")!=-1) {
+        $($errormessage).text($errorMsg1).fadeIn();
+      }
+      else if ($answers.value.indexOf(" ")!=-1){
+        $($errormessage).text($errorMsg2).fadeIn();
+      }
+      else if ($to_check_answers.indexOf("entity")!=-1){
+        $($errormessage).text($errorMsg3).fadeIn();
+      }
       else {
-        // Not supported by the browser, fallback to manual error display...
-        $($answers).toggleClass('error', !!$hasError);
-        $($answers).toggleClass('ok', !$hasError);
-        if ($hasError1) {
-          $($answers).attr('title', $errorMsg1);
-          }
-        else if ($hasError2){
-          $($answers).attr('title', $errorMsg2);
-          }
-        else if ($hasError3){
-          $($answers).attr('title', $errorMsg3);
-          }
-        else {
-          $($answers).removeAttr('title');
-          }
+        $($errormessage).fadeOut("fast");
       }
     }
   }
