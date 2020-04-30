@@ -45,9 +45,7 @@ class ActivityNetCaptionDataset(Dataset):
                 f.write('\n')
                 f.write(line[2])
                 f.write('\n')
-                f.write(line[3])
-                f.write(', ')
-                f.write(line[4])
+                f.write(str(line[3]))
                 f.write('\n')
                 f.write('\n')
 
@@ -133,7 +131,7 @@ class ActivityNetCaptionDataset(Dataset):
                 if len(out)==5:
                     masked_sentence, label, masked_position, original_sentence, correct_word = out
                     data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
-                    out_text.append([key, original_sentence, correct_word, start_frame, end_frame])
+                    out_text.append([key, original_sentence, correct_word, raw[key]['timestamps'][i]])
                 
         return data, out_text
 
