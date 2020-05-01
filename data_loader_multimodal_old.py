@@ -82,7 +82,7 @@ class ActivityNetCaptionDataset(Dataset):
         while len(position): 
             idx, POS = random.sample(position, 1)[0]
             if text[idx] in self.answerWordDict and self.answerWordDict[text[idx]] >= self.THRESHOLD and isTrain:
-                position.remove(idx)
+                position.remove((idx, POS))
                 continue
             new_sentence = text[:]
             correct_word = new_sentence[idx]
