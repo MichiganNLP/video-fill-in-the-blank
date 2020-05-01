@@ -154,7 +154,12 @@ class QGenLightningModel(LightningModule):
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
         loss_key = f"{key_prefix}loss"
         metrics: TYPE_STEP_OUTPUT = {}
-        for metric_name in {"correct", "batch_size", loss_key}:
+
+        if key_prefix == 'val_' or key_prefix == 'test_':
+            metric_names = {"correct", "batch_size"}
+        else:
+            metric_names = {"correct", "batch_size", loss_key}
+        for metric_name in metric_names:
             metric_total = 0
 
             for output in step_outputs:
@@ -174,8 +179,7 @@ class QGenLightningModel(LightningModule):
             else:
                 metrics[metric_name] = metric_total  # noqa
 
-        dtype = metrics[loss_key].dtype
-        metrics[f"{key_prefix}acc"] = metrics["correct"].to(dtype=dtype) / metrics["batch_size"].to(dtype=dtype)
+        metrics[f"{key_prefix}acc"] = metrics["correct"] / metrics["batch_size"]
 
         del metrics["correct"]
         del metrics["batch_size"]
