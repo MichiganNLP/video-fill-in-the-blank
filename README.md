@@ -5,7 +5,7 @@
 With Conda:
 
 ```bash
-conda create -n lqam -c pytorch --file environment.txt
+conda env create -f environment.yml
 conda activate lqam
 python -c "import nltk; nltk.download('averaged_perceptron_tagger')"
 ```
