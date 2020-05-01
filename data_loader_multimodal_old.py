@@ -45,7 +45,9 @@ class ActivityNetCaptionDataset(Dataset):
                 f.write('\n')
                 f.write(line[2])
                 f.write('\n')
-                f.write(str(line[3]))
+                f.write(line[3])
+                f.write('\n')
+                f.write(str(line[4]))
                 f.write('\n')
                 f.write('\n')
 
@@ -75,10 +77,10 @@ class ActivityNetCaptionDataset(Dataset):
 
         for i in range(len(parsed_sentence)):
             if parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] == 'NN':
-                position.append(i)
+                position.append((i, parsed_sentence[i][1]))
 
         while len(position): 
-            idx = random.sample(position, 1)[0]
+            idx, POS = random.sample(position, 1)[0]
             if text[idx] in self.answerWordDict and self.answerWordDict[text[idx]] >= self.THRESHOLD and isTrain:
                 position.remove(idx)
                 continue
@@ -107,7 +109,7 @@ class ActivityNetCaptionDataset(Dataset):
             new_sentence[idx] = '[MASK]'
 
             sequence_id = self.tokenizer.encode(' '.join(sentence_for_model))
-            return sequence_id, correct_word_tokenized, idx+1, new_sentence, correct_word
+            return sequence_id, correct_word_tokenized, idx+1, new_sentence, correct_word, POS
         return ()
 
     def getTextFeatures(self, textFile, isTrain=True):
@@ -131,10 +133,10 @@ class ActivityNetCaptionDataset(Dataset):
                 text = nltk.word_tokenize(sentence.strip().lower())
                 parsed_sentence = nltk.pos_tag(text)
                 out = self.gen(text, parsed_sentence, isTrain)
-                if len(out)==5:
-                    masked_sentence, label, masked_position, original_sentence, correct_word = out
+                if len(out)==6:
+                    masked_sentence, label, masked_position, original_sentence, correct_word, POS = out
                     data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
-                    out_text.append([key, original_sentence, correct_word, raw[key]['timestamps'][i]])
+                    out_text.append([key, original_sentence, correct_word, POS, raw[key]['timestamps'][i]])
                 
         return data, out_text
 
