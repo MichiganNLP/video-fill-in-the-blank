@@ -72,10 +72,18 @@ class QGenLightningModel(LightningModule):
 
         return accuracy, correct, batch_size, loss
 
+    def _val_test_step(self, batch: Tuple[Any]):
+        scores = []
+        for i in range(len(batch)):
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = data
+            loss, score = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+            
+        
+
     @overrides
     def training_step(self, batch: Tuple[Any],
                       batch_idx: int) -> Union[int, MutableMapping[str, Union[torch.Tensor, TYPE_STEP_OUTPUT]]]:
-        accuracy, correct, batch_size, loss = self._step(*batch)
+        accuracy, correct, batch_size, loss = self._step(*batch[0])
         metrics_to_show_and_log = {"train_loss": loss, "acc": accuracy}
         return {
             "accuracy": accuracy,
@@ -88,12 +96,12 @@ class QGenLightningModel(LightningModule):
 
     @overrides
     def validation_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size, loss = self._step(*batch)
+        accuracy, correct, batch_size, loss = self._val_test_step(batch)
         return {"val_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "val_loss": loss}
 
     @overrides
     def test_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size, loss = self._step(*batch)
+        accuracy, correct, batch_size, loss = self._val_test_step(*batch)
         return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "test_loss": loss}
 
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
@@ -142,99 +150,111 @@ class QGenLightningModel(LightningModule):
         metrics = self._average_metrics(outputs, "test_")
         return {"progress_bar": metrics, "log": metrics}
 
-    def _pad_batch(self, batch: Sequence[Sequence[Any]]) -> Tuple[Any, Any, Any, Any, Any, Any, Any, Any]:
+    def _pad_batch(self, batch: Sequence[Sequence[Any]], isTrain: bool) -> Tuple[Any, Any, Any, Any, Any, Any, Any, Any]:
         batch_size = len(batch)
-
-        text_features = []
-        video_features = []
-        labels = []
-        mask_positions = []
-
-        max_text_len = 0
-        max_video_len = 0
-        video = None
-        for i in range(batch_size):
-            data = batch[i]
-            text = torch.tensor(data[0])
-            video = data[1]
-            labels.append(data[2])
-            mask_positions.append(data[3])
-
-            text_features.append(text)
-            video_features.append(video)
-
-            total_text_len = len(text)
-            if total_text_len > max_text_len:
-                max_text_len = total_text_len
-
-            total_video_len = video.shape[0]
-            if total_video_len > max_video_len:
-                max_video_len = total_video_len
-
-        text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
-        if self.hparams.enable_visual_features:
-            video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.float)
+        out = []
+        if isTrain:
+            max_token_len = 1
         else:
-            video_tensor = None
+            max_token_len = self.hparams.max_token_num
+        for j in range(max_token_len):
+            text_features = []
+            video_features = []
+            labels = []
+            mask_positions = []
 
-        if self.hparams.enable_visual_features:
-            segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long),
-                                         torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
-            mask = torch.zeros(batch_size, max_text_len + max_video_len, dtype=torch.bool)
-            # `-100` is the default `ignore_index` value for CrossEntropyLoss.
-            masked_lm_labels = torch.ones(batch_size, max_text_len + max_video_len, dtype=torch.long) * -100
-            position_ids = torch.cat([torch.arange(max_text_len, dtype=torch.long),
-                                      torch.arange(max_video_len, dtype=torch.long)],
-                                     dim=0).unsqueeze(0).repeat(batch_size, 1)
-        else:
-            segments_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
-            mask = torch.zeros(batch_size, max_text_len, dtype=torch.bool)
-            # `-100` is the default `ignore_index` value for CrossEntropyLoss.
-            masked_lm_labels = torch.ones(batch_size, max_text_len, dtype=torch.long) * -100
-            position_ids = torch.arange(max_text_len, dtype=torch.long).unsqueeze(0).repeat(batch_size, 1)
+            max_text_len = 0
+            max_video_len = 0
+            video = None
+        
+            for i in range(batch_size):
+                data = batch[i]
+                text = torch.tensor(data[0][i])
+                video = data[1]
+                labels.append(data[2])
+                mask_positions.append(data[3])
 
-        for i in range(batch_size):
-            text = text_features[i]
-            video = video_features[i]
-            text_len = len(text)
+                text_features.append(text)
+                video_features.append(video)
 
-            # The input to the transformer is gonna be:
-            # [CLS] t_1 ... t_n pad ... pad [SEP] v_1 ... v_m pad ... pad [SEP]
+                total_text_len = len(text)
+                if total_text_len > max_text_len:
+                    max_text_len = total_text_len
 
-            text_tensor[i, :text_len - 1] = text[:-1]
-            text_tensor[i, -1] = text[-1]
-            mask[i, :text_len - 1] = True
+                total_video_len = video.shape[0]
+                if total_video_len > max_video_len:
+                    max_video_len = total_video_len
+
+            text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
+            if self.hparams.enable_visual_features:
+                video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.float)
+            else:
+                video_tensor = None
 
             if self.hparams.enable_visual_features:
-                video_len = video.shape[0]
-                video_tensor[i, :video_len] = video
-                mask[i, max_text_len - 1:max_text_len + video_len] = True
+                segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long),
+                                            torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
+                mask = torch.zeros(batch_size, max_text_len + max_video_len, dtype=torch.bool)
+                # `-100` is the default `ignore_index` value for CrossEntropyLoss.
+                masked_lm_labels = torch.ones(batch_size, max_text_len + max_video_len, dtype=torch.long) * -100
+                position_ids = torch.cat([torch.arange(max_text_len, dtype=torch.long),
+                                        torch.arange(max_video_len, dtype=torch.long)],
+                                        dim=0).unsqueeze(0).repeat(batch_size, 1)
+            else:
+                segments_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
+                mask = torch.zeros(batch_size, max_text_len, dtype=torch.bool)
+                # `-100` is the default `ignore_index` value for CrossEntropyLoss.
+                masked_lm_labels = torch.ones(batch_size, max_text_len, dtype=torch.long) * -100
+                position_ids = torch.arange(max_text_len, dtype=torch.long).unsqueeze(0).repeat(batch_size, 1)
 
-            label_len = len(labels[i])
-            masked_lm_labels[i, mask_positions[i]:mask_positions[i]+label_len] = torch.LongTensor(self.tokenizer.convert_tokens_to_ids(labels[i]))
+            for i in range(batch_size):
+                text = text_features[i]
+                video = video_features[i]
+                text_len = len(text)
 
-        return text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels, position_ids
+                # The input to the transformer is gonna be:
+                # [CLS] t_1 ... t_n pad ... pad [SEP] v_1 ... v_m pad ... pad [SEP]
 
-    def _dataloader(self, pickle_path_inside_data_folder: str) -> DataLoader:
+                text_tensor[i, :text_len - 1] = text[:-1]
+                text_tensor[i, -1] = text[-1]
+                mask[i, :text_len - 1] = True
+
+                if self.hparams.enable_visual_features:
+                    video_len = video.shape[0]
+                    video_tensor[i, :video_len] = video
+                    mask[i, max_text_len - 1:max_text_len + video_len] = True
+
+                # We now label length in training
+                if isTrain:
+                    label_len = len(labels[i])
+                # We don't know table length in testing
+                else:
+                    label_len = j
+                masked_lm_labels[i, mask_positions[i]:mask_positions[i]+label_len] = torch.LongTensor(self.tokenizer.convert_tokens_to_ids(labels[i]))
+
+            out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels, position_ids))
+        return out
+
+    def _dataloader(self, pickle_path_inside_data_folder: str, isTrain: bool) -> DataLoader:
         path = os.path.join(self.hparams.data_path, pickle_path_inside_data_folder)
         dataset = ActivityNetCaptionsDataset(path)
 
         shuffle = self.hparams.overfit_pct == 0
 
-        return DataLoader(dataset, batch_size=self.hparams.batch_size, shuffle=shuffle, collate_fn=self._pad_batch,
+        return DataLoader(dataset, batch_size=self.hparams.batch_size, shuffle=shuffle, collate_fn=lambda batch : self._pad_batch(batch, isTrain),
                           pin_memory=self.hparams.pin_memory, num_workers=self.hparams.num_workers)
 
     @overrides
     def train_dataloader(self) -> DataLoader:
-        return self._dataloader("train.pkl")
+        return self._dataloader("train.pkl", True)
 
     @overrides
     def val_dataloader(self) -> DataLoader:
-        return self._dataloader("val1.pkl")
+        return self._dataloader("val1.pkl", False)
 
     @overrides
     def test_dataloader(self) -> DataLoader:
-        return self._dataloader("val2.pkl")
+        return self._dataloader("val2.pkl", False)
 
     @staticmethod
     def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:  # pragma: no-cover

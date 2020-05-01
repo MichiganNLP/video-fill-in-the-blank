@@ -79,6 +79,7 @@ class MultiModalLightningModel(QGenLightningModel):
         parser.add_argument("--transformer-model-name", choices=model_name_choices, default="bert-base-uncased")
         parser.add_argument("--visual-size", default=500, type=int, metavar="V", help="input video feature dimension")
         parser.add_argument("--weight-decay", default=1e-4, type=float)
+        parser.add_argument("--max-token-num", default=3, type=int, help="max number of tokens predicted in val and test")
         return parser
 
 
