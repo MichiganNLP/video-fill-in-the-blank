@@ -37,7 +37,7 @@ class ActivityNetCaptionDataset(Dataset):
         textFeature, self.out_text = self.getTextFeatures(textFile, isTrain)
         self.data = self.getFeatures(textFeature, videoFeatures)
 
-        with open('val1', 'w') as f:
+        with open('val2', 'w') as f:
             for line in self.out_text:
                 f.write(line[0])
                 f.write('\n')
@@ -50,7 +50,7 @@ class ActivityNetCaptionDataset(Dataset):
                 f.write('\n')
 
         print(self.one_token, self.two_tokens, self.threemore_tokens, len(self.data))
-        with open('val1.pkl', 'wb') as f:
+        with open('val2.pkl', 'wb') as f:
             pickle.dump(self.data, f)
 
 
