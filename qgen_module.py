@@ -94,7 +94,7 @@ class QGenLightningModel(LightningModule):
                     mask_position = batch[j][5][i]
                     label = batch[j][4][i]
                     for k in range(j):
-                        _confid += max(scores[j][mask_position+k])
+                        _confid += max(scores[j][i][mask_position+k])
                     _confid = _confid / (j + 1)
                     if _confid > confidence:
                         confidence = _confid
