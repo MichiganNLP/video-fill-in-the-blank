@@ -75,9 +75,9 @@ class QGenLightningModel(LightningModule):
     def _val_test_step(self, batch: Tuple[Any]):
         scores = []
         for i in range(len(batch)):
-            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = data
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[i]
             loss, score = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
-            
+            pass
         
 
     @overrides
