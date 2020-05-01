@@ -93,7 +93,7 @@ class QGenLightningModel(LightningModule):
                     _confid = 0
                     mask_position = batch[j][5][i]
                     label = batch[j][4][i]
-                    for k in range(j):
+                    for k in range(j + 1):
                         _confid += max(scores[j][i][mask_position+k])
                     _confid = _confid / (j + 1)
                     if _confid > confidence:
@@ -231,6 +231,9 @@ class QGenLightningModel(LightningModule):
                 total_video_len = video.shape[0]
                 if total_video_len > max_video_len:
                     max_video_len = total_video_len
+            
+            if ~isTrain:
+                max_text_len += j
 
             text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
             if self.hparams.enable_visual_features:
@@ -261,10 +264,18 @@ class QGenLightningModel(LightningModule):
 
                 # The input to the transformer is gonna be:
                 # [CLS] t_1 ... t_n pad ... pad [SEP] v_1 ... v_m pad ... pad [SEP]
-
-                text_tensor[i, :text_len - 1] = text[:-1]
+                if isTrain:
+                    text_tensor[i, :text_len - 1] = text[:-1]                    
+                else:
+                    text_tensor[i, :mask_positions[i] + 1] = text[:mask_positions[i]+1]
+                    for k in range(j):
+                        text_tensor[i, :mask_positions[i] + 1 + k] = text[mask_positions[i]]
+                    text_tensor[mask_positions[i] + 2 + j : text_len + j - 1] = text[mask_positions[i] + 1 :]
                 text_tensor[i, -1] = text[-1]
-                mask[i, :text_len - 1] = True
+                if isTrain:
+                    mask[i, :text_len - 1] = True
+                else:
+                    mask[i, :text_len + j - 1] = True
 
                 if self.hparams.enable_visual_features:
                     video_len = video.shape[0]
