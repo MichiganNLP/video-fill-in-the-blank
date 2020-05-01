@@ -169,7 +169,7 @@ class QGenLightningModel(LightningModule):
         
             for i in range(batch_size):
                 data = batch[i]
-                text = torch.tensor(data[0][i])
+                text = torch.tensor(data[0])
                 video = data[1]
                 labels.append(data[2])
                 mask_positions.append(data[3])
