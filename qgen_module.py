@@ -270,7 +270,7 @@ class QGenLightningModel(LightningModule):
                     text_tensor[i, :mask_positions[i] + 1] = text[:mask_positions[i]+1]
                     for k in range(j):
                         text_tensor[i, :mask_positions[i] + 1 + k] = text[mask_positions[i]]
-                    text_tensor[mask_positions[i] + 1 + j : text_len + j - 1] = text[mask_positions[i] + 1 : -1]
+                    text_tensor[i, mask_positions[i] + 1 + j : text_len + j - 1] = text[mask_positions[i] + 1 : -1]
                 text_tensor[i, -1] = text[-1]
                 if isTrain:
                     mask[i, :text_len - 1] = True
