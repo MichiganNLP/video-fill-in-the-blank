@@ -12,6 +12,7 @@ from transformers import PreTrainedTokenizer
 from argparse_with_defaults import ArgumentParserWithDefaults
 from data_loader_multimodal import ActivityNetCaptionsDataset
 
+TYPE_BATCH = Sequence[Tuple[Any, Any, Any, Any, Any, Any, Any, Any]]
 TYPE_STEP_OUTPUT = MutableMapping[str, torch.Tensor]
 
 
@@ -25,31 +26,28 @@ class QGenLightningModel(LightningModule):
     def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], mask: torch.Tensor,
                 segment_mask: torch.Tensor, mask_lm_labels: torch.Tensor,
                 position_ids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        # text_token_ids shape: (batch_size, max_seq_len + 1)
+        # mask shape: (batch_size, max_seq_len + 1)
+        # mask_lm_labels (batch_size, max_seq_len + 1)
+        # position_ids: (batch_size, max_seq_len + 1)
         raise NotImplementedError
 
     def _correct_predictions(self, scores: torch.Tensor, labels: Sequence[str],
                              mask_positions: torch.Tensor) -> torch.Tensor:
-        """Computes the accuracy over the k top predictions for the specified values of k"""
+        # scores shape: (batch_size, max_seq_length, vocab_size)
         with torch.no_grad():
             batch_size = scores.shape[0]
-            # prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
+            # prediction_indices = scores[list(range(batch_size)), mask_positions].argmax(dim=1)
 
             # predictions = self.tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
             # correct = sum(prediction == label for prediction, label in zip(predictions, labels))
-            
+
             # For now, I also predict a number of word pieces in during test time
             correct = 0
             for i in range(batch_size):
-                label_len = len(labels[i])
-                all_correct = True
-                for j in range(label_len):
-                    prediction_index = torch.argmax(scores[i, mask_positions[i]+j])
-                    prediction = self.tokenizer.convert_ids_to_tokens(prediction_index.tolist())
-                    if prediction != labels[i][j]:
-                        all_correct = False
-                        break
-                if all_correct:
-                    correct += 1
+                predicted_indices = scores[i, mask_positions[i]:mask_positions[i] + len(labels[i])].argmax(dim=1)
+                prediction = self.tokenizer.convert_ids_to_tokens(predicted_indices)
+                correct += int(prediction == labels[i])
 
             return torch.tensor(correct, dtype=torch.int64, device=scores.device)
 
@@ -72,18 +70,18 @@ class QGenLightningModel(LightningModule):
 
         return accuracy, correct, batch_size, loss
 
-    def _val_test_step(self, batch: Tuple[Any]):
+    def _val_test_step(self, batch: TYPE_BATCH):
         scores = []
         correct = torch.tensor(0, dtype=torch.int64, device=batch[0][0].device)
         batch_size = batch[0][0].shape[0]
 
         with torch.no_grad():
-
             for i in range(len(batch)):
-                text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[i]
+                text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = \
+                    batch[i]
                 _, score = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
                 scores.append(score)
-            
+
             # for each element in one batch
             for i in range(batch_size):
                 confidence = max(scores[0][i][batch[0][5][i]])
@@ -94,27 +92,27 @@ class QGenLightningModel(LightningModule):
                     mask_position = batch[j][5][i]
                     label = batch[j][4][i]
                     for k in range(j + 1):
-                        _confid += max(scores[j][i][mask_position+k])
+                        _confid += max(scores[j][i][mask_position + k])
                     _confid = _confid / (j + 1)
                     if _confid > confidence:
                         confidence = _confid
                         token_num = j
-                
+
                 # compute correctness
                 mask_position = batch[token_num][5][i]
                 label = batch[token_num][4][i]
                 label_len = len(label)
-                if label_len == token_num + 1:                    
+                if label_len == token_num + 1:
                     all_correct = True
                     for j in range(label_len):
-                        prediction_index = torch.argmax(scores[token_num][i, mask_position+j])
+                        prediction_index = torch.argmax(scores[token_num][i, mask_position + j])
                         prediction = self.tokenizer.convert_ids_to_tokens(prediction_index.tolist())
                         if prediction != labels[i][j]:
                             all_correct = False
                             break
                     if all_correct:
                         correct += 1
-            
+
             if self.trainer.use_dp or self.trainer.use_ddp2:
                 correct = correct.unsqueeze(0)
 
@@ -125,10 +123,8 @@ class QGenLightningModel(LightningModule):
 
             return accuracy, correct, batch_size
 
-        
-
     @overrides
-    def training_step(self, batch: Tuple[Any],
+    def training_step(self, batch: TYPE_BATCH,
                       batch_idx: int) -> Union[int, MutableMapping[str, Union[torch.Tensor, TYPE_STEP_OUTPUT]]]:
         accuracy, correct, batch_size, loss = self._step(*batch[0])
         metrics_to_show_and_log = {"train_loss": loss, "acc": accuracy}
@@ -142,12 +138,12 @@ class QGenLightningModel(LightningModule):
         }
 
     @overrides
-    def validation_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
+    def validation_step(self, batch: TYPE_BATCH, batch_idx: int) -> TYPE_STEP_OUTPUT:
         accuracy, correct, batch_size = self._val_test_step(batch)
         return {"val_accuracy": accuracy, "correct": correct, "batch_size": batch_size}
 
     @overrides
-    def test_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
+    def test_step(self, batch: TYPE_BATCH, batch_idx: int) -> TYPE_STEP_OUTPUT:
         accuracy, correct, batch_size = self._val_test_step(*batch)
         return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size}
 
@@ -201,14 +197,11 @@ class QGenLightningModel(LightningModule):
         metrics = self._average_metrics(outputs, "test_")
         return {"progress_bar": metrics, "log": metrics}
 
-    def _pad_batch(self, batch: Sequence[Sequence[Any]], isTrain: bool) -> Tuple[Any, Any, Any, Any, Any, Any, Any, Any]:
+    def _pad_batch(self, batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
         batch_size = len(batch)
         out = []
-        if isTrain:
-            max_token_len = 1
-        else:
-            max_token_len = self.hparams.max_token_num
-        for j in range(max_token_len):
+        max_token_count = 1 if self.training else self.hparams.max_token_num
+        for token_count in range(max_token_count):
             text_features = []
             video_features = []
             labels = []
@@ -217,7 +210,7 @@ class QGenLightningModel(LightningModule):
             max_text_len = 0
             max_video_len = 0
             video = None
-        
+
             for i in range(batch_size):
                 data = batch[i]
                 text = torch.tensor(data[0])
@@ -235,9 +228,9 @@ class QGenLightningModel(LightningModule):
                 total_video_len = video.shape[0]
                 if total_video_len > max_video_len:
                     max_video_len = total_video_len
-            
-            if ~isTrain:
-                max_text_len += j
+
+            if not self.training:
+                max_text_len += token_count
 
             text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
             if self.hparams.enable_visual_features:
@@ -247,13 +240,13 @@ class QGenLightningModel(LightningModule):
 
             if self.hparams.enable_visual_features:
                 segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long),
-                                            torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
+                                             torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
                 mask = torch.zeros(batch_size, max_text_len + max_video_len, dtype=torch.bool)
                 # `-100` is the default `ignore_index` value for CrossEntropyLoss.
                 masked_lm_labels = torch.ones(batch_size, max_text_len + max_video_len, dtype=torch.long) * -100
                 position_ids = torch.cat([torch.arange(max_text_len, dtype=torch.long),
-                                        torch.arange(max_video_len, dtype=torch.long)],
-                                        dim=0).unsqueeze(0).repeat(batch_size, 1)
+                                          torch.arange(max_video_len, dtype=torch.long)],
+                                         dim=0).unsqueeze(0).repeat(batch_size, 1)
             else:
                 segments_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
                 mask = torch.zeros(batch_size, max_text_len, dtype=torch.bool)
@@ -268,18 +261,18 @@ class QGenLightningModel(LightningModule):
 
                 # The input to the transformer is gonna be:
                 # [CLS] t_1 ... t_n pad ... pad [SEP] v_1 ... v_m pad ... pad [SEP]
-                if isTrain:
-                    text_tensor[i, :text_len - 1] = text[:-1]                    
+                if self.training:
+                    text_tensor[i, :text_len - 1] = text[:-1]
                 else:
-                    text_tensor[i, :mask_positions[i] + 1] = text[:mask_positions[i]+1]
-                    for k in range(j):
+                    text_tensor[i, :mask_positions[i] + 1] = text[:mask_positions[i] + 1]
+                    for k in range(token_count):
                         text_tensor[i, :mask_positions[i] + 1 + k] = text[mask_positions[i]]
-                    text_tensor[i, mask_positions[i] + 1 + j : text_len + j - 1] = text[mask_positions[i] + 1 : -1]
+                    text_tensor[i, mask_positions[i] + 1 + token_count: text_len + token_count - 1] = text[mask_positions[i] + 1: -1]
                 text_tensor[i, -1] = text[-1]
-                if isTrain:
+                if self.training:
                     mask[i, :text_len - 1] = True
                 else:
-                    mask[i, :text_len + j - 1] = True
+                    mask[i, :text_len + token_count - 1] = True
 
                 if self.hparams.enable_visual_features:
                     video_len = video.shape[0]
@@ -287,34 +280,35 @@ class QGenLightningModel(LightningModule):
                     mask[i, max_text_len - 1:max_text_len + video_len] = True
 
                 # We know label length in training. For val and testing, mask_lm_labels is not used
-                if isTrain:
+                if self.training:
                     label_len = len(labels[i])
-                    masked_lm_labels[i, mask_positions[i]:mask_positions[i]+label_len] = torch.LongTensor(self.tokenizer.convert_tokens_to_ids(labels[i]))
-                
+                    masked_lm_labels[i, mask_positions[i]:mask_positions[i] + label_len] = torch.LongTensor(
+                        self.tokenizer.convert_tokens_to_ids(labels[i]))
 
-            out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels, position_ids))
+            out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
+                        position_ids))
         return out
 
-    def _dataloader(self, pickle_path_inside_data_folder: str, isTrain: bool) -> DataLoader:
+    def _dataloader(self, pickle_path_inside_data_folder: str) -> DataLoader:
         path = os.path.join(self.hparams.data_path, pickle_path_inside_data_folder)
         dataset = ActivityNetCaptionsDataset(path)
 
         shuffle = self.hparams.overfit_pct == 0
 
-        return DataLoader(dataset, batch_size=self.hparams.batch_size, shuffle=shuffle, collate_fn=lambda batch : self._pad_batch(batch, isTrain),
+        return DataLoader(dataset, batch_size=self.hparams.batch_size, shuffle=shuffle, collate_fn=self._pad_batch,
                           pin_memory=self.hparams.pin_memory, num_workers=self.hparams.num_workers)
 
     @overrides
     def train_dataloader(self) -> DataLoader:
-        return self._dataloader("train.pkl", True)
+        return self._dataloader("train.pkl")
 
     @overrides
     def val_dataloader(self) -> DataLoader:
-        return self._dataloader("val1.pkl", False)
+        return self._dataloader("val1.pkl")
 
     @overrides
     def test_dataloader(self) -> DataLoader:
-        return self._dataloader("val2.pkl", False)
+        return self._dataloader("val2.pkl")
 
     @staticmethod
     def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:  # pragma: no-cover
