@@ -54,7 +54,7 @@ class QGenLightningModel(LightningModule):
             return torch.tensor(correct, dtype=torch.int64, device=scores.device)
 
     def _step(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], mask: torch.Tensor,
-              segment_mask: torch.Tensor, labels: Sequence[str], mask_positions: torch.Tensor,
+              segment_mask: torch.Tensor, labels: Sequence[str], mask_positions: Sequence[int],
               mask_lm_labels: torch.Tensor,
               position_ids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         loss, scores = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
@@ -74,10 +74,57 @@ class QGenLightningModel(LightningModule):
 
     def _val_test_step(self, batch: Tuple[Any]):
         scores = []
-        for i in range(len(batch)):
-            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[i]
-            loss, score = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
-            pass
+        correct = torch.tensor(0, dtype=torch.int64, device=batch[0][0].device)
+        batch_size = batch[0][0].shape[0]
+
+        with torch.no_grad():
+
+            for i in range(len(batch)):
+                text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[i]
+                _, score = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+                scores.append(score)
+            
+            # for each element in one batch
+            for i in range(batch_size):
+                confidence = scores[0][i][batch[0][5][i]]
+                token_num = 0
+                # for each different len
+                for j in range(1, len(scores)):
+                    _confid = 0
+                    mask_position = batch[j][5][i]
+                    label = batch[j][4][i]
+                    for k in range(j):
+                        _confid += scores[j][mask_position+k]
+                    _confid = _confid / (j + 1)
+                    if _confid > confidence:
+                        confidence = _confid
+                        token_num = j
+                
+                # compute correctness
+                mask_position = batch[token_num][5][i]
+                label = batch[token_num][4][i]
+                label_len = len(label)
+                if label_len == token_num + 1:                    
+                    all_correct = True
+                    for j in range(label_len):
+                        prediction_index = torch.argmax(scores[token_num][i, mask_position+j])
+                        prediction = self.tokenizer.convert_ids_to_tokens(prediction_index.tolist())
+                        if prediction != labels[i][j]:
+                            all_correct = False
+                            break
+                    if all_correct:
+                        correct += 1
+            
+            if self.trainer.use_dp or self.trainer.use_ddp2:
+                correct = correct.unsqueeze(0)
+
+            batch_size = torch.empty_like(correct)
+            batch_size.fill_(scores[0].shape[0])
+
+            accuracy = correct / batch_size
+
+            return accuracy, correct, batch_size
+
         
 
     @overrides
@@ -96,13 +143,13 @@ class QGenLightningModel(LightningModule):
 
     @overrides
     def validation_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size, loss = self._val_test_step(batch)
-        return {"val_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "val_loss": loss}
+        accuracy, correct, batch_size = self._val_test_step(batch)
+        return {"val_accuracy": accuracy, "correct": correct, "batch_size": batch_size}
 
     @overrides
     def test_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size, loss = self._val_test_step(*batch)
-        return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "test_loss": loss}
+        accuracy, correct, batch_size = self._val_test_step(*batch)
+        return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size}
 
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
         loss_key = f"{key_prefix}loss"
