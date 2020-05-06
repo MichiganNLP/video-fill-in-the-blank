@@ -73,57 +73,73 @@ class QGenLightningModel(LightningModule):
         return accuracy, correct, batch_size, loss
 
     def _val_test_step(self, batch: Tuple[Any]):
-        scores = []
-        correct = torch.tensor(0, dtype=torch.int64, device=batch[0][0].device)
-        batch_size = batch[0][0].shape[0]
+        # scores = []
+        # correct = torch.tensor(0, dtype=torch.int64, device=batch[0][0].device)
+        # batch_size = batch[0][0].shape[0]
 
-        with torch.no_grad():
+        # with torch.no_grad():
 
-            for i in range(len(batch)):
-                text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[i]
-                _, score = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
-                scores.append(score)
+        #     for i in range(len(batch)):
+        #         text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[i]
+        #         _, score = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+        #         scores.append(score)
             
-            # for each element in one batch
-            for i in range(batch_size):
-                confidence = max(scores[0][i][batch[0][5][i]])
-                token_num = 0
-                # for each different len
-                for j in range(1, len(scores)):
-                    _confid = 0
-                    mask_position = batch[j][5][i]
-                    label = batch[j][4][i]
-                    for k in range(j + 1):
-                        _confid += max(scores[j][i][mask_position+k])
-                    _confid = _confid / (j + 1)
-                    if _confid > confidence:
-                        confidence = _confid
-                        token_num = j
+        #     # for each element in one batch
+        #     for i in range(batch_size):
+        #         confidence = max(scores[0][i][batch[0][5][i]])
+        #         token_num = 0
+        #         # for each different len
+        #         for j in range(1, len(scores)):
+        #             _confid = 0
+        #             mask_position = batch[j][5][i]
+        #             label = batch[j][4][i]
+        #             for k in range(j + 1):
+        #                 _confid += max(scores[j][i][mask_position+k])
+        #             _confid = _confid / (j + 1)
+        #             if _confid > confidence:
+        #                 confidence = _confid
+        #                 token_num = j
                 
-                # compute correctness
-                mask_position = batch[token_num][5][i]
-                label = batch[token_num][4][i]
-                label_len = len(label)
-                if label_len == token_num + 1:                    
-                    all_correct = True
-                    for j in range(label_len):
-                        prediction_index = torch.argmax(scores[token_num][i, mask_position+j])
-                        prediction = self.tokenizer.convert_ids_to_tokens(prediction_index.tolist())
-                        if prediction != labels[i][j]:
-                            all_correct = False
-                            break
-                    if all_correct:
-                        correct += 1
+        #         # compute correctness
+        #         mask_position = batch[token_num][5][i]
+        #         label = batch[token_num][4][i]
+        #         label_len = len(label)
+        #         if label_len == token_num + 1:                    
+        #             all_correct = True
+        #             for j in range(label_len):
+        #                 prediction_index = torch.argmax(scores[token_num][i, mask_position+j])
+        #                 prediction = self.tokenizer.convert_ids_to_tokens(prediction_index.tolist())
+        #                 if prediction != labels[i][j]:
+        #                     all_correct = False
+        #                     break
+        #             if all_correct:
+        #                 correct += 1
             
-            if self.trainer.use_dp or self.trainer.use_ddp2:
-                correct = correct.unsqueeze(0)
+        #     if self.trainer.use_dp or self.trainer.use_ddp2:
+        #         correct = correct.unsqueeze(0)
 
-            batch_size = torch.empty_like(correct)
-            batch_size.fill_(scores[0].shape[0])
+        #     batch_size = torch.empty_like(correct)
+        #     batch_size.fill_(scores[0].shape[0])
 
-            accuracy = correct / batch_size
+        #     accuracy = correct / batch_size
+        batch_size = batch[0][0].shape[0]
+        text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
+        loss, score = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+        prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
-            return accuracy, correct, batch_size
+        predictions = self.tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+        correct = sum(prediction == label for prediction, label in zip(predictions, labels))
+
+        correct = torch.tensor(correct, dtype=torch.int64, device=scores.device)
+        if self.trainer.use_dp or self.trainer.use_ddp2:
+            correct = correct.unsqueeze(0)
+
+        batch_size = torch.empty_like(correct)
+        batch_size.fill_(scores[0].shape[0])        
+
+        accuracy = correct / batch_size
+
+        return accuracy, correct, batch_size, loss
 
         
 
@@ -143,22 +159,19 @@ class QGenLightningModel(LightningModule):
 
     @overrides
     def validation_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size = self._val_test_step(batch)
-        return {"val_accuracy": accuracy, "correct": correct, "batch_size": batch_size}
+        accuracy, correct, batch_size, loss = self._val_test_step(batch)
+        return {"val_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "val_loss": loss}
 
     @overrides
     def test_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size = self._val_test_step(*batch)
-        return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size}
+        accuracy, correct, batch_size, loss = self._val_test_step(*batch)
+        return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "test_loss": loss}
 
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
         loss_key = f"{key_prefix}loss"
         metrics: TYPE_STEP_OUTPUT = {}
 
-        if key_prefix == 'val_' or key_prefix == 'test_':
-            metric_names = {"correct", "batch_size"}
-        else:
-            metric_names = {"correct", "batch_size", loss_key}
+        metric_names = {"correct", "batch_size", loss_key}
         for metric_name in metric_names:
             metric_total = 0
 
