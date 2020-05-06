@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u ../multi_modal_model_lightning.py --data-path /scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions --num-workers 8
+python -u ../multi_modal_model_lightning.py --data-path /scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions --num-workers 8 --max-token-num 1
 echo done
