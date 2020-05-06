@@ -1,6 +1,11 @@
 # lqam
 
 ## Setup
+If you are a Mac OS user, then you need to comment out following lines in `environment.yml`:
+```
+  - cudatoolkit=10.1.243
+  - cudnn==7.6.5
+```
 
 With Conda:
 
