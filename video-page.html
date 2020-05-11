@@ -118,20 +118,19 @@
       videoId: videoId,
       playerVars: {
         autoplay: 1,
-        controls: 1,
-        showinfo: 0,
+        controls: 0,
+        disablekb: 1,
         modestbranding: 1,
         fs: 1,                  // full screen button
         cc_load_policy: 0,      // Hide closed captions
         iv_load_policy: 3,      // Hide the Video Annotations
         start: startTime,
         end: endTime,
-        autohide: 1, // Hide video controls when playing
-        rel: 0,
       },
       events: {
         // TODO: when restarting the video, it's not starting from `startTime` as it should.
         'onStateChange': state => {
+          console.log(state);
           if (state.data === YT.PlayerState.ENDED) {
             videoEnded = true;
           } else if (state.data === YT.PlayerState.PLAYING && videoEnded) {

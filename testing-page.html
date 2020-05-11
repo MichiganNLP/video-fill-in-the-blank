@@ -33,7 +33,7 @@
       let htmlContent = xhr.responseText
           .replace('${video_id}', 'Jcdm9Z7HUr0')
           .replace('${video_start_time}', '18000')
-          .replace('${video_end_time}', '18060')
+          .replace('${video_end_time}', '18005')
           .replace('${question}', "The ground is full of _____.");
 
       const doc = document.getElementsByTagName('iframe')[0].contentWindow.document;
@@ -42,7 +42,7 @@
       doc.close();
     }
   };
-  xhr.open('GET', 'video-page.html');
+  xhr.open('GET', 'video-change-page.html');
   xhr.send();
 </script>
 
