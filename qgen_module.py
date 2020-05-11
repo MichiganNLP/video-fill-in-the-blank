@@ -137,6 +137,7 @@ class QGenLightningModel(LightningModule):
         batch_size = torch.empty_like(correct)
         batch_size.fill_(scores[0].shape[0])        
 
+        dtype = loss.dtype
         accuracy = correct.to(dtype=dtype) / batch_size.to(dtype=dtype)
 
         return accuracy, correct, batch_size, loss
