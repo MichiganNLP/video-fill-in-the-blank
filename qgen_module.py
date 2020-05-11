@@ -128,14 +128,14 @@ class QGenLightningModel(LightningModule):
         print(self.tokenizer.convert_ids_to_tokens(text_token_ids[0]))
         predictions = self.tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
         print(predictions)
-        correct = sum(prediction == label[0] for prediction, label in zip(predictions, labels))
+        correct = sum((len(label)==1 and prediction == label[0]) for prediction, label in zip(predictions, labels))
 
         correct = torch.tensor(correct, dtype=torch.int64, device=scores.device)
         if self.trainer.use_dp or self.trainer.use_ddp2:
             correct = correct.unsqueeze(0)
 
         batch_size = torch.empty_like(correct)
-        batch_size.fill_(scores[0].shape[0])        
+        batch_size.fill_(scores.shape[0])        
 
         dtype = loss.dtype
         accuracy = correct.to(dtype=dtype) / batch_size.to(dtype=dtype)
