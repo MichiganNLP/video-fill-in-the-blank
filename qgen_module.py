@@ -191,7 +191,8 @@ class QGenLightningModel(LightningModule):
             else:
                 metrics[metric_name] = metric_total  # noqa
 
-        metrics[f"{key_prefix}acc"] = metrics["correct"] / metrics["batch_size"]
+        dtype = metrics[loss_key].dtype
+        metrics[f"{key_prefix}acc"] = metrics["correct"].to(dtype=dtype) / metrics["batch_size"].to(dtype=dtype)
 
         del metrics["correct"]
         del metrics["batch_size"]
