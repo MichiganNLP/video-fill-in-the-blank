@@ -52,7 +52,7 @@ class ActivityNetCaptionDataset(Dataset):
         #         f.write('\n')
         #         f.write('\n')
         
-        with open('val1.csv', 'w') as csvfile:
+        with open('train.csv', 'w') as csvfile:
             fieldnames = ['question', 'video_id', 'pos_tag', 'video_start_time', 'video_end_time', 'answer']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='\t')
 
@@ -62,7 +62,7 @@ class ActivityNetCaptionDataset(Dataset):
                  'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
 
         print(self.one_token, self.two_tokens, self.threemore_tokens, len(self.data))
-        with open('val1.pkl', 'wb') as f:
+        with open('train.pkl', 'wb') as f:
             pickle.dump(self.data, f)
 
 
