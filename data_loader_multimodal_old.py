@@ -54,7 +54,7 @@ class ActivityNetCaptionDataset(Dataset):
         
         with open('val1.csv', 'w') as csvfile:
             fieldnames = ['question', 'video_id', 'pos_tag', 'video_start_time', 'video_end_time', 'answer']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='\t')
 
             writer.writeheader()
             for line in self.out_text:
