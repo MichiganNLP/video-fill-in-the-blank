@@ -9,6 +9,7 @@ import numpy as np
 import h5py
 from transformers import BertTokenizer, BertModel
 
+import csv
 import pickle
 
 class ActivityNetCaptionDataset(Dataset):
@@ -37,22 +38,31 @@ class ActivityNetCaptionDataset(Dataset):
         textFeature, self.out_text = self.getTextFeatures(textFile, isTrain)
         self.data = self.getFeatures(textFeature, videoFeatures)
 
-        with open('train', 'w') as f:
+        # with open('train', 'w') as f:
+        #     for line in self.out_text:
+        #         f.write(line[0])
+        #         f.write('\n')
+        #         f.write(' '.join(line[1]))
+        #         f.write('\n')
+        #         f.write(line[2])
+        #         f.write('\n')
+        #         f.write(line[3])
+        #         f.write('\n')
+        #         f.write(str(line[4]))
+        #         f.write('\n')
+        #         f.write('\n')
+        
+        with open('val1.csv', 'w') as csvfile:
+            fieldnames = ['question', 'video_id', 'pos_tag', 'video_start_time', 'video_end_time', 'answer']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+            writer.writeheader()
             for line in self.out_text:
-                f.write(line[0])
-                f.write('\n')
-                f.write(' '.join(line[1]))
-                f.write('\n')
-                f.write(line[2])
-                f.write('\n')
-                f.write(line[3])
-                f.write('\n')
-                f.write(str(line[4]))
-                f.write('\n')
-                f.write('\n')
+                writer.writerow({'question': ' '.join(line[1]), 'video_id': line[0], 'pos_tag': line[3],
+                 'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
 
         print(self.one_token, self.two_tokens, self.threemore_tokens, len(self.data))
-        with open('train.pkl', 'wb') as f:
+        with open('val1.pkl', 'wb') as f:
             pickle.dump(self.data, f)
 
 
