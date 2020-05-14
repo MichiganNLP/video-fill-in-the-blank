@@ -29,7 +29,7 @@
     text-align: center;
   }
 
-  #answer-label {
+  #answer-label-div {
     text-align: center;
   }
 
@@ -41,7 +41,7 @@
 
   #add-answer {
     border-radius: 15px;
-    background-color: #4CAF50;
+    background-color: rgba(117, 122, 118, 0.822);
     /* Green */
     border: none;
     color: white;
@@ -53,7 +53,7 @@
 
   #restart-video {
     border-radius: 15px;
-    background-color: hsl(352, 78%, 48%);
+    background-color: rgba(117, 122, 118, 0.822);
     /* Green */
     border: none;
     color: white;
@@ -102,6 +102,7 @@
       <h2>Basic Instructions</h2>
 
       <ul>
+        <li>If the video is unavailable, just fill in <u><i>unavailable video</i></u>.</li>
         <li>Fill in the blank based on the video (including its audio).</li>
         <li>To "fill in the blank", write in the text boxes.</li>
         <li>Write one or more answers in the boxes, <b>one per box</b>.</li>
@@ -159,9 +160,9 @@
       <h2 id="question">Loading question...</h2>
       <div class="alert alert-info" id="error-message"></div>
 
-      <div id="answer-label">
-        <label style="font-size:18px;" for="answers">Please view <a href="#instructions">Instructions</a> (including <b>bonus</b> information);
-          <br>Fill in <b>valid</b>, <b>natural</b> and <b>concise</b> answers (<b>One-word</b> answers are preferable but not necessary)
+      <div id="answer-label-div">
+        <label style="font-size:18px;" for="answers" id="answer-label">Please view <a href="#instructions">Instructions</a> (including <b>bonus</b> information);
+          <br>Fill in <b>valid</b>, <b>natural</b> and <b>concise</b> answers (please fill in <big><i><u><b>--</b></u></i></big> as much as possible)
           <br>One answer per box, press <b>Add another answer</b> to add new answer box.</label>
       </div>
 
@@ -187,10 +188,16 @@
 
 <script type="text/javascript">
   let videoId = '${video_id}';
-  let startTime = parseInt('${video_start_time}');
-  let endTime = parseInt('${video_end_time}');
+  let postag = '${pos_tag}';
   let question = '${question}';
-  question = question.replace("_____","<a href=\"#answer1\" style=\"color:#B2BABB;\">_____</a>");
+  let startTime = Math.floor(parseFloat('${video_start_time}'));
+  let endTime = Math.ceil(parseFloat('${video_end_time}'));
+  videoId = videoId.substring(2);
+  question = question.replace("[MASK]","<a href=\"#answer1\" style=\"color:#B2BABB;\">_____</a>");
+  var poswarn = "adjective";
+  if(postag == "NN"){
+    poswarn = "noun";
+  }
 
   var tag = document.createElement('script');
   tag.src = "https://www.youtube.com/iframe_api";
@@ -239,11 +246,15 @@
 
   function onDomContentLoaded() {
     const $video_instruction = document.getElementById("video-instruction").innerHTML;
+    const $answer_label = document.getElementById("answer-label").innerHTML;
     const $question = document.getElementById('question');
     const $answer1 = document.getElementById('answer1');
     const $errormessage = document.getElementById('error-message');
     // show video length
     document.getElementById("video-instruction").innerHTML = $video_instruction.replace("--",(endTime-startTime).toString());
+    // show POS-tag
+    document.getElementById("answer-label").innerHTML = $answer_label.replace("--",poswarn);
+
     $question.innerHTML = question;
     $answer1.focus();
     $($errormessage).text("Please fill in at least one answer").fadeIn();
