@@ -44,6 +44,10 @@ class MultiModalLightningModel(QGenLightningModel):
             visual_embedding = self.video_embedding(visual)
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
 
+        if self.hparams.grad_eval:
+            return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
+                            masked_lm_labels=mask_lm_labels, position_ids=position_ids), text_embedding
+
         return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
                             masked_lm_labels=mask_lm_labels, position_ids=position_ids)
 
@@ -145,14 +149,14 @@ def _main() -> None:
         for batch in data:
             batch_size = batch[0][0].shape[0]
             text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
-            loss, scores = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+            loss, scores, text_embed = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
             predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
             correct = sum((len(label)==1 and prediction == label[0]) for prediction, label in zip(predictions, labels))
 
             loss.backward()
-            text_grad = text_token_ids.grad
+            text_grad = text_embed.grad
             visual_grad = visual.grad
 
 
