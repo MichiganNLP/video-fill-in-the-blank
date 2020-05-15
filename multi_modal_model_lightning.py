@@ -18,6 +18,8 @@ from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 from argparse_with_defaults import ArgumentParserWithDefaults
 from qgen_module import QGenLightningModel
 
+from uitls_grad_eval import _dataloader
+
 logger = logging.getLogger(__name__)
 
 
@@ -110,6 +112,7 @@ def _get_args() -> argparse.Namespace:
     parent_parser.add_argument("--save-path", metavar="DIR", default=".")
     parent_parser.add_argument("--use-16bit", action="store_true")
     parent_parser.add_argument("-v", "--verbose", action="store_true")
+    parent_parser.add_argument("--grad-eval", type=bool, default=False)
     parser = MultiModalLightningModel.add_model_specific_args(parent_parser)
     return parser.parse_args()
 
@@ -125,15 +128,31 @@ def _main() -> None:
 
     logger.info(hparams)
 
-    model = MultiModalLightningModel(hparams)
+    if not hparams.grad_eval:
+        model = MultiModalLightningModel(hparams)
 
-    trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
-                         distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
-                         amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
-                         progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
-                         fast_dev_run=hparams.fast_dev_run)
+        trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
+                            distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
+                            amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
+                            progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
+                            fast_dev_run=hparams.fast_dev_run)
 
-    trainer.fit(model)
+        trainer.fit(model)
+    else:
+        model = MultiModalLightningModel(hparams).load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
+        data = _dataloader('val2.pkl')
+        for batch in data:
+            batch_size = batch[0][0].shape[0]
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
+            loss, scores = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+            prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
+
+            predictions = self.tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+            correct = sum((len(label)==1 and prediction == label[0]) for prediction, label in zip(predictions, labels))
+
+            loss.backward()
+            text_grad = text_token_ids.grad
+            visual_grad = visual.grad
 
 
 if __name__ == "__main__":
