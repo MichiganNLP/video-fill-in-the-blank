@@ -302,7 +302,7 @@ class QGenLightningModel(LightningModule):
                 else:
                     print(masked_lm_labels[i, mask_positions[i]].shape)
                     print(torch.LongTensor(self.tokenizer.convert_tokens_to_ids(labels[i][0])))
-                    masked_lm_labels[i, mask_positions[i]] = torch.LongTensor(self.tokenizer.convert_tokens_to_ids(labels[i][0]))
+                    masked_lm_labels[i, mask_positions[i]] = self.tokenizer.convert_tokens_to_ids(labels[i][0])
 
             out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
                         position_ids))
