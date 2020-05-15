@@ -140,14 +140,15 @@ def _main() -> None:
         trainer.fit(model)
     else:
         model = MultiModalLightningModel(hparams).load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
-        data = _dataloader('val2.pkl')
+        data = _dataloader('val2.pkl', hparams)
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
         for batch in data:
             batch_size = batch[0][0].shape[0]
             text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
-            loss, scores = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+            loss, scores = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
-            predictions = self.tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+            predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
             correct = sum((len(label)==1 and prediction == label[0]) for prediction, label in zip(predictions, labels))
 
             loss.backward()
