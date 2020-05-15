@@ -143,7 +143,7 @@ def _main() -> None:
 
         trainer.fit(model)
     else:
-        model = MultiModalLightningModel(hparams).load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
+        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
         data = _dataloader('val2.pkl', hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
         for batch in data:
