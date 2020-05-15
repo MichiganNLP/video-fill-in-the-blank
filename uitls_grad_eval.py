@@ -52,7 +52,7 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
             max_video_len = total_video_len
 
     text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
-    video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.float, requires_grad=True)
+    video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.float)
 
 
     segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long),
