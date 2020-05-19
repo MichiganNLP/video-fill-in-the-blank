@@ -49,8 +49,7 @@
     text-align: center;
     font-size: 16px;
   }
-
-
+  
   #restart-video {
     border-radius: 15px;
     background-color: rgba(117, 122, 118, 0.822);
@@ -90,7 +89,7 @@
 
 <crowd-form>
   <div id="container" class="container">
-    <h1>Fill in the blank based on the video and the audio</h1>
+    <h1>Fill in the blank based on the video and its audio</h1>
 
     <details id="instructions">
       <summary>Instructions (including <b>bonus</b> information)</summary>
@@ -102,28 +101,36 @@
       <h2>Basic Instructions</h2>
 
       <ul>
-        <li>If the video is unavailable, just fill in <u><i>unavailable video</i></u>.</li>
-        <li>Fill in the blank based on the video (including its audio).</li>
-        <li>To "fill in the blank", write in the text boxes.</li>
-        <li>Write one or more answers in the boxes, <b>one per box</b>.</li>
+        <li>Fill in the blank for the text below, based on the video (including its audio).</li>
+        <li>
+          To "fill in the blank", write in the text boxes. Write one or more answers in the boxes,
+          <b>one per box</b>.
+        </li>
         <li>
           When you enter numbers, please enter digital numbers instead of text
-          (e.g. enter <i>"17"</i> instead of <i>"seventeen"</i>).
+          (e.g., enter <i>"17"</i> instead of <i>"seventeen"</i>).
         </li>
+        <li>If the video is unavailable, just fill in <u><i>"unavailable video"</i></u>.</li>
       </ul>
 
       <h2>How To Answer</h2>
 
-      The answers should be <b>valid</b>, <b>natural</b> and <b>concise</b>.
+      The answers should be <b>valid</b>, <b>natural</b> and <b>concise</b>, 
+      and should complete the text such that the text becomes a good description of the video. 
 
       <ul>
-        <li>E.g., saying <i>"cat"</i> when there's clearly no cat but a <i>"dog"</i> is considered <u>invalid</u>.</li>
-        <li>Natural in the sense that it's something you would probably say in the situation shown in the video.
-        </li>
-        <li>E.g., <i>"object"</i> and <i>"entity"</i> are not something you'd <u>naturally</u> say.</li>
-        <li>Unless necessary, try not to fill in adjectives.</li>
-        <li>E.g., "<i>yellow</i> ball" includes a necessary adjective; but "<i>cute dog</i>" includes an unnecessary
-          adjective, "<i>cute</i>"</li>
+        <li>It should be valid, in the sense that it should be an appropriate answer for what is represented in the video.</li>
+        <ul>
+          <li>E.g., saying <i>"cat"</i> when there's clearly no cat but a <i>"dog"</i> is considered <u>invalid</u>.</li>
+        </ul>
+        <li>It should be natural, in the sense that it should be something you would normally say in the situation shown in the video.</li>
+        <ul>
+          <li>E.g., <i>"object"</i> and <i>"entity"</i> are not something you'd <u>naturally</u> say.</li>
+        </ul>
+        <li>Unless necessary, try not to fill in descriptors.</li>
+        <ul>
+          <li>E.g., state <i>"ball"</i> instead of <i>"yellow ball"</i>; or <i>"dog"</i> instead of <i>"cute dog"</i>.</li>
+        </ul>
         <li>Use your best judgment.</li>
       </ul>
 
@@ -135,8 +142,7 @@
         <li>Generally speaking, the more answers you provide, the better.</li>
         <li>But remember, every answer has to be <u>valid</u> and <u>natural</u> for the context.</li>
         <li>
-          The top performer workers will be awarded a <b>bonus</b>
-          (the ones that provide both the most accurate and natural answers).
+          The top performer workers, who provide answers that are correct, will be awarded a <b>bonus</b>.
         </li>
       </ul>
     </details>
@@ -149,8 +155,8 @@
       </div>
       <div id="video-relates">
         <label id="video-instruction" style="font-size:18px;">
-          Please watch this (<i>-- seconds</i>) video <b>and</b> listen to the <b><u>audio</u></b> (You may need to adjust your <b>device volume</b>).
-          <br>When the video ends, <b>do not</b> click on any other video. Press <b>Restart Video</b> when need.
+          Please watch this <i>-- second</i> video while you listen to its <b><u>audio</u></b> (You may need to adjust your <b>device volume</b>).
+          <br>When the video ends, <b>do not</b> click on any other video. Press <b>Restart Video</b> if you need to re-watch it.
         </label>
         <br>
         <button id="restart-video" type="button">Restart Video</button>
@@ -161,16 +167,17 @@
       <div class="alert alert-info" id="error-message"></div>
 
       <div id="answer-label-div">
-        <label style="font-size:18px;" for="answers" id="answer-label">Please view <a href="#instructions">Instructions</a> (including <b>bonus</b> information);
-          <br>Fill in <b>valid</b>, <b>natural</b> and <b>concise</b> answers (please fill in <big><i><u><b>--</b></u></i></big> as much as possible)
-          <br>One answer per box, press <b>Add another answer</b> to add a new answer box.</label>
+        <label style="font-size:18px;" for="answers" id="answer-label">
+          The provided answers need to be <big><i><u><b>--</b></u></i></big>.
+          <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
+          <br>Fill in <b>valid</b>, <b>natural</b> and <b>concise</b> answers  (please fill in as many answers as possible, while still being valid, natural and concise);
+          <br>Write one answer per text box. Press <b>Add another answer</b> to add a new answer box.</label>
       </div>
 
       <div id="answer-block">
-        <input type="text" id="answer1" name="answer 1" minlength="1" maxlength="20" size="20" placeholder="answer 1"
-          autocomplete="off"></input>
+        <input type="text" id="answer1" name="answer1" minlength="1"'
+                ' maxlength="20" size="20" placeholder="answer 1" autocomplete="off"></input>
         <button id="add-answer" type="button">Add another answer</button>
-      </div>
     </div>
   </div>
 </crowd-form>
@@ -257,7 +264,7 @@
 
     $question.innerHTML = question;
     $answer1.focus();
-    $($errormessage).text("Please fill in at least one answer").fadeIn();
+    $($errormessage).text("Please fill in with at least one answer").fadeIn();
 
     // add answer box
     let $NoAnswer = 2;
@@ -292,7 +299,7 @@
         }
       });
       if (empty) {
-        $($errormessage).text("Please input at least one answer").fadeIn();
+        $($errormessage).text("Please fill in with at least one answer").fadeIn();
       }
       else {
         $($errormessage).fadeOut("fast");
