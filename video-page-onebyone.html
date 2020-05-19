@@ -168,7 +168,7 @@
 
       <div id="answer-label-div">
         <label style="font-size:18px;" for="answers" id="answer-label">
-          The provided answers need to be <big><i><u><b>--</b></u></i></big>.
+          Each provided answer needs to be <big><i><u><b>--</b></u></i></big>.
           <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
           <br>Fill in <b>valid</b>, <b>natural</b> and <b>concise</b> answers  (please fill in as many answers as possible, while still being valid, natural and concise);
           <br>Write one answer per text box. Press <b>Add another answer</b> to add a new answer box.</label>
@@ -201,9 +201,9 @@
   let endTime = Math.ceil(parseFloat('${video_end_time}'));
   videoId = videoId.substring(2);
   question = question.replace("[MASK]","<a href=\"#answer1\" style=\"color:#B2BABB;\">_____</a>");
-  var poswarn = "adjective";
+  var poswarn = "an adjective";
   if(postag == "NN"){
-    poswarn = "noun";
+    poswarn = "a noun";
   }
 
   var tag = document.createElement('script');
