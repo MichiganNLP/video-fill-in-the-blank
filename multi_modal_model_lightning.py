@@ -171,7 +171,7 @@ def _main() -> None:
                 print(tokenizer.convert_ids_to_tokens(text_token_ids[i]))
                 print(predictions[i])
                 print(labels[i][0])
-                print(embed_sum_top3[i])
+                print(embed_sum_top3[1][i])
             pass
             
 
