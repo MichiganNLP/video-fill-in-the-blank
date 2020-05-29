@@ -163,6 +163,15 @@ def _main() -> None:
 
             loss.backward()
             embed_grad = embed.grad
+            embed_sum = torch.abs(embed_grad).sum(axis=2)
+            embed_sum_top3 = torch.topk(embed_sum, 3, axis=1)
+            prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
+            predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+            for i in range(embed_grad.shape[0]):
+                print(tokenizer.convert_ids_to_tokens(text_token_ids[i]))
+                print(predictions[i])
+                print(labels[i][0])
+                print(embed_sum_top3[i])
             
 
 
