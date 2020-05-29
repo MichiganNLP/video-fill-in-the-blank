@@ -172,6 +172,7 @@ def _main() -> None:
                 print(predictions[i])
                 print(labels[i][0])
                 print(embed_sum_top3[i])
+            pass
             
 
 
