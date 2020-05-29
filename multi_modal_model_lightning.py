@@ -31,14 +31,13 @@ class MultiModalLightningModel(QGenLightningModel):
         super().__init__(tokenizer=tokenizer, hparams=hparams)
 
         self.encoder = AutoModelWithLMHead.from_pretrained(self.hparams.transformer_model_name)
-        self.grad_eval = hparams.grad_eval
         self.text_embedding = self.encoder.get_input_embeddings()
         self.video_embedding = nn.Linear(self.hparams.visual_size, self.text_embedding.embedding_dim)
 
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], mask: torch.Tensor,
                 segment_mask: torch.Tensor, mask_lm_labels: torch.Tensor,
-                position_ids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+                position_ids: torch.Tensor, grad_eval: bool) -> Tuple[torch.Tensor, torch.Tensor]:
         text_embedding = self.text_embedding(text_token_ids)
         if visual is None:
             embedding = text_embedding
@@ -49,7 +48,7 @@ class MultiModalLightningModel(QGenLightningModel):
         # if self.grad_eval:
         #     return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
         #                     masked_lm_labels=mask_lm_labels, position_ids=position_ids), text_embedding
-        if self.grad_eval:
+        if grad_eval:
             return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
                             masked_lm_labels=mask_lm_labels, position_ids=position_ids), embedding
         else:
@@ -154,7 +153,7 @@ def _main() -> None:
         for batch in data:
             batch_size = batch[0][0].shape[0]
             text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
-            out, embed = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+            out, embed = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids, True)
             loss, scores = out
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
