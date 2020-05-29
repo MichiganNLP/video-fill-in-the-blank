@@ -31,7 +31,7 @@ class MultiModalLightningModel(QGenLightningModel):
         super().__init__(tokenizer=tokenizer, hparams=hparams)
 
         self.encoder = AutoModelWithLMHead.from_pretrained(self.hparams.transformer_model_name)
-
+        self.grad_eval = hparams.grad_eval
         self.text_embedding = self.encoder.get_input_embeddings()
         self.video_embedding = nn.Linear(self.hparams.visual_size, self.text_embedding.embedding_dim)
 
@@ -49,7 +49,7 @@ class MultiModalLightningModel(QGenLightningModel):
         # if self.grad_eval:
         #     return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
         #                     masked_lm_labels=mask_lm_labels, position_ids=position_ids), text_embedding
-        if self.hparams.grad_eval:
+        if self.grad_eval:
             return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
                             masked_lm_labels=mask_lm_labels, position_ids=position_ids), embedding
         else:
