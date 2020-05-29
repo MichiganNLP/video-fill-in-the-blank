@@ -20,6 +20,8 @@ from qgen_module import QGenLightningModel
 
 from uitls_grad_eval import _dataloader
 
+from torch.autograd import Variable
+
 logger = logging.getLogger(__name__)
 
 
@@ -47,9 +49,12 @@ class MultiModalLightningModel(QGenLightningModel):
         # if self.grad_eval:
         #     return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
         #                     masked_lm_labels=mask_lm_labels, position_ids=position_ids), text_embedding
-
-        return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
-                            masked_lm_labels=mask_lm_labels, position_ids=position_ids), text_embedding
+        if self.hparams.grad_eval:
+            return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
+                            masked_lm_labels=mask_lm_labels, position_ids=position_ids), embedding
+        else:
+            return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
+                            masked_lm_labels=mask_lm_labels, position_ids=position_ids)
 
     @overrides
     def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]]]:
