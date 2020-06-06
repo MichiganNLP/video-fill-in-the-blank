@@ -64,5 +64,6 @@ def transform(sentence, word_to_idx):
     tokens = [w for w in word_tokenize(sentence) if w.isalpha()]
     token_no_stops = [t for t in tokens if t not in stop_words]
     for word in token_no_stops:
-        vector[word_to_idx[word]] += 1
+        if word in word_to_idx:
+            vector[word_to_idx[word]] += 1
     return vector.view(1, -1)
