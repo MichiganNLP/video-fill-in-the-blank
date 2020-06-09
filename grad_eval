@@ -1,0 +1,116 @@
+['[CLS]', 'a', 'woman', 'is', 'kneeling', 'down', 'talking', 'the', 'the', '[MASK]', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+reverend
+camera
+tensor([6, 4, 7])
+['[CLS]', 'eventually', 'moving', 'his', '[MASK]', 'behind', 'his', 'ears', 'licking', 'and', 'brushing', 'repeatedly', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+old
+paws
+tensor([12,  4, 48])
+['[CLS]', 'the', '[MASK]', 'grabs', 'a', 'sponge', 'and', 'its', 'cleaning', 'a', 'pot', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+logo
+kid
+tensor([3, 5, 2])
+['[CLS]', 'a', '[MASK]', 'is', 'talking', 'inside', 'his', 'garage', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+man
+man
+tensor([7, 4, 6])
+['[CLS]', 'a', '[MASK]', 'in', 'a', 'green', 'shirt', 'is', 'looking', 'forward', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+man
+man
+tensor([6, 9, 8])
+['[CLS]', 'a', 'couple', 'of', '[MASK]', 'children', 'are', 'playing', 'with', 'a', 'tub', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+his
+small
+tensor([5, 2, 7])
+['[CLS]', 'they', 'shoot', 'the', 'balls', 'into', 'the', '[MASK]', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+air
+net
+tensor([4, 2, 5])
+['[CLS]', 'he', 'uses', 'it', 'to', 'remove', 'the', 'tiles', 'on', 'the', '[MASK]', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+floor
+roof
+tensor([7, 5, 2])
+['[CLS]', 'the', 'gymnast', 'go', 'right', 'into', 'a', 'split', 'on', 'the', '[MASK]', 'beam', 'and', 'performs', 'some', 'additional', 'moves', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+balance
+balance
+tensor([11,  2, 10])
+['[CLS]', 'the', 'credits', 'of', 'the', '[MASK]', 'are', 'shown', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+film
+clip
+tensor([2, 7, 3])
+['[CLS]', 'a', '[MASK]', 'is', 'seen', 'playing', 'a', 'piano', 'and', 'singing', 'in', 'a', 'public', 'place', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+woman
+man
+tensor([9, 2, 7])
+['[CLS]', 'the', 'child', 'talks', 'to', 'the', '[MASK]', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+mother
+camera
+tensor([2, 3, 6])
+['[CLS]', 'the', '[MASK]', 'skiing', 'and', 'snow', '##boarding', 'down', 'the', 'hill', 'past', 'others', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+of
+continue
+tensor([2, 3, 5])
+['[CLS]', 'there', "'", 's', 'a', 'gymnast', 'dressed', 'red', 'leo', '##tar', '##ds', 'performing', 'gymnastics', 'on', 'a', 'horse', '[MASK]', 'in', 'an', 'indoor', 'gym', 'with', 'another', 'gymnast', ',', 'some', 'judges', 'and', 'spectators', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+on
+bar
+tensor([15, 29, 12])
+['[CLS]', 'a', 'large', 'group', 'of', 'mostly', 'women', 'and', 'one', 'man', 'wearing', '[MASK]', 'tops', 'and', 'black', 'bottoms', 'are', 'standing', 'in', 'an', 'indoor', 'gymnasium', 'and', 'they', 'each', 'jump', 'and', 'do', 'their', 'routine', 'with', 'their', 'own', 'jump', 'ropes', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+white
+green
+tensor([12, 15, 14])
+['[CLS]', 'a', '[MASK]', 'of', 'a', 'painter', 'and', 'his', 'son', 'as', 'the', 'painter', 'is', 'asked', 'questions', 'on', 'painting', 'techniques', 'and', 'his', 'son', 'demonstrates', 'how', 'to', 'do', 'them', 'on', 'a', 'canvas', 'while', 'in', 'the', 'corner', 'of', 'the', 'screen', 'a', 'digital', 'paint', 'program', 'is', 'being', 'shown', 'from', 'a', 'computer', 'screen', '.', '[SEP]']
+portrait
+video
+tensor([ 5,  9, 11])
+['[CLS]', 'she', 'continues', 'to', 'spin', 'and', 'dance', 'for', 'the', '[MASK]', 'while', 'laughing', 'and', 'smiling', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+camera
+camera
+tensor([4, 6, 7])
+['[CLS]', 'they', 'put', 'a', '[MASK]', 'roof', 'on', 'the', 'house', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+new
+new
+tensor([9, 5, 8])
+['[CLS]', 'people', 'walk', 'around', 'a', '[MASK]', 'and', 'enjoy', 'one', 'another', 'as', 'well', 'as', 'playing', 'more', 'soccer', '.', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+park
+city
+tensor([7, 3, 1])
+['[CLS]', 'the', '[MASK]', 'is', 'then', 'shown', 'driving', 'through', 'a', 'tube', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+driver
+car
+tensor([ 5,  6, 10])
+['[CLS]', 'she', 'lays', 'down', 'the', 'map', 'and', 'shows', 'off', 'the', '[MASK]', 'while', 'smiling', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+map
+camera
+tensor([ 7,  5, 12])
+['[CLS]', 'a', 'girl', 'is', 'leaning', 'forward', 'and', 'clip', '##ping', 'her', '[MASK]', 'into', 'place', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+her
+hair
+tensor([ 7,  2, 13])
+['[CLS]', 'the', '[MASK]', 'of', 'australia', 'is', 'being', 'interviewed', 'about', 'the', 'event', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+government
+commissioner
+tensor([4, 7, 6])
+['[CLS]', 'a', 'couple', 'of', 'children', 'are', 'playing', 'in', 'a', '[MASK]', 'game', 'room', 'area', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+small
+large
+tensor([11, 10, 12])
+['[CLS]', 'another', 'family', 'rides', 'down', 'the', '[MASK]', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+mountain
+hill
+tensor([6, 3, 4])
+['[CLS]', 'he', 'becomes', 'embarrassed', 'and', 'the', 'lady', 'starts', 'drinking', 'her', 'tea', 'and', 'playing', 'with', 'her', '[MASK]', '.', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+fingers
+dog
+tensor([12, 10, 13])
+['[CLS]', 'the', '[MASK]', 'continues', 'and', 'then', 'the', 'ride', 'finally', 'stops', 'and', 'they', 'get', 'out', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+ride
+behavior
+tensor([7, 3, 2])
+['[CLS]', 'they', 'continue', 'scraping', 'until', 'a', '[MASK]', 'is', 'cleaned', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+surface
+strip
+tensor([8, 3, 6])
+['[CLS]', 'he', 'spins', 'the', 'tires', 'and', 'adjust', '##s', 'the', '[MASK]', '.', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[PAD]', '[SEP]']
+the
+chain
+tensor([4, 6, 9])

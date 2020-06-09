@@ -37,7 +37,7 @@ class MultiModalLightningModel(QGenLightningModel):
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], mask: torch.Tensor,
                 segment_mask: torch.Tensor, mask_lm_labels: torch.Tensor,
-                position_ids: torch.Tensor, grad_eval: bool) -> Tuple[torch.Tensor, torch.Tensor]:
+                position_ids: torch.Tensor, grad_eval = False: bool) -> Tuple[torch.Tensor, torch.Tensor]:
         text_embedding = self.text_embedding(text_token_ids)
         if visual is None:
             embedding = text_embedding
