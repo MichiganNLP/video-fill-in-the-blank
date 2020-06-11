@@ -57,7 +57,7 @@ with open(csvData) as csvfile:
 
         video_features = getVideoFeatures(video_id, start_frame, end_frame, videoFeatures)
 
-        data.append((masked_sentence, video_features, extended_answers, mask_position, standard_answer))
+        data.append((sequence_id, video_features, extended_answers, mask_position, standard_answer))
 
 with open('val_mturk.pkl', 'wb') as f:
     pickle.dump(data, f)
