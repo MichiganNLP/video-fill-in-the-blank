@@ -40,8 +40,9 @@ with open(csvData) as csvfile:
 
         sequence_id = tokenizer.encode(question)
 
-        start_frame = math.floor(start_time * 2)
-        end_frame = math.ceil(end_time * 2)
+        # start_time and end_time are strings, convert them to float
+        start_frame = math.floor(float(start_time) * 2)
+        end_frame = math.ceil(float(end_time) * 2)
 
         video_features = getVideoFeatures(video_id, start_frame, end_frame, videoFeatures)
 
