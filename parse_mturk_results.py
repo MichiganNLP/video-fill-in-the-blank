@@ -27,7 +27,7 @@ with open(csvData) as csvfile:
         video_id, question, start_time, end_time, _, standard_answer, worker_answers = row
         extended_answers = set(standard_answer + worker_answers)
         masked_sentence = tokenizer.tokenize(question)
-        mask_position = sentence.index('[MASK]') + 1 ## plus one for [CLS]
+        mask_position = masked_sentence.index('[MASK]') + 1 ## plus one for [CLS]
 
         sequence_id = tokenizer.encode(quesiton)
 
