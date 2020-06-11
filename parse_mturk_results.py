@@ -12,6 +12,7 @@ import h5py
 import math
 import torch
 import numpy as np
+import pickle
 from transformers import BertTokenizer, BertModel
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
