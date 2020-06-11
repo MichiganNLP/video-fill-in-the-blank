@@ -30,14 +30,14 @@ with open(csvData) as csvfile:
             continue
         video_id, question, start_time, end_time, _, standard_answer, worker_answers = row
         
-        # original worker answers is list-like string, convert it to a real list        
+        # original worker answers is a list-like string, convert it to a real list        
         worker_answers = worker_answers.strip(']\'\'[').split('\', \'') 
         
-        extended_answers = set([standard_answer] + worker_answers)
+        extended_answers = list(set([standard_answer] + worker_answers))
         masked_sentence = tokenizer.tokenize(question)
         mask_position = masked_sentence.index('[MASK]') + 1 # plus one for [CLS]
 
-        sequence_id = tokenizer.encode(quesiton)
+        sequence_id = tokenizer.encode(question)
 
         start_frame = math.floor(start_time * 2)
         end_frame = math.ceil(end_time * 2)
