@@ -1,3 +1,12 @@
+# This file preprocess data from Mturk and dumps them into a pickle file for further usage
+# Output data structure:
+#   (masked_sentence, video_features, extended_answers, mask_position, standard_answer)
+#       masked_sentence: sequence id of the masked sentence. [CLS] and [SEP] already added
+#       video_features: C3D video features. T * 500
+#       extended answers: set of valid MTurk workers' answers
+#       mask_position: index of the [MASK] token in the question
+#       standard_answer: original answer
+
 import csv
 import h5py
 import math
@@ -47,7 +56,7 @@ with open(csvData) as csvfile:
 
         video_features = getVideoFeatures(video_id, start_frame, end_frame, videoFeatures)
 
-        data.append(masked_sentence, video_features, extended_answers, mask_position)
+        data.append((masked_sentence, video_features, extended_answers, mask_position, standard_answer))
 
 with open('val_mturk.pkl', 'wb') as f:
     pickle.dump(data, f)
