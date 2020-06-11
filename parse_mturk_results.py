@@ -2,8 +2,11 @@ import csv
 from transformers import BertTokenizer, BertModel
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 
-def getVideoFeatures(key, startFrame, endFrame, videoFeatures, textLen):
+data = []
+
+def getVideoFeatures(key, startFrame, endFrame, videoFeatures):
         feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
         
         if feature_np.shape[0] > 200:
@@ -21,6 +24,16 @@ with open('val1_50_mturk_appr_answers.csv') as csvfile:
         video_id, question, start_time, end_time, _, standard_answer, worker_answers = row
         extended_answers = set(standard_answer + worker_answers)
         masked_sentence = tokenizer.tokenize(question)
-        mask_position = sentence.index('[MASK]')
+        mask_position = sentence.index('[MASK]') + 1 ## plus one for [CLS]
 
         sequence_id = tokenizer.encode(quesiton)
+
+        start_frame = math.floor(start_time * 2)
+        end_frame = math.ceil(end_time * 2)
+
+        video_features = getVideoFeatures(video_id, start_frame, end_frame, videoFeatures)
+
+        data.append(masked_sentence, video_features, extended_answers, mask_position)
+
+with open('train.pkl', 'wb') as f:
+    pickle.dump(data, f)
