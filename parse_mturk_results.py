@@ -1,8 +1,10 @@
 import csv
 from transformers import BertTokenizer, BertModel
 
+folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
+csvData = f"{folder}/val1_50_mturk_appr_answers.csv"
 
 data = []
 
@@ -18,7 +20,7 @@ def getVideoFeatures(key, startFrame, endFrame, videoFeatures):
 
         return torch.tensor(feature, dtype=torch.float)
 
-with open('val1_50_mturk_appr_answers.csv') as csvfile:
+with open(csvData) as csvfile:
     reader = csv.reader(csvfile)
     for row in reader:
         video_id, question, start_time, end_time, _, standard_answer, worker_answers = row
@@ -35,5 +37,5 @@ with open('val1_50_mturk_appr_answers.csv') as csvfile:
 
         data.append(masked_sentence, video_features, extended_answers, mask_position)
 
-with open('train.pkl', 'wb') as f:
+with open('val_mturk.pkl', 'wb') as f:
     pickle.dump(data, f)
