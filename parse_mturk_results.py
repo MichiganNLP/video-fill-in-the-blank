@@ -23,7 +23,11 @@ def getVideoFeatures(key, startFrame, endFrame, videoFeatures):
 
 with open(csvData) as csvfile:
     reader = csv.reader(csvfile)
+    isHead = True
     for row in reader:
+        if isHead:
+            isHead = False
+            continue
         video_id, question, start_time, end_time, _, standard_answer, worker_answers = row
         extended_answers = set(standard_answer + worker_answers)
         masked_sentence = tokenizer.tokenize(question)
