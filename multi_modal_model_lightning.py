@@ -186,7 +186,7 @@ def _main() -> None:
             standard_results = [(prediction == label) for prediction, label in zip(predictions, standard_answers)]
             for i in range(len(extended_results)):
                 if extended_results[i] != standard_results[i]:
-                    print(tokenizer.convert_ids_to_tokens(text_token_ids[i].tolist()))
+                    print(' '.join(tokenizer.convert_ids_to_tokens(text_token_ids[i].tolist())))
                     print(predictions[i])
                     print(labels[i])
                     print(standard_answers[i])
