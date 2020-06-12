@@ -42,7 +42,7 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
         labels.append(data[2])
         mask_positions.append(data[3])
         if len(data) == 5:
-            standard_answers.append(data)
+            standard_answers.append(data[4])
 
 
         text_features.append(text)
