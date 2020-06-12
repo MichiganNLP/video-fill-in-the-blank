@@ -169,6 +169,11 @@ def _main() -> None:
         model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_7579387/checkpoints/epoch=1.ckpt')
         data = _dataloader('val_mturk.pkl', hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+
+        total = 0
+        correct_extended = 0
+        correct_standard = 0
+
         for batch in data:
             batch_size = batch[0][0].shape[0]
             text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers = batch[0]
@@ -177,8 +182,15 @@ def _main() -> None:
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
             predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
-            correct_extended = sum((prediction in label) for prediction, label in zip(predictions, labels))
-            correct_standard = sum((prediction == label) for prediction, label in zip(predictions, standard_answers))
+            extended_results = (prediction in label) for prediction, label in zip(predictions, labels)
+            standard_results = ((prediction == label) for prediction, label in zip(predictions, standard_answers))
+            compare = (extended_results != standard_results)
+            correct_extended += sum(extended_results)
+            correct_standard += sum(standard_results)
+            total += batch_size
+        
+        acc_extended = correct_extended / total
+        acc_standard = correct_standard / total
     else:
         model = MultiModalLightningModel(hparams)
 
