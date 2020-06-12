@@ -184,13 +184,21 @@ def _main() -> None:
             predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
             extended_results = [(prediction in label) for prediction, label in zip(predictions, labels)]
             standard_results = [(prediction == label) for prediction, label in zip(predictions, standard_answers)]
-            compare = (extended_results != standard_results)
+            for i in range(len(extended_results)):
+                if extended_results[i] != standard_results[i]:
+                    print(tokenizer.convert_ids_to_tokens(text_token_ids[i].tolist()))
+                    print(predictions[i])
+                    print(labels[i])
+                    print(standard_answers[i])
+                    print()
             correct_extended += sum(extended_results)
             correct_standard += sum(standard_results)
             total += batch_size
         
         acc_extended = correct_extended / total
         acc_standard = correct_standard / total
+        print(acc_extended)
+        print(acc_standard)
     else:
         model = MultiModalLightningModel(hparams)
 
