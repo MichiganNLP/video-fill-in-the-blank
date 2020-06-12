@@ -140,6 +140,7 @@ class QGenLightningModel(LightningModule):
 
         return accuracy, correct, batch_size, loss
 
+
     @overrides
     def training_step(self, batch: TYPE_BATCH,
                       batch_idx: int) -> Union[int, MutableMapping[str, Union[torch.Tensor, TYPE_STEP_OUTPUT]]]:
@@ -161,8 +162,11 @@ class QGenLightningModel(LightningModule):
 
     @overrides
     def test_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size, loss = self._val_test_step(*batch)
-        return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "test_loss": loss}
+        if not self.hparams.mturk_val:
+            accuracy, correct, batch_size, loss = self._val_test_step(*batch)
+            return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "test_loss": loss}
+        else:
+
 
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
         loss_key = f"{key_prefix}loss"

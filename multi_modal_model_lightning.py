@@ -18,7 +18,7 @@ from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 from argparse_with_defaults import ArgumentParserWithDefaults
 from qgen_module import QGenLightningModel
 
-from uitls_grad_eval import _dataloader
+from utils_grad_eval import _dataloader
 
 from torch.autograd import Variable
 
@@ -122,6 +122,7 @@ def _get_args() -> argparse.Namespace:
     parent_parser.add_argument("--use-16bit", action="store_true")
     parent_parser.add_argument("-v", "--verbose", action="store_true")
     parent_parser.add_argument("--grad-eval", type=bool, default=False)
+    parent_parser.add_argument("--mturk-eval", type=bool, default=False)
     parser = MultiModalLightningModel.add_model_specific_args(parent_parser)
     return parser.parse_args()
 
@@ -137,17 +138,8 @@ def _main() -> None:
 
     logger.info(hparams)
 
-    if not hparams.grad_eval:
-        model = MultiModalLightningModel(hparams)
-
-        trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
-                            distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
-                            amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
-                            progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
-                            fast_dev_run=hparams.fast_dev_run)
-
-        trainer.fit(model)
-    else:
+    
+    if hparams.grad_eval:
         model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
         data = _dataloader('val2.pkl', hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
@@ -173,6 +165,30 @@ def _main() -> None:
                 print(labels[i][0])
                 print(embed_sum_top3[1][i])
             pass
+    elif hparams.mturk_eval:
+        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
+        data = _dataloader('val_mturk.pkl', hparams)
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+        for batch in data:
+            batch_size = batch[0][0].shape[0]
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers = batch[0]
+            out, embed = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids, True)
+            loss, scores = out
+            prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
+
+            predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+            correct_extended = sum((prediction in label) for prediction, label in zip(predictions, labels))
+            correct_standard = sum((prediction == label) for prediction, label in zip(predictions, standard_answers))
+    else:
+        model = MultiModalLightningModel(hparams)
+
+        trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
+                            distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
+                            amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
+                            progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
+                            fast_dev_run=hparams.fast_dev_run)
+
+        trainer.fit(model)
             
 
 

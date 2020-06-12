@@ -28,10 +28,12 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
     video_features = []
     labels = []
     mask_positions = []
+    standard_answers = []
 
     max_text_len = 0
     max_video_len = 0
     video = None
+    
 
     for i in range(batch_size):
         data = batch[i]
@@ -39,6 +41,9 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
         video = data[1]
         labels.append(data[2])
         mask_positions.append(data[3])
+        if len(data) == 5:
+            standard_answers.append(data)
+
 
         text_features.append(text)
         video_features.append(video)
@@ -82,8 +87,12 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
         # We know label length in training. For val and testing, mask_lm_labels is not used
         masked_lm_labels[i, mask_positions[i]] = tokenizer.convert_tokens_to_ids(labels[i][0])
 
-    out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
-                position_ids))
+    if len(standard_answers) == 0:
+        out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
+                    position_ids))
+    else:
+        out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
+                    position_ids, standard_answers))
     return out
 
 def _dataloader(pickle_path_inside_data_folder: str, hparams: argparse.Namespace) -> DataLoader:
