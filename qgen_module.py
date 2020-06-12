@@ -162,10 +162,8 @@ class QGenLightningModel(LightningModule):
 
     @overrides
     def test_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        if not self.hparams.mturk_val:
-            accuracy, correct, batch_size, loss = self._val_test_step(*batch)
-            return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "test_loss": loss}
-        else:
+        accuracy, correct, batch_size, loss = self._val_test_step(*batch)
+        return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "test_loss": loss}
 
 
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
