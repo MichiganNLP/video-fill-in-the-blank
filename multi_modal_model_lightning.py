@@ -172,7 +172,7 @@ def _main() -> None:
         for batch in data:
             batch_size = batch[0][0].shape[0]
             text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers = batch[0]
-            out, embed = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids, True)
+            out = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
             loss, scores = out
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
