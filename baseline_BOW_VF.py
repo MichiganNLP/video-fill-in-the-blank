@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class baseline_BOW_VF(nn.Module):
     def __init__(self, W_D_in, V_D_in, D_out):
         """
@@ -15,6 +16,6 @@ class baseline_BOW_VF(nn.Module):
 
     def forward(self, text_feature, video_feature):
         text_feature_out = self.relu1(self.linear1(text_feature))
-        fused_feature = torch.cat([text_feature_out, video_feature], dim=1)
+        fused_feature = torch.cat([text_feature_out, video_feature], dim=-1)
         y_pred = self.linear2(fused_feature)
         return y_pred
