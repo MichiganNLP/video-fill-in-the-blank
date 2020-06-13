@@ -16,10 +16,10 @@ class ActivityNetCaptionsDataset(Dataset):
             video url
         """
         with open(pickle_path, 'rb') as file:
-            self.data_dict = pickle.load(file)
+            self.data = pickle.load(file)
 
     def __len__(self) -> int:
-        return len(self.data_dict)
+        return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data_dict[idx]
+        return self.data[idx]
