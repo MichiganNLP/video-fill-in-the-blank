@@ -10,7 +10,7 @@ class baseline_BOW_VF(nn.Module):
         """
         super(baseline_BOW_VF, self).__init__()
         self.linear1 = nn.Linear(W_D_in, V_D_in)
-        self.relu1 = nn.ReLU()
+        self.relu1 = nn.LeakyReLU()
 
         self.linear2 = nn.Linear(2 * V_D_in, D_out)
 

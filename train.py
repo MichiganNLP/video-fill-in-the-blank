@@ -93,7 +93,7 @@ _, num_vocabs = fit(train_text_file, 1000)
 print(f"num_vocabs: {num_vocabs}")
 model = baseline_BOW_VF(1000, 500, num_vocabs).cuda()
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0003)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.00003)
 max_epoch = 30
 
 model = train(trainLoader, max_epoch, model, optimizer, criterion)
