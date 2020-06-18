@@ -11,26 +11,32 @@ import os
 
 
 def fit(train_text_file, num_tokens):
+    word_to_idx_file = f'/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/word_to_idx-{num_tokens}.pkl'
     stop_words = set(stopwords.words('english'))
     word_to_idx = dict()
-    file = open(train_text_file, 'r')
-    data = json.load(file)
     # collect all documents into all_sentences
     documents = list()
-    for key in data:
-        documents.extend(data[key]['sentences'])
+    with open(train_text_file, 'r') as f:
+        data = json.load(f)
+        for key in data:
+            documents.extend(data[key]['sentences'])
     # tokenize documents
     tokenized_docs = [word_tokenize(doc.lower()) for doc in documents]
     # filter out stop words
     tokens = [w for t_doc in tokenized_docs for w in t_doc if w.isalpha()]
     tokens_no_stops = [t for t in tokens if t not in stop_words]
     # Get top k tokens by frequency
-    top_k_words = Counter(tokens_no_stops).most_common(num_tokens)
+    counter = Counter(tokens_no_stops)
+    top_k_words = counter.most_common(num_tokens)
     # create (word, index) dictionary
     for word, _ in top_k_words:
         if word not in word_to_idx:
             word_to_idx[word] = len(word_to_idx)
-    return word_to_idx, len(tokens_no_stops)
+    # open pickle file and dump data into the file
+    pickle_file = open(word_to_idx_file, 'wb')
+    pickle.dump((word_to_idx, len(tokens)), pickle_file)
+    pickle_file.close()
+    return word_to_idx, len(counter)
 
 
 def make_bow_vector(sentence, word_to_idx):
@@ -69,7 +75,7 @@ def get_video_representations(key, start, end, video_features):
 def build_representation(num_tokens, masked_data_file, train_text_file, video_feature_file, bow_representation_file):
     # check if representation file exists
     if os.path.exists(bow_representation_file):
-        print('representations are loaded.')
+        print(f'{bow_representation_file}: representations are loaded.')
         return
     # construct word to index dictionary for sentence representation using training data file: train.json, etc
     word_to_idx, num_vocabs = fit(train_text_file, num_tokens)
@@ -79,6 +85,7 @@ def build_representation(num_tokens, masked_data_file, train_text_file, video_fe
     # (sentence_representation, feature representation, label_representation)
     data = list()
     with open(masked_data_file, 'r') as train_file:
+        error_file = open(masked_data_file + '_error_time_stamps.txt', 'w')
         while True:
             key = train_file.readline().strip()
             # check if it is the end of train file
@@ -94,9 +101,18 @@ def build_representation(num_tokens, masked_data_file, train_text_file, video_fe
             # create sentence feature and video feature
             sentence_feature = make_bow_vector(sentence, word_to_idx)
             video_feature = get_video_representations(key, original_tt_start, original_tt_end, video_features)
-            video_feature = torch.mean(video_feature, dim=0)
-            label_representation = make_target(label, word_to_idx)
-            data.append((sentence_feature, video_feature, label_representation))
+            if video_feature.shape[0] == 0:
+                error_file.write('shape: ' + str(video_feature.shape) + '\n')
+                error_file.write('key: ' + key + '\n')
+                error_file.write('sentence: ' + sentence + '\n')
+                error_file.write('label: ' + label + '\n')
+                error_file.write('indices: [' + str(tt_start) + ' ' + str(tt_start) + ']' + '\n')
+                error_file.write('\n')
+            else:
+                video_feature = torch.mean(video_feature, dim=0)
+                label_representation = make_target(label, word_to_idx)
+                data.append((sentence_feature, video_feature, label_representation))
+        error_file.close()
         # open pickle file and dump data into the file
         pickle_file = open(bow_representation_file, 'wb')
         pickle.dump(data, pickle_file)
