@@ -126,7 +126,7 @@ class BaselineBowVF(pl.LightningModule):
     def add_model_specific_args(parent_parser, num_vocabs, num_tokens):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument('--num_tokens', type=int, default=num_tokens)
-        parser.add_argument("--epochs", type=int, default=30)
+        parser.add_argument("--epochs", type=int, default=1000)
         parser.add_argument('--text_feature_dim', type=int, default=1000)
         parser.add_argument('--video_feature_dim', type=int, default=500)
         parser.add_argument('--output_dim', type=int, default=num_vocabs)
