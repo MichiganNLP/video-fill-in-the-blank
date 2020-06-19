@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 
 class BaselineBowVF(pl.LightningModule):
 
-    def __init__(self, hparams):
+    def __init__(self, hparams, output_dim):
         """
         In the constructor we instantiate two nn.Linear modules and assign them as
         member variables.
@@ -25,7 +25,7 @@ class BaselineBowVF(pl.LightningModule):
         self.linear1 = nn.Linear(self.hparams.text_feature_dim, self.hparams.video_feature_dim)
         self.relu = nn.ReLU()
 
-        self.linear2 = nn.Linear(2 * self.hparams.video_feature_dim, self.hparams.output_dim)
+        self.linear2 = nn.Linear(2 * self.hparams.video_feature_dim, output_dim)
 
     def forward(self, text_feature, video_feature):
 
@@ -119,17 +119,18 @@ class BaselineBowVF(pl.LightningModule):
     #     return DataLoader(self.test_data_set, batch_size=16, shuffle=True, num_workers=0)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate,
+                                     weight_decay=self.hparams.weight_decay)
         return optimizer
 
     @staticmethod
-    def add_model_specific_args(parent_parser, num_vocabs, num_tokens):
+    def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument('--num_tokens', type=int, default=num_tokens)
+        parser.add_argument("--weight_decay", default=1e-1, type=float)
+        parser.add_argument('--num_tokens', type=int, default=1000)
         parser.add_argument("--epochs", type=int, default=1000)
         parser.add_argument('--text_feature_dim', type=int, default=1000)
         parser.add_argument('--video_feature_dim', type=int, default=500)
-        parser.add_argument('--output_dim', type=int, default=num_vocabs)
         parser.add_argument('--shuffle', type=bool, default=True)
         parser.add_argument('--num_workers', type=int, default=4)
         parser.add_argument('--train_batch_size', type=int, default=32)
@@ -139,7 +140,7 @@ class BaselineBowVF(pl.LightningModule):
 
     @staticmethod
     # program level args
-    def add_program_args():
+    def add_args():
         parser = ArgumentParser(add_help=False)
         parser.add_argument(
             '-d', '--debug',
@@ -158,19 +159,18 @@ class BaselineBowVF(pl.LightningModule):
         parser.add_argument('--distributed-backend', default='dp', choices=('dp', 'ddp', 'ddp2'))
         parser.add_argument('--gpu-count', type=int, default=1)
         parser.add_argument('--resume-from-checkpoint', metavar='CHECKPOINT_FILE')
-        return parser
+
+        return BaselineBowVF.add_model_specific_args(parser)
 
 
 if __name__ == '__main__':
-    parser = BaselineBowVF.add_program_args()
-    train_text_file = os.path.join(parser.parse_args().data_path, 'train.json')
-
-    NUM_TOKENS = 1000
-    _, NUM_VOCABS = fit(train_text_file, NUM_TOKENS)
-
-    parser = BaselineBowVF.add_model_specific_args(parser, NUM_VOCABS, NUM_TOKENS)
-    parser = Trainer.add_argparse_args(parser)
+    parser = BaselineBowVF.add_args()
     hparams = parser.parse_args()
+
+    train_text_file = os.path.join(hparams.data_path, 'train.json')
+    _, NUM_VOCABS = fit(train_text_file, hparams.num_tokens)
+
+    parser = Trainer.add_argparse_args(parser)
 
     logger = logging.getLogger(__name__)
     logger.info(hparams)
@@ -182,5 +182,5 @@ if __name__ == '__main__':
                       resume_from_checkpoint=hparams.resume_from_checkpoint, fast_dev_run=hparams.fast_dev_run,
                       progress_bar_refresh_rate=1)
 
-    model = BaselineBowVF(hparams)
+    model = BaselineBowVF(hparams, NUM_VOCABS)
     trainer.fit(model)
