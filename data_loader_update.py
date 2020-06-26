@@ -44,7 +44,7 @@ def gen(masked_data_file, text_file, video_features):
 
                 video_feature_np = video_features[key]['c3d_features'][start_frame:end_frame+1]
         
-                if vidoe_feature_np.shape[0] > 200:
+                if video_feature_np.shape[0] > 200:
                     video_feature = np.zeros((200, video_feature_np.shape[1]))
                     for i in range(200):
                         video_feature[i] = video_feature_np[round(i * (video_feature_np.shape[0]-1)/199)]
