@@ -57,8 +57,11 @@ def gen(masked_data_file, text_file, video_features):
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
-videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
+video_features = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 genTextFile = f"{folder}/train"
 rawTextFile = f"{folder}/train.json"
 
 data = gen(genTextFile, rawTextFile, video_features)
+
+with open('train.pkl', 'wb') as f:
+    pickle.dump(data, f)
