@@ -19,7 +19,7 @@ from transformers import BertTokenizer, BertModel
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
-csvData = f"{folder}/val1_50_mturk_appr_answers.csv"
+csvData = f"{folder}/val1_mturk_appr_answers.csv"
 
 data = []
 
