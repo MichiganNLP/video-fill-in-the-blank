@@ -29,11 +29,16 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
     labels = []
     mask_positions = []
     standard_answers = []
+    extended_answers = []
 
     max_text_len = 0
     max_video_len = 0
     video = None
     
+    if len(batch[0]) == 6
+        mturk = True
+    else:
+        mturk = False
 
     for i in range(batch_size):
         data = batch[i]
@@ -41,8 +46,9 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
         video = data[1]
         labels.append(data[2])
         mask_positions.append(data[3])
-        if len(data) == 5:
+        if mturk:
             standard_answers.append(data[4])
+            extended_answers.append(data[5])
 
 
         text_features.append(text)
@@ -85,14 +91,17 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
         mask[i, max_text_len - 1:max_text_len + video_len] = True
 
         # We know label length in training. For val and testing, mask_lm_labels is not used
-        masked_lm_labels[i, mask_positions[i]] = tokenizer.convert_tokens_to_ids(labels[i][0])
+        if not mturk:
+            masked_lm_labels[i, mask_positions[i]] = tokenizer.convert_tokens_to_ids(labels[i][0])
+        else:
+            masked_lm_labels[i, mask_positions[i]] = tokenizer.convert_tokens_to_ids(standard_answers[i])
 
-    if len(standard_answers) == 0:
+    if not mturk:
         out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
                     position_ids))
     else:
         out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
-                    position_ids, standard_answers))
+                    position_ids, standard_answers, extended_answers))
     return out
 
 def _dataloader(pickle_path_inside_data_folder: str, hparams: argparse.Namespace) -> DataLoader:
