@@ -49,11 +49,11 @@ with open(csvData) as csvfile:
         # start_time and end_time are strings, convert them to float
         
         duration = raw_data[video_id]["duration"]
-        video_feature_len = video_features[key]['c3d_features'].shape[0]
+        video_feature_len = video_features[video_id]['c3d_features'].shape[0]
         start_frame = math.floor(tt_start / duration * video_feature_len)
         end_frame  = math.floor(tt_end / duration * video_feature_len)
 
-        feature_np = video_features[key]['c3d_features'][start_frame:end_frame+1]
+        feature_np = video_features[video_id]['c3d_features'][start_frame:end_frame+1]
         
         if feature_np.shape[0] > 200:
             feature = np.zeros((200, feature_np.shape[1]))
