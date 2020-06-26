@@ -40,7 +40,7 @@ with open(csvData) as csvfile:
         # original worker answers is a dict-like string, convert it to a real dictionary        
         worker_answers = eval(worker_answers)
         
-        extended_answers = list(set([standard_answer] + worker_answers.keys()))
+        extended_answers = list(set([standard_answer] + list(worker_answers.keys())))
         masked_sentence = tokenizer.tokenize(question)
         mask_position = masked_sentence.index('[MASK]') + 1 # plus one for [CLS]
 
