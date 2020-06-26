@@ -166,7 +166,8 @@ def _main() -> None:
                 print(embed_sum_top3[1][i])
             pass
     elif hparams.mturk_eval:
-        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_8206545/checkpoints/epoch=1.ckpt')
+        # model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_8206545/checkpoints/epoch=1.ckpt')
+        model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
         data = _dataloader('val_mturk.pkl', hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
@@ -180,8 +181,9 @@ def _main() -> None:
         for batch in data:
             batch_size = batch[0][0].shape[0]
             text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers, extended_answers = batch[0]
-            out = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
-            loss, scores = out
+            # out = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+            out = model(text_token_ids, mask_lm_labels=masked_lm_labels, position_ids=position_ids, attention_mask=mask, token_type_ids=segment_mask)
+            loss, scores = out[:2]
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
             predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
