@@ -40,7 +40,7 @@ with open(csvData) as csvfile:
         # original worker answers is a dict-like string, convert it to a real dictionary        
         worker_answers = eval(worker_answers)
         
-        extended_answers = list(set([standard_answer] + worker_answers))
+        extended_answers = list(set([standard_answer] + worker_answers.keys()))
         masked_sentence = tokenizer.tokenize(question)
         mask_position = masked_sentence.index('[MASK]') + 1 # plus one for [CLS]
 
@@ -64,7 +64,7 @@ with open(csvData) as csvfile:
         
         feature = torch.tensor(feature, dtype=torch.float)
 
-        data.append((sequence_id, video_features, extended_answers, mask_position, standard_answer))
+        data.append((sequence_id, video_features, worker_answers, mask_position, standard_answer, extended_answers))
 
 with open('val_mturk.pkl', 'wb') as f:
     pickle.dump(data, f)
