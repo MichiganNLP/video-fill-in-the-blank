@@ -182,15 +182,15 @@ def _main() -> None:
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
             predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
-            extended_results = [(prediction in label) for prediction, label in zip(predictions, labels)]
+            extended_results = [(prediction in label) for prediction, label in zip(predictions, labels.keys())]
             standard_results = [(prediction == label) for prediction, label in zip(predictions, standard_answers)]
-            for i in range(len(extended_results)):
-                if extended_results[i] != standard_results[i]:
-                    print(' '.join(tokenizer.convert_ids_to_tokens(text_token_ids[i].tolist())))
-                    print(predictions[i])
-                    print(labels[i])
-                    print(standard_answers[i])
-                    print()
+            # for i in range(len(extended_results)):
+            #     if extended_results[i] != standard_results[i]:
+            #         print(' '.join(tokenizer.convert_ids_to_tokens(text_token_ids[i].tolist())))
+            #         print(predictions[i])
+            #         print(labels[i])
+            #         print(standard_answers[i])
+            #         print()
             correct_extended += sum(extended_results)
             correct_standard += sum(standard_results)
             total += batch_size
