@@ -198,16 +198,22 @@ def _main() -> None:
                 
                 oot_score = 0
                 total_H = 0
+                if labels[i] != []:
+                    for key in labels[i]:
+                        total_H += labels[i][key][0] / labels[i][key][1]
 
-                for key in labels[i]:
-                    total_H += labels[i][key][0] / labels[i][key][1]
-
-                for pred in predictions_top10:
-                    if pred in labels[i]:
-                        correct = True
-                        oot_score += labels[i][pred][0] / labels[i][pred][1]
+                    for pred in predictions_top10:
+                        if pred in labels[i]:
+                            correct = True
+                            oot_score += labels[i][pred][0] / labels[i][pred][1]
                 
-                oot_score /= total_H
+                    oot_score /= total_H
+                else:
+                    for pred in predictions_top10:
+                        if pred == standard_answers[i]:
+                            correct = True
+                            oot_score = 1
+                            break
                 if correct:
                     top10 += 1
                 oot += oot_score
