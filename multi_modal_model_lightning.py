@@ -166,7 +166,7 @@ def _main() -> None:
                 print(embed_sum_top3[1][i])
             pass
     elif hparams.mturk_eval:
-        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_7579387/checkpoints/epoch=1.ckpt')
+        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_8206545/checkpoints/epoch=1.ckpt')
         data = _dataloader('val_mturk.pkl', hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
