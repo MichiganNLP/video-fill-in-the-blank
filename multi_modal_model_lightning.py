@@ -182,7 +182,7 @@ def _main() -> None:
             batch_size = batch[0][0].shape[0]
             text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers, extended_answers = batch[0]
             # out = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
-            out = model(text_token_ids, masked_lm_labels=mask_lm_labels, position_ids=position_ids, attention_mask=mask, token_type_ids=segment_mask)
+            out = model(text_token_ids, masked_lm_labels=mask_lm_labels, attention_mask=mask, token_type_ids=segment_mask)
             loss, scores = out[:2]
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
