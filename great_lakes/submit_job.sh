@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem-per-cpu=20000m 
+#SBATCH --mem-per-cpu=10000m 
 #SBATCH --gres=gpu:1
 #SBATCH --time=01-5:00:00
 #SBATCH --account=mihalcea1

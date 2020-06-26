@@ -171,6 +171,9 @@ def _main() -> None:
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
         total = 0
+        top10 = 0
+        oot = 0
+        correct_workers = 0
         correct_extended = 0
         correct_standard = 0
 
@@ -182,9 +185,34 @@ def _main() -> None:
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
             predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
-            worker_results = [(prediction in label.keys()) for prediction, label in zip(predictions, labels)]
+            worker_results = [(prediction in label) for prediction, label in zip(predictions, labels)]
             extended_results = [(prediction in label) for prediction, label in zip(predictions, extended_answers)]
             standard_results = [(prediction == label) for prediction, label in zip(predictions, standard_answers)]
+            
+            
+            
+            for i in range(batch_size):
+                _, indices = torch.topk(scores[i,mask_positions[i]], 10)
+                predictions_top10 = tokenizer.convert_ids_to_tokens(indices)
+                correct = False
+                
+                oot_score = 0
+                total_H = 0
+
+                for key in labels[i]:
+                    total_H += labels[i][key][0] / labels[i][key][1]
+
+                for pred in predictions_top10:
+                    if pred in labels[i]:
+                        correct = True
+                        oot_score += labels[i][pred][0] / labels[i][pred][1]
+                
+                oot_score /= total_H
+                if correct:
+                    top10 += 1
+                oot += oot_score
+
+
             # for i in range(len(extended_results)):
             #     if extended_results[i] != standard_results[i]:
             #         print(' '.join(tokenizer.convert_ids_to_tokens(text_token_ids[i].tolist())))
@@ -192,12 +220,19 @@ def _main() -> None:
             #         print(labels[i])
             #         print(standard_answers[i])
             #         print()
+            correct_workers += sum(worker_results)
             correct_extended += sum(extended_results)
             correct_standard += sum(standard_results)
             total += batch_size
-        
+
+        acc_top10 = top10 / total
+        oot = oot / total
+        acc_workers = correct_workers / total
         acc_extended = correct_extended / total
         acc_standard = correct_standard / total
+        print(acc_top10)
+        print(oot)
+        print(acc_workers)
         print(acc_extended)
         print(acc_standard)
     else:
