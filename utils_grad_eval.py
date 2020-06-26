@@ -35,7 +35,7 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
     max_video_len = 0
     video = None
     
-    if len(batch[0]) == 6
+    if len(batch[0]) == 6:
         mturk = True
     else:
         mturk = False
