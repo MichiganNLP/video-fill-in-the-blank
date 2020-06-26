@@ -33,7 +33,7 @@ def gen(masked_data_file, text_file, video_features):
                 if not key:
                     break
                 sentence = train_file.readline().strip()
-                sequence_id = tokenizer.encode(sentence) 
+                sentence_id = tokenizer.encode(sentence) 
                 mask_position = sentence.split(' ').index('[MASK]') + 1
                 label = train_file.readline().strip()
                 tt_start, tt_end = json.loads(train_file.readline().strip())
