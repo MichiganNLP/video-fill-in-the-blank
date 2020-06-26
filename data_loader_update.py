@@ -42,7 +42,7 @@ def gen(masked_data_file, text_file, video_features):
                 start_frame = math.floor(tt_start / duration * video_feature_len)
                 end_frame  = math.floor(tt_end / duration * video_feature_len)
 
-                video_feature_np = video_features[key]['c3d_features'][startFrame:endFrame+1]
+                video_feature_np = video_features[key]['c3d_features'][start_frame:end_frame+1]
         
                 if vidoe_feature_np.shape[0] > 200:
                     video_feature = np.zeros((200, video_feature_np.shape[1]))
