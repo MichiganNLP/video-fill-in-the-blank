@@ -22,17 +22,7 @@ csvData = f"{folder}/val1_50_mturk_appr_answers.csv"
 
 data = []
 
-def getVideoFeatures(key, startFrame, endFrame, videoFeatures):
-        feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
-        
-        if feature_np.shape[0] > 200:
-            feature = np.zeros((200, feature_np.shape[1]))
-            for i in range(200):
-                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/199)]
-        else:
-            feature = feature_np
 
-        return torch.tensor(feature, dtype=torch.float)
 
 with open(csvData) as csvfile:
     reader = csv.reader(csvfile)
@@ -53,10 +43,23 @@ with open(csvData) as csvfile:
         sequence_id = tokenizer.encode(question)
 
         # start_time and end_time are strings, convert them to float
-        start_frame = math.floor(float(start_time) * 2)
-        end_frame = math.ceil(float(end_time) * 2)
+        
+        
 
-        video_features = getVideoFeatures(video_id, start_frame, end_frame, videoFeatures)
+        video_feature_len = video_features[key]['c3d_features'].shape[0]
+        start_frame = math.floor(tt_start / duration * video_feature_len)
+        end_frame  = math.floor(tt_end / duration * video_feature_len)
+
+        feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
+        
+        if feature_np.shape[0] > 200:
+            feature = np.zeros((200, feature_np.shape[1]))
+            for i in range(200):
+                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/199)]
+        else:
+            feature = feature_np
+        
+        feature = torch.tensor(feature, dtype=torch.float)
 
         data.append((sequence_id, video_features, extended_answers, mask_position, standard_answer))
 
