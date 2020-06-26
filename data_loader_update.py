@@ -54,7 +54,7 @@ def gen(masked_data_file, text_file, video_features):
                     video_feature = video_feature_np
 
                 video_feature = torch.tensor(video_feature, dtype=torch.float)
-                data.append([sentence, video_feature, label, mask_position, key])
+                data.append([sentence_id, video_feature, label, mask_position, key])
     return data
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
