@@ -22,6 +22,9 @@ csvData = f"{folder}/val1_50_mturk_appr_answers.csv"
 
 data = []
 
+text_file = f"{folder}/val_1.json"
+with open(text_file, 'r') as f:
+    raw_data = json.load(f)
 
 
 with open(csvData) as csvfile:
@@ -33,8 +36,8 @@ with open(csvData) as csvfile:
             continue
         video_id, question, start_time, end_time, _, standard_answer, worker_answers = row
         
-        # original worker answers is a list-like string, convert it to a real list        
-        worker_answers = worker_answers.strip(']\'\'[').split('\', \'') 
+        # original worker answers is a dict-like string, convert it to a real dictionary        
+        worker_answers = eval(worker_answers)
         
         extended_answers = list(set([standard_answer] + worker_answers))
         masked_sentence = tokenizer.tokenize(question)
@@ -44,13 +47,12 @@ with open(csvData) as csvfile:
 
         # start_time and end_time are strings, convert them to float
         
-        
-
+        duration = raw_data[video_id]["duration"]
         video_feature_len = video_features[key]['c3d_features'].shape[0]
         start_frame = math.floor(tt_start / duration * video_feature_len)
         end_frame  = math.floor(tt_end / duration * video_feature_len)
 
-        feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
+        feature_np = videoFeatures[key]['c3d_features'][start_frame:end_frame+1]
         
         if feature_np.shape[0] > 200:
             feature = np.zeros((200, feature_np.shape[1]))

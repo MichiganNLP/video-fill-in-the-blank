@@ -36,7 +36,7 @@ def gen(masked_data_file, text_file, video_features):
                 sentence_id = tokenizer.encode(sentence) 
                 mask_position = sentence.split(' ').index('[MASK]') + 1
 
-                label = train_file.readline().strip()
+                label = tokenizer.tokenize(train_file.readline().strip())
 
                 tt_start, tt_end = json.loads(train_file.readline().strip())
                 tt_start, tt_end = float(tt_start), float(tt_end)
