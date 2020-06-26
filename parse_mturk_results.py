@@ -18,7 +18,7 @@ from transformers import BertTokenizer, BertModel
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
+video_features = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 csvData = f"{folder}/val1_mturk_appr_answers.csv"
 
 data = []
@@ -53,7 +53,7 @@ with open(csvData) as csvfile:
         start_frame = math.floor(tt_start / duration * video_feature_len)
         end_frame  = math.floor(tt_end / duration * video_feature_len)
 
-        feature_np = videoFeatures[key]['c3d_features'][start_frame:end_frame+1]
+        feature_np = video_features[key]['c3d_features'][start_frame:end_frame+1]
         
         if feature_np.shape[0] > 200:
             feature = np.zeros((200, feature_np.shape[1]))
