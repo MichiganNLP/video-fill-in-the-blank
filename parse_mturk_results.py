@@ -72,5 +72,5 @@ for csvData in file_names:
 
             data.append((sequence_id, feature, worker_answers, mask_position, standard_answer, extended_answers))
 
-    with open(f'{csvData}.pkl', 'wb') as f:
+    with open(f'{csvData[:-4]}.pkl', 'wb') as f:
         pickle.dump(data, f)
