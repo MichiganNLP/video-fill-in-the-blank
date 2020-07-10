@@ -22,17 +22,17 @@ folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 video_features = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 
-file_names = os.listdir(f'{folder}/MTurk_data/val1/')
+file_names = os.listdir(f'{folder}/MTurk_data/val2/')
 
 for csvData in file_names: 
     data = []
 
-    text_file = f"{folder}/val_1.json"
+    text_file = f"{folder}/val_2.json"
     with open(text_file, 'r') as f:
         raw_data = json.load(f)
 
 
-    with open(f"{folder}/MTurk_data/val1/{csvData}") as csvfile:
+    with open(f"{folder}/MTurk_data/val2/{csvData}") as csvfile:
         reader = csv.reader(csvfile)
         isHead = True
         for row in reader:
