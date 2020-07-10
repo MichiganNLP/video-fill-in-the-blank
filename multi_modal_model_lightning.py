@@ -123,6 +123,7 @@ def _get_args() -> argparse.Namespace:
     parent_parser.add_argument("-v", "--verbose", action="store_true")
     parent_parser.add_argument("--grad-eval", type=bool, default=False)
     parent_parser.add_argument("--mturk-eval", type=bool, default=False)
+    parent_parser.add_argument("--mturk-data", type=str, default="")
     parser = MultiModalLightningModel.add_model_specific_args(parent_parser)
     return parser.parse_args()
 
@@ -168,7 +169,7 @@ def _main() -> None:
     elif hparams.mturk_eval:
         # model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_8206545/checkpoints/epoch=1.ckpt')
         model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
-        data = _dataloader('val_mturk.pkl', hparams)
+        data = _dataloader(hparams.mturk_data, hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
         total = 0
