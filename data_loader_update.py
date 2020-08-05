@@ -66,8 +66,8 @@ folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 video_features = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 
 # Train
-genTextFile_train = f"{folder}/val2"
-rawTextFile_train = f"{folder}/val_2.json"
+genTextFile_train = f"{folder}/train"
+rawTextFile_train = f"{folder}/train.json"
 
 data = gen(genTextFile_train, rawTextFile_train, video_features)
 

@@ -8,13 +8,14 @@ import random
 import numpy as np
 import h5py
 from transformers import BertTokenizer, BertModel
+import csv
 
 import csv
 import pickle
 
 class ActivityNetCaptionDataset(Dataset):
 
-    def __init__(self, textFile, videoFeatures, isTrain=True):
+    def __init__(self, textFile, videoFeatures, duration_file, isTrain=True):
         """
         Args:
             textFile: text file path
@@ -36,6 +37,10 @@ class ActivityNetCaptionDataset(Dataset):
         self.threemore_tokens = 0
 
         textFeature, self.out_text = self.getTextFeatures(textFile, isTrain)
+        
+        with open("duration_file", 'rb') as f:
+            self.duration = pickle.load(f)
+
         self.data = self.getFeatures(textFeature, videoFeatures)
 
         # with open('train', 'w') as f:
@@ -66,7 +71,11 @@ class ActivityNetCaptionDataset(Dataset):
             pickle.dump(self.data, f)
 
 
-    def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures, textLen):
+    def getVideoFeatures(self, key, startTime, endTime, videoFeatures, textLen):
+        l = videoFeatures[key]['c3d_features'].shape[0]
+
+        duration = t.
+        
         feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
         # shape = feature_h5.shape
         # feature_np = np.zeros(shape)
@@ -122,30 +131,55 @@ class ActivityNetCaptionDataset(Dataset):
             return sequence_id, correct_word_tokenized, idx+1, new_sentence, correct_word, POS
         return ()
 
-    def getTextFeatures(self, textFile, isTrain=True):
-        with open(textFile, 'r') as f:
-            raw = json.load(f)
+    # This commented function was used to extract text features from original ActivityNet Caption data
+    # def getTextFeatures(self, textFile, isTrain=True):
+    #     with open(textFile, 'r') as f:
+    #         raw = json.load(f)
         
+    #     data = []
+    #     out_text = []
+    #     # debug_count = 0
+    #     for key in raw.keys():
+    #         # if debug_count >= 500 and isTrain:
+    #         #     break
+    #         # if debug_count >= 100 and not isTrain:
+    #         #     break
+    #         # debug_count += 1
+    #         total_events = len(raw[key]['sentences'])
+    #         for i in range(total_events):
+    #             start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
+    #             end_frame = math.ceil(raw[key]['timestamps'][i][1] * 2)
+    #             sentence = raw[key]['sentences'][i]
+    #             text = nltk.word_tokenize(sentence.strip().lower())
+    #             parsed_sentence = nltk.pos_tag(text)
+    #             out = self.gen(text, parsed_sentence, isTrain)
+    #             if len(out)==6:
+    #                 masked_sentence, label, masked_position, original_sentence, correct_word, POS = out
+    #                 data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
+    #                 out_text.append([key, original_sentence, correct_word, POS, raw[key]['timestamps'][i]])
+                
+    #     return data, out_text
+
+    def getTextFeatures(self, textFile, isTrain=True):
         data = []
         out_text = []
-        # debug_count = 0
-        for key in raw.keys():
-            # if debug_count >= 500 and isTrain:
-            #     break
-            # if debug_count >= 100 and not isTrain:
-            #     break
-            # debug_count += 1
-            total_events = len(raw[key]['sentences'])
-            for i in range(total_events):
-                start_frame = math.floor(raw[key]['timestamps'][i][0] * 2)
-                end_frame = math.ceil(raw[key]['timestamps'][i][1] * 2)
-                sentence = raw[key]['sentences'][i]
+        
+        with open(textFile, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file)
+            isHead = True
+            for row in csv_reader:
+                if (isHead):
+                    isHead = False
+                key = row[0]
+                start_time = row[4]
+                end_time = row[5]
+                sentence = row[1]
                 text = nltk.word_tokenize(sentence.strip().lower())
                 parsed_sentence = nltk.pos_tag(text)
                 out = self.gen(text, parsed_sentence, isTrain)
                 if len(out)==6:
                     masked_sentence, label, masked_position, original_sentence, correct_word, POS = out
-                    data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
+                    data.append([key, start_time, end_time, masked_sentence, label, masked_position])
                     out_text.append([key, original_sentence, correct_word, POS, raw[key]['timestamps'][i]])
                 
         return data, out_text
