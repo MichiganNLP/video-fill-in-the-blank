@@ -10,7 +10,7 @@ def getObjectFeature(self, input, output):
     global feature
     feature = output.data
 
-image = Image.open(f'{folder}v_qkN9uA8izVE/000001.jpg')
+image = Image.open(f'{folder}v_2mI7NL54yP8/000001.jpg')
 img_np = np.asarray(image) / 255
 img_tensor = torch.FloatTensor(img_np)
 img_tensor = img_tensor.permute(2, 0, 1)
