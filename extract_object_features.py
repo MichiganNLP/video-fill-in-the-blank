@@ -7,7 +7,7 @@ import os
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/activitynet_frames/"
 
 def getObjectFeature(self, input, output):
-    nonlocal feature
+    global feature
     feature = output.data
 
 image = Image.open(f'{folder}v_qkN9uA8izVE/000001.jpg')
