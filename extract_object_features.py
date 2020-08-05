@@ -7,7 +7,8 @@ import os
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/activitynet_frames/"
 
 def getObjectFeature(self, input, output):
-    print(output.data)
+    nonlocal feature
+    feature = output.data
 
 image = Image.open(f'{folder}v_qkN9uA8izVE/000001.jpg')
 img_np = np.asarray(image) / 255
@@ -19,3 +20,4 @@ model.roi_heads.box_roi_pool.register_forward_hook(getObjectFeature)
 model.eval()
 
 pred = model([img_tensor])
+pass
