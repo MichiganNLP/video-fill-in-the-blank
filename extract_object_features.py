@@ -5,10 +5,9 @@ import torch
 import os
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/activitynet_frames/"
-
+features = []
 def getObjectFeature(self, input, output):
-    global feature
-    feature = output.data
+    features.append(output.data)
 
 image = Image.open(f'{folder}v_2mI7NL54yP8/000001.jpg')
 img_np = np.asarray(image) / 255
