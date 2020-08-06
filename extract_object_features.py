@@ -18,5 +18,5 @@ model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 model.roi_heads.box_roi_pool.register_forward_hook(getObjectFeature)
 model.eval()
 
-pred = model([img_tensor])
+pred = model([img_tensor, img_tensor])
 pass
