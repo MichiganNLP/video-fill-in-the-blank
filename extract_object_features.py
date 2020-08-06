@@ -34,7 +34,7 @@ for video in os.listdir(folder):
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         model.roi_heads.box_roi_pool.register_forward_hook(getObjectFeature)
         model.roi_heads.box_predictor.cls_score.register_forward_hook(getPrediction)
-
+        model.roi_heads.box_predictor.bbox_pred.register_forward_hook(getBBox)
         model.eval()
         pred = model([img_tensor])
         # select top THRESHOLD
@@ -42,7 +42,12 @@ for video in os.listdir(folder):
         feature = torch.index_select(feature, 0, idx)
         # scores = torch.index_select(scores, 0, idx)
         cl = torch.index_select(cl, 0, idx)
-        features.append([feature, cl])
+        bboxes = torch.zeros(THESHROLD, 4)
+        for i in range(len(idx)):
+            bboxes[i, :] = bbox[4 * idx[i] : 4 * idx[i] + 4]
+
+
+        features[video].append([feature, bboxes, cl])
 
 with open("video_features.pkl", 'wb') as f:
     pickle.dump(features, f)
