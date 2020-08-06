@@ -17,7 +17,9 @@ def getPrediction(self, input, output):
     global cl
     scores, cl = torch.max(output.data, axis=1)
 
-def 
+def getBBox(self, input, output):
+    global bbox
+    bbox = output.data
 
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
@@ -32,6 +34,7 @@ for video in os.listdir(folder):
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         model.roi_heads.box_roi_pool.register_forward_hook(getObjectFeature)
         model.roi_heads.box_predictor.cls_score.register_forward_hook(getPrediction)
+
         model.eval()
         pred = model([img_tensor])
         # select top THRESHOLD
