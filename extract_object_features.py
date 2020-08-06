@@ -7,7 +7,7 @@ import pickle
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/activitynet_frames/"
 features = {}
-THESHROLD = 10
+THESHROLD = 16
 def getObjectFeature(self, input, output):
     global feature
     feature = output.data
