@@ -44,7 +44,7 @@ for video in os.listdir(folder):
         cl = torch.index_select(cl, 0, idx)
         bboxes = torch.zeros(THESHROLD, 4)
         for i in range(len(idx)):
-            bboxes[i, :] = bbox[4 * idx[i] : 4 * idx[i] + 4]
+            bboxes[i, :] = bbox[idx[i], cl[i] * 4 : cl[i] * 4 + 4]
 
 
         features[video].append([feature, bboxes, cl])
