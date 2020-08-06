@@ -40,12 +40,11 @@ for video in os.listdir(folder):
         # select top THRESHOLD
         _, idx = torch.topk(scores, THESHROLD)
         feature = torch.index_select(feature, 0, idx)
-        # scores = torch.index_select(scores, 0, idx)
-        cl = torch.index_select(cl, 0, idx)
+        # scores = torch.index_select(scores, 0, idx)        
         bboxes = torch.zeros(THESHROLD, 4)
         for i in range(len(idx)):
-            bboxes[i, :] = bbox[idx[i], cl[i] * 4 : cl[i] * 4 + 4]
-
+            bboxes[i, :] = bbox[idx[i], cl[idx[i]] * 4 : cl[idx[i]] * 4 + 4]
+        cl = torch.index_select(cl, 0, idx)
 
         features[video].append([feature, bboxes, cl])
 
