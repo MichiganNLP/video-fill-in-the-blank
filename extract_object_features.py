@@ -21,6 +21,9 @@ def getBBox(self, input, output):
     global bbox
     bbox = output.data
 
+def debug(self, input, output):
+    pass
+
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
     features[video] = []
@@ -35,6 +38,7 @@ for video in os.listdir(folder):
         model.roi_heads.box_roi_pool.register_forward_hook(getObjectFeature)
         model.roi_heads.box_predictor.cls_score.register_forward_hook(getPrediction)
         model.roi_heads.box_predictor.bbox_pred.register_forward_hook(getBBox)
+        model.roi_heads.box_predictor.register_forward_hook(debug)
         model.eval()
         pred = model([img_tensor])
         # select top THRESHOLD
