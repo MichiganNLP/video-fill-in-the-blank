@@ -3,6 +3,7 @@ from PIL import Image
 import numpy as np
 import torch
 import os
+import pickle
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/activitynet_frames/"
 features = {}
@@ -14,8 +15,9 @@ def getObjectFeature(self, input, output):
 def getPrediction(self, input, output):
     global scores
     global cl
+    scores, cl = torch.max(output.data, axis=1)
 
-    scores, cl = torch.max(output.data)
+def 
 
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
@@ -38,3 +40,6 @@ for video in os.listdir(folder):
         # scores = torch.index_select(scores, 0, idx)
         cl = torch.index_select(cl, 0, idx)
         features.append([feature, cl])
+
+with open("video_features.pkl", 'wb') as f:
+    pickle.dump(features, f)
