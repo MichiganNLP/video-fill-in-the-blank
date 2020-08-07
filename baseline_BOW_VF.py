@@ -3,6 +3,7 @@ import os
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
+import pickle
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from utils import build_representation, fit
@@ -63,7 +64,7 @@ class BaselineBowVF(pl.LightningModule):
         loss = self.cross_entropy(logits, labels)
 
         # calculate accuracy
-        correct_predictions, batch_size = 0, len(val_batch)
+        correct_predictions, batch_size = 0, len(labels)
         for i in range(batch_size):
             if torch.argmax(logits[i]) == labels[i]:
                 correct_predictions += 1
@@ -82,6 +83,9 @@ class BaselineBowVF(pl.LightningModule):
         return {'avg_val_loss': avg_loss, 'validation_accuracy': avg_accuracy, 'log': tensorboard_logs}
 
     def prepare_data(self):
+        # load video duration variable from file
+        duration_path = os.path.join(self.hparams.data_path, 'latest_data/multimodal_model/video_duration.pkl')
+        self.video_duration = pickle.load(open(duration_path, 'rb'))
         # build representations
 
         video_features_file = os.path.join(self.hparams.data_path,
@@ -97,11 +101,11 @@ class BaselineBowVF(pl.LightningModule):
         masked_test_data_file = os.path.join(self.hparams.data_path, 'latest_data/test')
 
         build_representation(self.hparams.num_tokens, masked_training_data_file, train_text_file,
-                             video_features_file, bow_representation_train_file)
+                             video_features_file, bow_representation_train_file, self.video_duration)
         build_representation(self.hparams.num_tokens, masked_validation_data_file, train_text_file,
-                             video_features_file, bow_representation_val_file)
+                             video_features_file, bow_representation_val_file, self.video_duration)
         build_representation(self.hparams.num_tokens, masked_test_data_file, train_text_file,
-                             video_features_file, bow_representation_test_file)
+                             video_features_file, bow_representation_test_file, self.video_duration)
 
         self.training_data_set = ActivityNetCaptionsDataset(bow_representation_train_file)
         self.validation_data_set = ActivityNetCaptionsDataset(bow_representation_val_file)
