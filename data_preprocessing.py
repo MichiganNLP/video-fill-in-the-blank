@@ -16,7 +16,7 @@ videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_act
 trainTextFile = "Train.tsv"
 valTextFile = "Val.tsv"
 testTextFile = "Test.tsv"
-durationFile = f"{folder}/ActivityNet_Captions/latest_data/multimodal_model/video_duration.pkl"
+durationFile = f"{folder}/latest_data/multimodal_model/video_duration.pkl"
 
 ActivityNetCaptionDataset(trainTextFile, videoFeatures, durationFile, isTrain=True)
 ActivityNetCaptionDataset(valTextFile, videoFeatures, durationFile, isTrain=False)
