@@ -105,7 +105,7 @@ for video in os.listdir(folder):
         img_tensor = torch.FloatTensor(img_np)
         img_tensor = img_tensor.permute(2, 0, 1)
 
-        model.roi_heads.(ROIHeadsHook)
+        model.roi_heads.register_forward_hook(ROIHeadsHook)
         model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
         model.eval()
         pred = model([img_tensor])
