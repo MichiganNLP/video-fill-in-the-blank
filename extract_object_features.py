@@ -26,10 +26,13 @@ def getBBox(self, input, output):
     bbox = output.data
 
 def ROIHeadsHook(self, input, output):
-    pass
+    global prop
+    global img_shapes
+    prop = input[1]
+    img_shapes = input[2]
+    
 
 def ROIHeads_BoxPredictorHook(self, input, output):
-    global scores
     global cl
     global box_reg
     box_feature = input[0]
@@ -110,16 +113,18 @@ for video in os.listdir(folder):
         model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
         model.eval()
         pred = model([img_tensor])
-        # select top THRESHOLD
-        _, idx = torch.topk(scores, THESHROLD)
-        feature = torch.index_select(feature, 0, idx)
-        # scores = torch.index_select(scores, 0, idx)        
-        bboxes = torch.zeros(THESHROLD, 4)
-        for i in range(len(idx)):
-            bboxes[i, :] = bbox[idx[i], cl[idx[i]] * 4 : cl[idx[i]] * 4 + 4]
-        cl = torch.index_select(cl, 0, idx)
+        # # select top THRESHOLD
+        # _, idx = torch.topk(scores, THESHROLD)
+        # feature = torch.index_select(feature, 0, idx)
+        # # scores = torch.index_select(scores, 0, idx)        
+        # bboxes = torch.zeros(THESHROLD, 4)
+        # for i in range(len(idx)):
+        #     bboxes[i, :] = bbox[idx[i], cl[idx[i]] * 4 : cl[idx[i]] * 4 + 4]
+        # cl = torch.index_select(cl, 0, idx)
 
-        features[video].append([feature, bboxes, cl])
+        all_boxes, all_scores, all_labels = postprocess_detections(cl, box_reg, prop, img_shapes)
+
+        # features[video].append([feature, bboxes, cl])
 
 with open("video_features.pkl", 'wb') as f:
     pickle.dump(features, f)
