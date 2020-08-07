@@ -18,6 +18,6 @@ valTextFile = "Val.tsv"
 testTextFile = "Test.tsv"
 durationFile = f"{folder}/ActivityNet_Captions/latest_data/multimodal_model/video_duration.pkl"
 
-ActivityNetCaptionDataset(trainTextFile, videoFeatures, isTrain=True)
-ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
-ActivityNetCaptionDataset(testTextFile, videoFeatures, isTrain=False)
+ActivityNetCaptionDataset(trainTextFile, videoFeatures, durationFile, isTrain=True)
+ActivityNetCaptionDataset(valTextFile, videoFeatures, durationFile, isTrain=False)
+ActivityNetCaptionDataset(testTextFile, videoFeatures, durationFile, isTrain=False)
