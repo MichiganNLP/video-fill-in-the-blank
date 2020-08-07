@@ -15,7 +15,7 @@ import pickle
 
 class ActivityNetCaptionDataset(Dataset):
 
-    def __init__(self, textFile, videoFeatures, duration_file, isTrain=True):
+    def __init__(self, textFile, videoFeatures, duration_file, name, isTrain=True):
         """
         Args:
             textFile: text file path
@@ -67,7 +67,7 @@ class ActivityNetCaptionDataset(Dataset):
         #          'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
 
         # print(self.one_token, self.two_tokens, self.threemore_tokens, len(self.data))
-        with open('train.pkl', 'wb') as f:
+        with open(f'{name}.pkl', 'wb') as f:
             pickle.dump(self.data, f)
 
 
