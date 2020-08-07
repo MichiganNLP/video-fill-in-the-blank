@@ -25,8 +25,15 @@ def getBBox(self, input, output):
     global bbox
     bbox = output.data
 
-def ROIHeads_BoxPredictorHook(self, input, output):
+def ROIHeadsHook(self, input, output):
     pass
+
+def ROIHeads_BoxPredictorHook(self, input, output):
+    global scores
+    global cl
+    global box_reg
+    box_feature = input[0]
+    cl, box_reg = output
 
 def postprocess_detections(class_logits,    # type: Tensor
                                box_regression,  # type: Tensor
@@ -40,7 +47,6 @@ def postprocess_detections(class_logits,    # type: Tensor
         bbox_reg_weights = (10., 10., 5., 5.)
         box_coder = BoxCoder(bbox_reg_weights)
 
-        bbox_reg_weights = (10., 10., 5., 5.)
         boxes_per_image = [boxes_in_image.shape[0] for boxes_in_image in proposals]
         pred_boxes = box_coder.decode(box_regression, proposals)
 
@@ -99,10 +105,7 @@ for video in os.listdir(folder):
         img_tensor = torch.FloatTensor(img_np)
         img_tensor = img_tensor.permute(2, 0, 1)
 
-        model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
-        model.roi_heads.box_roi_pool.register_forward_hook(getObjectFeature)
-        model.roi_heads.box_predictor.cls_score.register_forward_hook(getPrediction)
-        model.roi_heads.box_predictor.bbox_pred.register_forward_hook(getBBox)
+        model.roi_heads.(ROIHeadsHook)
         model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
         model.eval()
         pred = model([img_tensor])
