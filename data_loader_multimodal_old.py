@@ -183,7 +183,6 @@ class ActivityNetCaptionDataset(Dataset):
                 if len(out)==6:
                     masked_sentence, label, masked_position, original_sentence, correct_word, POS = out
                     data.append([key, start_time, end_time, masked_sentence, label, masked_position])
-                    out_text.append([key, original_sentence, correct_word, POS, raw[key]['timestamps'][i]])
                 
         return data, out_text
 
