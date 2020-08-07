@@ -13,6 +13,11 @@ PATH = 'Checkpoint'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
 videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
-trainTextFile = f"{folder}/train.json"
+trainTextFile = "Train.tsv"
+valTextFile = "Val.tsv"
+testTextFile = "Test.tsv"
+durationFile = f"{folder}/ActivityNet_Captions/latest_data/multimodal_model/video_duration.pkl"
 
 ActivityNetCaptionDataset(trainTextFile, videoFeatures, isTrain=True)
+ActivityNetCaptionDataset(valTextFile, videoFeatures, isTrain=False)
+ActivityNetCaptionDataset(testTextFile, videoFeatures, isTrain=False)

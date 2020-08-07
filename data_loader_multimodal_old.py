@@ -57,24 +57,27 @@ class ActivityNetCaptionDataset(Dataset):
         #         f.write('\n')
         #         f.write('\n')
         
-        with open('train.csv', 'w') as csvfile:
-            fieldnames = ['question', 'video_id', 'pos_tag', 'video_start_time', 'video_end_time', 'answer']
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='\t')
+        # with open('train.csv', 'w') as csvfile:
+        #     fieldnames = ['question', 'video_id', 'pos_tag', 'video_start_time', 'video_end_time', 'answer']
+        #     writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='\t')
 
-            writer.writeheader()
-            for line in self.out_text:
-                writer.writerow({'question': ' '.join(line[1]), 'video_id': line[0], 'pos_tag': line[3],
-                 'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
+        #     writer.writeheader()
+        #     for line in self.out_text:
+        #         writer.writerow({'question': ' '.join(line[1]), 'video_id': line[0], 'pos_tag': line[3],
+        #          'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
 
-        print(self.one_token, self.two_tokens, self.threemore_tokens, len(self.data))
+        # print(self.one_token, self.two_tokens, self.threemore_tokens, len(self.data))
         with open('train.pkl', 'wb') as f:
             pickle.dump(self.data, f)
 
 
     def getVideoFeatures(self, key, startTime, endTime, videoFeatures, textLen):
-        l = videoFeatures[key]['c3d_features'].shape[0]
+        video_feature_len = videoFeatures[key]['c3d_features'].shape[0]
 
-        duration = t.
+        duration = float(self.duration[key])
+
+        startFrame = math.floor(startTime / duration * video_feature_len)
+        endFrame  = math.floor(endTime / duration * video_feature_len)
         
         feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
         # shape = feature_h5.shape
@@ -165,7 +168,7 @@ class ActivityNetCaptionDataset(Dataset):
         out_text = []
         
         with open(textFile, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file)
+            csv_reader = csv.reader(csv_file,delimiter='\t')
             isHead = True
             for row in csv_reader:
                 if (isHead):
