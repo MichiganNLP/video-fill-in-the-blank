@@ -8,6 +8,7 @@ import json
 import pickle
 import h5py
 import os
+import math
 
 
 def fit(train_text_file, num_tokens):
@@ -57,11 +58,15 @@ def make_target(label, label_to_ix):
         return torch.LongTensor([0])
 
 
-def get_video_representations(key, start, end, video_features):
-    feature_np = video_features[key]['c3d_features'][start:end + 1]
-    # shape = feature_h5.shape
-    # feature_np = np.zeros(shape)
-    # feature_h5.read_direct(feature_np)
+def get_video_representations(key, start, end, video_features, video_duration):
+    video_feature_len = video_features[key]['c3d_features'].shape[0]
+    duration = video_duration[key]
+
+    start_frame = math.floor(start / duration * video_feature_len)
+    end_frame = math.floor(end / duration * video_feature_len)
+
+    feature_np = video_features[key]['c3d_features'][start_frame:end_frame + 1]
+
     if feature_np.shape[0] > 200:
         feature = np.zeros((200, feature_np.shape[1]))
         for i in range(200):
@@ -72,11 +77,13 @@ def get_video_representations(key, start, end, video_features):
     return torch.tensor(feature, dtype=torch.float32)
 
 
-def build_representation(num_tokens, masked_data_file, train_text_file, video_feature_file, bow_representation_file):
+def build_representation(num_tokens, masked_data_file,
+                         train_text_file, video_feature_file,
+                         bow_representation_file, video_duration):
     # check if representation file exists
-    if os.path.exists(bow_representation_file):
-        print(f'{bow_representation_file}: representations are loaded.')
-        return
+    # if os.path.exists(bow_representation_file):
+    #     print(f'{bow_representation_file}: representations are loaded.')
+    #     return
     # construct word to index dictionary for sentence representation using training data file: train.json, etc
     word_to_idx, num_vocabs = fit(train_text_file, num_tokens)
     # retrieve video features from file
@@ -100,7 +107,8 @@ def build_representation(num_tokens, masked_data_file, train_text_file, video_fe
             train_file.readline()
             # create sentence feature and video feature
             sentence_feature = make_bow_vector(sentence, word_to_idx)
-            video_feature = get_video_representations(key, original_tt_start, original_tt_end, video_features)
+            video_feature = get_video_representations(key, original_tt_start, original_tt_end,
+                                                      video_features, video_duration)
             if video_feature.shape[0] == 0:
                 error_file.write('shape: ' + str(video_feature.shape) + '\n')
                 error_file.write('key: ' + key + '\n')
