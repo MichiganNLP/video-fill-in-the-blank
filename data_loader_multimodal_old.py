@@ -38,7 +38,7 @@ class ActivityNetCaptionDataset(Dataset):
 
         textFeature, self.out_text = self.getTextFeatures(textFile, isTrain)
         
-        with open("duration_file", 'rb') as f:
+        with open(duration_file, 'rb') as f:
             self.duration = pickle.load(f)
 
         self.data = self.getFeatures(textFeature, videoFeatures)
