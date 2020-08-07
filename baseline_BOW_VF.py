@@ -86,26 +86,26 @@ class BaselineBowVF(pl.LightningModule):
 
         video_features_file = os.path.join(self.hparams.data_path,
                                            'ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5')
-        train_text_file = os.path.join(self.hparams.data_path, 'train.json')
+        train_text_file = os.path.join(self.hparams.data_path, 'latest_data/train.json')
 
-        bow_representation_train_file = os.path.join(self.hparams.data_path, 'bow_training_data.pkl')
-        bow_representation_val_file_1 = os.path.join(self.hparams.data_path, 'bow_validation_data_1.pkl')
-        bow_representation_val_file_2 = os.path.join(self.hparams.data_path, 'bow_validation_data_2.pkl')
+        bow_representation_train_file = os.path.join(self.hparams.data_path, 'latest_data/bow_training_data.pkl')
+        bow_representation_val_file = os.path.join(self.hparams.data_path, 'latest_data/bow_validation_data.pkl')
+        bow_representation_test_file = os.path.join(self.hparams.data_path, 'latest_data/bow_test_data.pkl')
 
-        masked_training_data_file = os.path.join(self.hparams.data_path, 'train')
-        masked_validation_data_file_1 = os.path.join(self.hparams.data_path, 'val1')
-        masked_validation_data_file_2 = os.path.join(self.hparams.data_path, 'val2')
+        masked_training_data_file = os.path.join(self.hparams.data_path, 'latest_data/train')
+        masked_validation_data_file = os.path.join(self.hparams.data_path, 'latest_data/val')
+        masked_test_data_file = os.path.join(self.hparams.data_path, 'latest_data/test')
 
         build_representation(self.hparams.num_tokens, masked_training_data_file, train_text_file,
                              video_features_file, bow_representation_train_file)
-        build_representation(self.hparams.num_tokens, masked_validation_data_file_1, train_text_file,
-                             video_features_file, bow_representation_val_file_1)
-        build_representation(self.hparams.num_tokens, masked_validation_data_file_2, train_text_file,
-                             video_features_file, bow_representation_val_file_2)
+        build_representation(self.hparams.num_tokens, masked_validation_data_file, train_text_file,
+                             video_features_file, bow_representation_val_file)
+        build_representation(self.hparams.num_tokens, masked_test_data_file, train_text_file,
+                             video_features_file, bow_representation_test_file)
 
         self.training_data_set = ActivityNetCaptionsDataset(bow_representation_train_file)
-        self.validation_data_set = ActivityNetCaptionsDataset(bow_representation_val_file_1)
-        self.test_data_set = ActivityNetCaptionsDataset(bow_representation_val_file_2)
+        self.validation_data_set = ActivityNetCaptionsDataset(bow_representation_val_file)
+        self.test_data_set = ActivityNetCaptionsDataset(bow_representation_test_file)
 
     def train_dataloader(self):
         return DataLoader(self.training_data_set, batch_size=self.hparams.train_batch_size,
@@ -167,7 +167,7 @@ if __name__ == '__main__':
     parser = BaselineBowVF.add_args()
     hparams = parser.parse_args()
 
-    train_text_file = os.path.join(hparams.data_path, 'train.json')
+    train_text_file = os.path.join(hparams.data_path, 'latest_data/train.json')
     _, NUM_VOCABS = fit(train_text_file, hparams.num_tokens)
 
     parser = Trainer.add_argparse_args(parser)
