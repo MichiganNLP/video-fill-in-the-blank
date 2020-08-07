@@ -175,8 +175,8 @@ class ActivityNetCaptionDataset(Dataset):
                     isHead = False
                     continue
                 key = row[0]
-                start_time = row[4]
-                end_time = row[5]
+                start_time = float(row[4])
+                end_time = float(row[5])
                 sentence = row[1]
                 text = nltk.word_tokenize(sentence.strip().lower())
                 parsed_sentence = nltk.pos_tag(text)
