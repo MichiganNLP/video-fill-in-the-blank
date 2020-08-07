@@ -11,7 +11,7 @@ import os
 
 
 def fit(train_text_file, num_tokens):
-    word_to_idx_file = f'/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/word_to_idx-{num_tokens}.pkl'
+    word_to_idx_file = f'/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/word_to_idx-{num_tokens}.pkl'
     stop_words = set(stopwords.words('english'))
     word_to_idx = dict()
     # collect all documents into all_sentences
@@ -106,7 +106,7 @@ def build_representation(num_tokens, masked_data_file, train_text_file, video_fe
                 error_file.write('key: ' + key + '\n')
                 error_file.write('sentence: ' + sentence + '\n')
                 error_file.write('label: ' + label + '\n')
-                error_file.write('indices: [' + str(tt_start) + ' ' + str(tt_start) + ']' + '\n')
+                error_file.write('indices: [' + str(tt_start) + ' ' + str(tt_end) + ']' + '\n')
                 error_file.write('\n')
             else:
                 video_feature = torch.mean(video_feature, dim=0)
