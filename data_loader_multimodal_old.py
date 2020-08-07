@@ -173,6 +173,7 @@ class ActivityNetCaptionDataset(Dataset):
             for row in csv_reader:
                 if (isHead):
                     isHead = False
+                    continue
                 key = row[0]
                 start_time = row[4]
                 end_time = row[5]
