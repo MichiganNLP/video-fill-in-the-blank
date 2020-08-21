@@ -64,11 +64,13 @@ def postprocess_detections(class_logits,    # type: Tensor
 
         pred_boxes_list = pred_boxes.split(boxes_per_image, 0)
         pred_scores_list = pred_scores.split(boxes_per_image, 0)
+        box_feature_list = box_features.split(boxes_per_image, 0)
 
         all_boxes = []
         all_scores = []
         all_labels = []
-        for boxes, scores, image_shape in zip(pred_boxes_list, pred_scores_list, image_shapes):
+        all_box_features = []
+        for boxes, scores, image_shape, box_feat in zip(pred_boxes_list, pred_scores_list, image_shapes, box_feature_list):
             boxes = box_ops.clip_boxes_to_image(boxes, image_shape)
 
             # create labels for each prediction
@@ -87,23 +89,24 @@ def postprocess_detections(class_logits,    # type: Tensor
 
             # remove low scoring boxes
             inds = torch.nonzero(scores > box_score_thresh).squeeze(1)
-            boxes, scores, labels = boxes[inds], scores[inds], labels[inds]
+            boxes, scores, labels, box_feat = boxes[inds], scores[inds], labels[inds], box_feat[inds]
 
             # remove empty boxes
             keep = box_ops.remove_small_boxes(boxes, min_size=1e-2)
-            boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
+            boxes, scores, labels, box_feat = boxes[keep], scores[keep], labels[keep], box_feat[keep]
 
             # non-maximum suppression, independently done per class
             keep = box_ops.batched_nms(boxes, scores, labels, nms_thresh)
             # keep only topk scoring predictions
             keep = keep[:detections_per_img]
-            boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
+            boxes, scores, labels, box_feat = boxes[keep], scores[keep], labels[keep], box_feat[keep]
 
             all_boxes.append(boxes)
             all_scores.append(scores)
             all_labels.append(labels)
+            all_box_features.append(box_feat)
 
-        return all_boxes, all_scores, all_labels
+        return all_boxes, all_scores, all_labels, all_box_features
 
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
@@ -133,7 +136,7 @@ for video in os.listdir(folder):
         #     bboxes[i, :] = bbox[idx[i], cl[idx[i]] * 4 : cl[idx[i]] * 4 + 4]
         # cl = torch.index_select(cl, 0, idx)
 
-        all_boxes, all_scores, all_labels = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
+        all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
 
         # features[video].append([feature, bboxes, cl])
 
