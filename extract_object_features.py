@@ -41,6 +41,9 @@ def ROIHeads_BoxPredictorHook(self, input, output):
     box_feature = input[0]
     cl, box_reg = output
 
+def RPN_ClslogitsHook(self, input, output):
+    pass
+
 def postprocess_detections(class_logits,    # type: Tensor
                                box_regression,  # type: Tensor
                                proposals,       # type: List[Tensor]
@@ -114,6 +117,7 @@ for video in os.listdir(folder):
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         model.roi_heads.register_forward_hook(ROIHeadsHook)
         model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
+        model.rpn.head.cls_logits(RPN_ClslogitsHook)
         model.eval()
         pred = model([img_tensor])
         # # select top THRESHOLD
