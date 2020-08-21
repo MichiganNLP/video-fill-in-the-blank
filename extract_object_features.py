@@ -8,7 +8,7 @@ import os
 import pickle
 from object_detect_utils import BoxCoder
 
-folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/activitynet_frames/"
+folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/5fps_Videos/"
 features = {}
 THESHROLD = 16
 box_score_thresh = 0.05
