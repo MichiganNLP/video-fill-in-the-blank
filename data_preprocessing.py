@@ -14,7 +14,7 @@ folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 
 videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 trainTextFile = "Train.tsv"
-valTextFile = "Val.tsv"
+valTextFile = "Validation.tsv"
 testTextFile = "Test.tsv"
 durationFile = f"{folder}/latest_data/multimodal_model/video_duration.pkl"
 
