@@ -108,7 +108,7 @@ def postprocess_detections(class_logits,    # type: Tensor
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
     features[video] = []
-    for i in range(frame_num, step=2):
+    for i in range(0, frame_num, 2):
         image_list = []
         for k in range(2):
             frame_name = '0' * (6-len(str(i + k + 1))) + str(i + k + 1) + '.jpg'
