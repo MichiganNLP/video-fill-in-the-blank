@@ -38,16 +38,17 @@ def ROIHeadsHook(self, input, output):
 def ROIHeads_BoxPredictorHook(self, input, output):
     global cl
     global box_reg
-    box_feature = input[0]
     cl, box_reg = output
 
 def RPN_ClslogitsHook(self, input, output):
-    pass
+    global box_features
+    box_features = input[0]
 
 def postprocess_detections(class_logits,    # type: Tensor
                                box_regression,  # type: Tensor
                                proposals,       # type: List[Tensor]
-                               image_shapes     # type: List[Tuple[int, int]]
+                               image_shapes,     # type: List[Tuple[int, int]]
+                               box_features,
                                ):
         # type: (...) -> Tuple[List[Tensor], List[Tensor], List[Tensor]]
         device = class_logits.device
@@ -63,6 +64,7 @@ def postprocess_detections(class_logits,    # type: Tensor
 
         pred_boxes_list = pred_boxes.split(boxes_per_image, 0)
         pred_scores_list = pred_scores.split(boxes_per_image, 0)
+        box_feature_list = 
 
         all_boxes = []
         all_scores = []
@@ -107,19 +109,22 @@ def postprocess_detections(class_logits,    # type: Tensor
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
     features[video] = []
-    for i in range(frame_num):
-        frame_name = '0' * (6-len(str(i + 1))) + str(i + 1) + '.jpg'
-        image = Image.open(f'{folder}{video}/{frame_name}')
-        img_np = np.asarray(image) / 255
-        img_tensor = torch.FloatTensor(img_np)
-        img_tensor = img_tensor.permute(2, 0, 1)
+    for i in range(frame_num, step=2):
+        image_list = []
+        for k in range(2):
+            frame_name = '0' * (6-len(str(i + k + 1))) + str(i + k + 1) + '.jpg'
+            image = Image.open(f'{folder}{video}/{frame_name}')
+            img_np = np.asarray(image) / 255
+            img_tensor = torch.FloatTensor(img_np)
+            img_tensor = img_tensor.permute(2, 0, 1)
+            image_list.append(img_tensor)
 
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         model.roi_heads.register_forward_hook(ROIHeadsHook)
         model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
         model.roi_heads.box_head.register_forward_hook(RPN_ClslogitsHook)
         model.eval()
-        pred = model([img_tensor])
+        pred = model(image_list)
         # # select top THRESHOLD
         # _, idx = torch.topk(scores, THESHROLD)
         # feature = torch.index_select(feature, 0, idx)
@@ -129,7 +134,7 @@ for video in os.listdir(folder):
         #     bboxes[i, :] = bbox[idx[i], cl[idx[i]] * 4 : cl[idx[i]] * 4 + 4]
         # cl = torch.index_select(cl, 0, idx)
 
-        all_boxes, all_scores, all_labels = postprocess_detections(cl, box_reg, prop, img_shapes)
+        all_boxes, all_scores, all_labels = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
 
         # features[video].append([feature, bboxes, cl])
 
