@@ -12,6 +12,9 @@ folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/5fps
 features = {}
 THESHROLD = 16
 box_score_thresh = 0.05
+nms_thresh = 0.5
+detections_per_img = 100
+
 def getObjectFeature(self, input, output):
     global feature
     feature = output.data
@@ -79,7 +82,7 @@ def postprocess_detections(class_logits,    # type: Tensor
             labels = labels.reshape(-1)
 
             # remove low scoring boxes
-            inds = torch.nonzero(scores > self.score_thresh).squeeze(1)
+            inds = torch.nonzero(scores > box_score_thresh).squeeze(1)
             boxes, scores, labels = boxes[inds], scores[inds], labels[inds]
 
             # remove empty boxes
@@ -87,9 +90,9 @@ def postprocess_detections(class_logits,    # type: Tensor
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
             # non-maximum suppression, independently done per class
-            keep = box_ops.batched_nms(boxes, scores, labels, self.nms_thresh)
+            keep = box_ops.batched_nms(boxes, scores, labels, nms_thresh)
             # keep only topk scoring predictions
-            keep = keep[:self.detections_per_img]
+            keep = keep[:detections_per_img]
             boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
 
             all_boxes.append(boxes)
