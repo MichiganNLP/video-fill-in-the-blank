@@ -89,7 +89,7 @@ def postprocess_detections(class_logits,    # type: Tensor
 
             # remove low scoring boxes
             inds = torch.nonzero(scores > box_score_thresh).squeeze(1)
-            boxes, scores, labels, box_feat = boxes[inds], scores[inds], labels[inds], box_feat[inds]
+            boxes, scores, labels, box_feat = boxes[inds], scores[inds], labels[inds], box_feat[inds//(num_classes - 1)]
 
             # remove empty boxes
             keep = box_ops.remove_small_boxes(boxes, min_size=1e-2)
