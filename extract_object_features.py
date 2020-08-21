@@ -64,7 +64,6 @@ def postprocess_detections(class_logits,    # type: Tensor
 
         pred_boxes_list = pred_boxes.split(boxes_per_image, 0)
         pred_scores_list = pred_scores.split(boxes_per_image, 0)
-        box_feature_list = 
 
         all_boxes = []
         all_scores = []
