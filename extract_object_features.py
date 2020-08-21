@@ -117,7 +117,7 @@ for video in os.listdir(folder):
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         model.roi_heads.register_forward_hook(ROIHeadsHook)
         model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
-        model.rpn.register_forward_hook(RPN_ClslogitsHook)
+        model.roi_heads.box_roi_pool.register_forward_hook(RPN_ClslogitsHook)
         model.eval()
         pred = model([img_tensor])
         # # select top THRESHOLD
