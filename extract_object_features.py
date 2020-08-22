@@ -29,7 +29,10 @@ def ROIHeads_BoxPredictorHook(self, input, output):
 
 def RPN_ClslogitsHook(self, input, output):
     global box_features
+    # This layer contains two linear layers
+    # We may want to train new linear layers so we used the input of this layer
     box_features = input[0]
+    
 
 def postprocess_detections(class_logits,    # type: Tensor
                                box_regression,  # type: Tensor
@@ -58,6 +61,9 @@ def postprocess_detections(class_logits,    # type: Tensor
         all_labels = []
         all_box_features = []
         for boxes, scores, image_shape, box_feat in zip(pred_boxes_list, pred_scores_list, image_shapes, box_feature_list):
+            # boxes : N * num_classes * 4
+            # scores : N * nums_classes
+            # box_feat: N * C * H * W
             boxes = box_ops.clip_boxes_to_image(boxes, image_shape)
 
             # create labels for each prediction
@@ -95,6 +101,25 @@ def postprocess_detections(class_logits,    # type: Tensor
 
         return all_boxes, all_scores, all_labels, all_box_features
 
+model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+model.roi_heads.register_forward_hook(ROIHeadsHook)
+model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
+model.roi_heads.box_head.register_forward_hook(RPN_ClslogitsHook)
+model.eval()
+
+# output layer structure of faster-rcnn:
+# (roi_heads): RoIHeads(
+#     (box_roi_pool): MultiScaleRoIAlign()
+#     (box_head): TwoMLPHead(
+#       (fc6): Linear(in_features=12544, out_features=1024, bias=True)
+#       (fc7): Linear(in_features=1024, out_features=1024, bias=True)
+#     )
+#     (box_predictor): FastRCNNPredictor(
+#       (cls_score): Linear(in_features=1024, out_features=91, bias=True)
+#       (bbox_pred): Linear(in_features=1024, out_features=364, bias=True)
+#     )
+#   )
+
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
     features[video] = []
@@ -108,13 +133,10 @@ for video in os.listdir(folder):
         img_tensor = img_tensor.permute(2, 0, 1)
         image_list.append(img_tensor)
 
-        model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
-        model.roi_heads.register_forward_hook(ROIHeadsHook)
-        model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
-        model.roi_heads.box_head.register_forward_hook(RPN_ClslogitsHook)
-        model.eval()
+        
         pred = model(image_list)
 
+        # All outputs are lists, one element corresponds to one image 
         all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
 
         features[video].append([all_boxes, all_box_features, all_scores, all_labels])
