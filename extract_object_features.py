@@ -10,30 +10,17 @@ from object_detect_utils import BoxCoder
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/5fps_Videos/"
 features = {}
-THESHROLD = 16
+
+# Hyperparams copied from torchvision faster rcnn model default config
 box_score_thresh = 0.05
 nms_thresh = 0.5
 detections_per_img = 100
-
-def getObjectFeature(self, input, output):
-    global feature
-    feature = output.data
-
-def getPrediction(self, input, output):
-    global scores
-    global cl
-    scores, cl = torch.max(output.data, axis=1)
-
-def getBBox(self, input, output):
-    global bbox
-    bbox = output.data
 
 def ROIHeadsHook(self, input, output):
     global prop
     global img_shapes
     prop = input[1]
     img_shapes = input[2]
-    
 
 def ROIHeads_BoxPredictorHook(self, input, output):
     global cl
@@ -48,7 +35,7 @@ def postprocess_detections(class_logits,    # type: Tensor
                                box_regression,  # type: Tensor
                                proposals,       # type: List[Tensor]
                                image_shapes,     # type: List[Tuple[int, int]]
-                               box_features,
+                               box_features,     # type: Tensor, size: N * C * H * W (N is total box numbers in all images in one batch)
                                ):
         # type: (...) -> Tuple[List[Tensor], List[Tensor], List[Tensor]]
         device = class_logits.device
@@ -127,18 +114,10 @@ for video in os.listdir(folder):
         model.roi_heads.box_head.register_forward_hook(RPN_ClslogitsHook)
         model.eval()
         pred = model(image_list)
-        # # select top THRESHOLD
-        # _, idx = torch.topk(scores, THESHROLD)
-        # feature = torch.index_select(feature, 0, idx)
-        # # scores = torch.index_select(scores, 0, idx)        
-        # bboxes = torch.zeros(THESHROLD, 4)
-        # for i in range(len(idx)):
-        #     bboxes[i, :] = bbox[idx[i], cl[idx[i]] * 4 : cl[idx[i]] * 4 + 4]
-        # cl = torch.index_select(cl, 0, idx)
 
         all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
 
-        # features[video].append([feature, bboxes, cl])
+        features[video].append([all_boxes, all_box_features, all_scores, all_labels])
 
 with open("video_features.pkl", 'wb') as f:
     pickle.dump(features, f)
