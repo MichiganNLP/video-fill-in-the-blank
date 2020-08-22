@@ -98,15 +98,15 @@ def postprocess_detections(class_logits,    # type: Tensor
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
     features[video] = []
-    for i in range(0, frame_num, 2):
+    for i in range(frame_num):
+        # Model input is a list of images, here we input images one at each time
         image_list = []
-        for k in range(2):
-            frame_name = '0' * (6-len(str(i + k + 1))) + str(i + k + 1) + '.jpg'
-            image = Image.open(f'{folder}{video}/{frame_name}')
-            img_np = np.asarray(image) / 255
-            img_tensor = torch.FloatTensor(img_np)
-            img_tensor = img_tensor.permute(2, 0, 1)
-            image_list.append(img_tensor)
+        frame_name = '0' * (6-len(str(i + 1))) + str(i + 1) + '.jpg'
+        image = Image.open(f'{folder}{video}/{frame_name}')
+        img_np = np.asarray(image) / 255
+        img_tensor = torch.FloatTensor(img_np)
+        img_tensor = img_tensor.permute(2, 0, 1)
+        image_list.append(img_tensor)
 
         model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         model.roi_heads.register_forward_hook(ROIHeadsHook)
