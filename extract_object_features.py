@@ -125,24 +125,25 @@ model.eval()
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
     features = []
-    for i in range(frame_num):
-        # Model input is a list of images, here we input images one at each time
-        image_list = []
-        frame_name = '0' * (6-len(str(i + 1))) + str(i + 1) + '.jpg'
-        with Image.open(f'{folder}{video}/{frame_name}') as image:
-            img_np = np.asarray(image) / 255
-        img_tensor = torch.FloatTensor(img_np)
-        if torch.cuda.is_available:
-            img_tensor = img_tensor.cuda()
-        img_tensor = img_tensor.permute(2, 0, 1)        
-        image_list.append(img_tensor)
-        
-        pred = model(image_list)
-        del image_list
-        # All outputs are lists, one element corresponds to one image 
-        all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
+    with torch.no_grad:
+        for i in range(frame_num):
+            # Model input is a list of images, here we input images one at each time
+            image_list = []
+            frame_name = '0' * (6-len(str(i + 1))) + str(i + 1) + '.jpg'
+            with Image.open(f'{folder}{video}/{frame_name}') as image:
+                img_np = np.asarray(image) / 255
+            img_tensor = torch.FloatTensor(img_np)
+            if torch.cuda.is_available:
+                img_tensor = img_tensor.cuda()
+            img_tensor = img_tensor.permute(2, 0, 1)        
+            image_list.append(img_tensor)
+            
+            pred = model(image_list)
+            del image_list
+            # All outputs are lists, one element corresponds to one image 
+            all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
 
-        features.append([all_boxes, all_box_features, all_scores, all_labels])
+            features.append([all_boxes, all_box_features, all_scores, all_labels])
 
     with open(f"{output_folder}{video}.pkl", 'wb') as f:
         pickle.dump(features, f)
