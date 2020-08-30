@@ -169,6 +169,7 @@ def _main() -> None:
     elif hparams.mturk_eval:
         # model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_8206545/checkpoints/epoch=1.ckpt')
         model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
+        model.eval()
         data = _dataloader(hparams.mturk_data, hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
