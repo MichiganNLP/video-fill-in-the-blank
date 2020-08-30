@@ -129,8 +129,8 @@ for video in os.listdir(folder):
         # Model input is a list of images, here we input images one at each time
         image_list = []
         frame_name = '0' * (6-len(str(i + 1))) + str(i + 1) + '.jpg'
-        image = Image.open(f'{folder}{video}/{frame_name}')
-        img_np = np.asarray(image) / 255
+        with Image.open(f'{folder}{video}/{frame_name}') as image:
+            img_np = np.asarray(image) / 255
         img_tensor = torch.FloatTensor(img_np)
         if torch.cuda.is_available:
             img_tensor = img_tensor.cuda()
