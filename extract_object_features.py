@@ -137,7 +137,7 @@ for video in os.listdir(folder):
         img_tensor = img_tensor.permute(2, 0, 1)        
         image_list.append(img_tensor)
         
-        pred = model(image_list)
+        model(image_list)
 
         # All outputs are lists, one element corresponds to one image 
         all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
