@@ -7,7 +7,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem-per-cpu=10000m 
+#SBATCH --mem-per-cpu=32000m 
 #SBATCH --time=01-5:00:00
 #SBATCH --account=mihalcea1
 #SBATCH --partition=standard
