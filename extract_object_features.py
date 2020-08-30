@@ -138,7 +138,7 @@ for video in os.listdir(folder):
         image_list.append(img_tensor)
         
         model(image_list)
-
+        del image_list
         # All outputs are lists, one element corresponds to one image 
         all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
 
