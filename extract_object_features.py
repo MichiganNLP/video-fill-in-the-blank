@@ -102,6 +102,8 @@ def postprocess_detections(class_logits,    # type: Tensor
         return all_boxes, all_scores, all_labels, all_box_features
 
 model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+if torch.cuda.is_available:
+    model = model.cuda()
 model.roi_heads.register_forward_hook(ROIHeadsHook)
 model.roi_heads.box_predictor.register_forward_hook(ROIHeads_BoxPredictorHook)
 model.roi_heads.box_head.register_forward_hook(RPN_ClslogitsHook)
@@ -130,9 +132,10 @@ for video in os.listdir(folder):
         image = Image.open(f'{folder}{video}/{frame_name}')
         img_np = np.asarray(image) / 255
         img_tensor = torch.FloatTensor(img_np)
-        img_tensor = img_tensor.permute(2, 0, 1)
+        if torch.cuda.is_available:
+            img_tensor = img_tensor.cuda()
+        img_tensor = img_tensor.permute(2, 0, 1)        
         image_list.append(img_tensor)
-
         
         pred = model(image_list)
 
