@@ -125,7 +125,7 @@ model.eval()
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
     features = []
-    with torch.no_grad:
+    with torch.no_grad():
         for i in range(frame_num):
             # Model input is a list of images, here we input images one at each time
             image_list = []
