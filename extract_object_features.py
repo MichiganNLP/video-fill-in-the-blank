@@ -9,7 +9,7 @@ import pickle
 from object_detect_utils import BoxCoder
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/5fps_Videos/"
-features = {}
+output_folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model/object_detection_features/"
 
 # Hyperparams copied from torchvision faster rcnn model default config
 box_score_thresh = 0.05
@@ -122,7 +122,7 @@ model.eval()
 
 for video in os.listdir(folder):
     frame_num = len(os.listdir(f"{folder}{video}"))
-    features[video] = []
+    features = []
     for i in range(frame_num):
         # Model input is a list of images, here we input images one at each time
         image_list = []
@@ -139,7 +139,7 @@ for video in os.listdir(folder):
         # All outputs are lists, one element corresponds to one image 
         all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
 
-        features[video].append([all_boxes, all_box_features, all_scores, all_labels])
+        features.append([all_boxes, all_box_features, all_scores, all_labels])
 
-with open("video_features.pkl", 'wb') as f:
-    pickle.dump(features, f)
+    with open(f"{output_folder}{video}.pkl", 'wb') as f:
+        pickle.dump(features, f)
