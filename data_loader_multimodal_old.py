@@ -174,11 +174,11 @@ class ActivityNetCaptionDataset(Dataset):
                 if (isHead):
                     isHead = False
                     continue
-                key = row[0]
+                key = row[0] # v_*
                 start_time = float(row[4])
                 end_time = float(row[5])
                 text = self.tokenizer.tokenize(row[1])
-                masked_position = text.index('[MASK]') + 1
+                masked_position = text.index('[MASK]') + 1 # +1 for [CLS]
                 label = self.tokenizer.tokenize(row[2])
                 correct_word_len = len(label)
                 if isTrain:
