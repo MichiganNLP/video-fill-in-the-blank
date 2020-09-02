@@ -179,11 +179,10 @@ class ActivityNetCaptionDataset(Dataset):
                 end_time = float(row[5])
                 sentence = row[1]
                 text = nltk.word_tokenize(sentence.strip().lower())
-                parsed_sentence = nltk.pos_tag(text)
-                out = self.gen(text, parsed_sentence, isTrain)
-                if len(out)==6:
-                    masked_sentence, label, masked_position, original_sentence, correct_word, POS = out
-                    data.append([key, start_time, end_time, masked_sentence, label, masked_position])
+                masked_position = text.index('[MASK]') + 1
+                label = row[2]
+
+                data.append([key, start_time, end_time, text, label, masked_position])
                 
         return data, out_text
 
