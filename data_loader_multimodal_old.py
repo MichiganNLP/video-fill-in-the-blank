@@ -179,8 +179,8 @@ class ActivityNetCaptionDataset(Dataset):
                 end_time = float(row[5])
                 text = self.tokenizer.tokenize(row[1])
                 masked_position = text.index('[MASK]') + 1
-                label = row[2]
-                correct_word_len = len(self.tokenizer.tokenize(label))
+                label = self.tokenizer.tokenize(row[2])
+                correct_word_len = len(label)
                 if isTrain:
                     for _ in range(correct_word_len - 1):
                         text.insert(masked_position, '[MASK]')                
