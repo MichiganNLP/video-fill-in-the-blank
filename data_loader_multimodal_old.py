@@ -93,46 +93,46 @@ class ActivityNetCaptionDataset(Dataset):
 
         return torch.tensor(feature, dtype=torch.float)
     
-    def gen(self, text, parsed_sentence, isTrain):
-        position = []
+    # def gen(self, text, parsed_sentence, isTrain):
+    #     position = []
         
 
-        for i in range(len(parsed_sentence)):
-            if parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] == 'NN':
-                position.append((i, parsed_sentence[i][1]))
+    #     for i in range(len(parsed_sentence)):
+    #         if parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] == 'NN':
+    #             position.append((i, parsed_sentence[i][1]))
 
-        while len(position): 
-            idx, POS = random.sample(position, 1)[0]
-            if text[idx] in self.answerWordDict and self.answerWordDict[text[idx]] >= self.THRESHOLD and isTrain:
-                position.remove((idx, POS))
-                continue
-            new_sentence = text[:]
-            correct_word = new_sentence[idx]
-            correct_word_tokenized = self.tokenizer.tokenize(correct_word)
-            if isTrain:
-                if correct_word in self.answerWordDict:
-                    self.answerWordDict[correct_word] += 1
-                else:
-                    self.answerWordDict[correct_word] = 1
+    #     while len(position): 
+    #         idx, POS = random.sample(position, 1)[0]
+    #         if text[idx] in self.answerWordDict and self.answerWordDict[text[idx]] >= self.THRESHOLD and isTrain:
+    #             position.remove((idx, POS))
+    #             continue
+    #         new_sentence = text[:]
+    #         correct_word = new_sentence[idx]
+    #         correct_word_tokenized = self.tokenizer.tokenize(correct_word)
+    #         if isTrain:
+    #             if correct_word in self.answerWordDict:
+    #                 self.answerWordDict[correct_word] += 1
+    #             else:
+    #                 self.answerWordDict[correct_word] = 1
 
-            correct_word_len = len(correct_word_tokenized)
+    #         correct_word_len = len(correct_word_tokenized)
 
-            if correct_word_len == 1:
-                self.one_token += 1
-            elif correct_word_len == 2:
-                self.two_tokens += 1
-            else:
-                self.threemore_tokens += 1
+    #         if correct_word_len == 1:
+    #             self.one_token += 1
+    #         elif correct_word_len == 2:
+    #             self.two_tokens += 1
+    #         else:
+    #             self.threemore_tokens += 1
 
-            if isTrain:
-                sentence_for_model = new_sentence[0:idx] + ['[MASK]'] * correct_word_len + new_sentence[idx+1:]
-            else:
-                sentence_for_model = new_sentence[0:idx] + ['[MASK]'] + new_sentence[idx + 1:]
-            new_sentence[idx] = '[MASK]'
+    #         if isTrain:
+    #             sentence_for_model = new_sentence[0:idx] + ['[MASK]'] * correct_word_len + new_sentence[idx+1:]
+    #         else:
+    #             sentence_for_model = new_sentence[0:idx] + ['[MASK]'] + new_sentence[idx + 1:]
+    #         new_sentence[idx] = '[MASK]'
 
-            sequence_id = self.tokenizer.encode(' '.join(sentence_for_model))
-            return sequence_id, correct_word_tokenized, idx+1, new_sentence, correct_word, POS
-        return ()
+    #         sequence_id = self.tokenizer.encode(' '.join(sentence_for_model))
+    #         return sequence_id, correct_word_tokenized, idx+1, new_sentence, correct_word, POS
+    #     return ()
 
     # This commented function was used to extract text features from original ActivityNet Caption data
     # def getTextFeatures(self, textFile, isTrain=True):
@@ -177,10 +177,13 @@ class ActivityNetCaptionDataset(Dataset):
                 key = row[0]
                 start_time = float(row[4])
                 end_time = float(row[5])
-                sentence = row[1]
-                text = nltk.word_tokenize(sentence.strip().lower())
+                text = self.tokenizer.tokenize(row[1])
                 masked_position = text.index('[MASK]') + 1
                 label = row[2]
+                correct_word_len = len(self.tokenizer.tokenize(label))
+                if isTrain:
+                    for _ in range(correct_word_len - 1):
+                        text.insert(masked_position, '[MASK]')                
 
                 data.append([key, start_time, end_time, text, label, masked_position])
                 
