@@ -2,7 +2,7 @@
 
 #“#SBATCH” directives that convey submission options:
 
-#SBATCH --job-name=extract_object_detection_features
+#SBATCH --job-name=data_gen
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=1
 #SBATCH --nodes=1
