@@ -67,7 +67,7 @@ class ActivityNetCaptionDataset(Dataset):
         #          'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
 
         # print(self.one_token, self.two_tokens, self.threemore_tokens, len(self.data))
-        with open(f'{name}.pkl', 'wb') as f:
+        with open(f'{name}Subset.pkl', 'wb') as f:
             pickle.dump(self.data, f)
 
 
@@ -168,7 +168,7 @@ class ActivityNetCaptionDataset(Dataset):
         out_text = []
         
         with open(textFile, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file,delimiter='\t')
+            csv_reader = csv.reader(csv_file,delimiter=',')
             isHead = True
             for row in csv_reader:
                 if (isHead):
