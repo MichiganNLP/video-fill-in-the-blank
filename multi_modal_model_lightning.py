@@ -249,7 +249,7 @@ def _main() -> None:
     else:
         model = MultiModalLightningModel(hparams)
 
-        trainer = pl.Trainer(default_root_dir=hparams.save_path, num_gpus=hparams.gpu_count, max_epochs=hparams.epochs,
+        trainer = pl.Trainer(default_root_dir=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
                             distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
                             amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
                             progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
