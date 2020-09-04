@@ -320,15 +320,15 @@ class QGenLightningModel(LightningModule):
 
     @overrides
     def train_dataloader(self) -> DataLoader:
-        return self._dataloader("trainSubset.pkl")
+        return self._dataloader("train.pkl")
 
     @overrides
     def val_dataloader(self) -> DataLoader:
-        return self._dataloader("valSubset.pkl")
+        return self._dataloader("val.pkl")
 
     @overrides
     def test_dataloader(self) -> DataLoader:
-        return self._dataloader("testSubset.pkl")
+        return self._dataloader("test.pkl")
 
     @staticmethod
     def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:  # pragma: no-cover
