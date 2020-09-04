@@ -168,7 +168,7 @@ def _main() -> None:
             pass
     elif hparams.mturk_eval:
         # model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12390904/checkpoints/epoch=1.ckpt')
-        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_8206545/checkpoints/epoch=1.ckpt')
+        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12389195/checkpoints/epoch=1.ckpt')
         # model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
         model.eval()
         data = _dataloader(hparams.mturk_data, hparams)
@@ -255,7 +255,8 @@ def _main() -> None:
                             progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
                             fast_dev_run=hparams.fast_dev_run)
 
-        trainer.fit(model)
+        # trainer.fit(model)
+        trainer.test(model)
             
 
 
