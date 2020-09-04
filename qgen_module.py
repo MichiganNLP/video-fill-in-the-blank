@@ -313,7 +313,10 @@ class QGenLightningModel(LightningModule):
         path = os.path.join(self.hparams.data_path, pickle_path_inside_data_folder)
         dataset = ActivityNetCaptionsDataset(path)
 
-        shuffle = self.hparams.overfit_pct == 0
+        if self.training:
+            shuffle = self.hparams.overfit_pct == 0
+        else:
+            shuffle = False
 
         return DataLoader(dataset, batch_size=self.hparams.batch_size, shuffle=shuffle, collate_fn=self._pad_batch,
                           pin_memory=self.hparams.pin_memory, num_workers=self.hparams.num_workers)
