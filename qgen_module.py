@@ -162,7 +162,7 @@ class QGenLightningModel(LightningModule):
 
     @overrides
     def test_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size, loss = self._val_test_step(*batch)
+        accuracy, correct, batch_size, loss = self._val_test_step(batch)
         return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size, "test_loss": loss}
 
 
