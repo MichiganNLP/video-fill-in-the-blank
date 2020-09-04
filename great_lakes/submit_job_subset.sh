@@ -2,7 +2,7 @@
 
 #“#SBATCH” directives that convey submission options:
 
-#SBATCH --job-name=lightning_mm_model
+#SBATCH --job-name=lightning_mm_model_subset
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=4
 #SBATCH --nodes=1
