@@ -183,9 +183,11 @@ class ActivityNetCaptionDataset(Dataset):
                 correct_word_len = len(label)
                 if isTrain:
                     for _ in range(correct_word_len - 1):
-                        text.insert(masked_position, '[MASK]')                
+                        text.insert(masked_position, '[MASK]')
 
-                data.append([key, start_time, end_time, text, label, masked_position])
+                sequence_id = self.tokenizer.encode(' '.join(text))        
+
+                data.append([key, start_time, end_time, sequence_id, label, masked_position])
                 
         return data, out_text
 
