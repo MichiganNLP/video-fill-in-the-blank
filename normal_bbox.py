@@ -9,7 +9,7 @@ pickle_folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captio
 
 for video_data in os.listdir(pickle_folder):
     video = video_data[:-4]
-    with Image.open(f'{video_folder}{video}/000001') as image:
+    with Image.open(f'{video_folder}{video}/000001.jpg') as image:
         w, h = image.size
     with open(f'{pickle_folder}{video_data}', 'rb') as f:
         video_features = pickle.load(f)
