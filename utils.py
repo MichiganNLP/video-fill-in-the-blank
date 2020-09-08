@@ -18,7 +18,7 @@ from transformers import AutoTokenizer
 TYPE_BATCH = Sequence[Tuple[Any, Any, Any, Any, Any, Any, Any, Any]]
 TYPE_STEP_OUTPUT = MutableMapping[str, torch.Tensor]
 
-def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
+def _pad_batch_grad_eval(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
     tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
 
@@ -104,11 +104,12 @@ def _pad_batch(batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
                     position_ids, standard_answers, extended_answers))
     return out
 
-def _dataloader(pickle_path_inside_data_folder: str, hparams: argparse.Namespace) -> DataLoader:
+def _dataloader_grad_eval(pickle_path_inside_data_folder: str, hparams: argparse.Namespace) -> DataLoader:
     path = os.path.join(hparams.data_path, pickle_path_inside_data_folder)
     dataset = ActivityNetCaptionsDataset(path)
 
     shuffle = hparams.overfit_pct == 0
 
-    return DataLoader(dataset, batch_size=hparams.batch_size, shuffle=shuffle, collate_fn=_pad_batch,
+    return DataLoader(dataset, batch_size=hparams.batch_size, shuffle=shuffle, collate_fn=_pad_batch_grad_eval,
                         pin_memory=hparams.pin_memory, num_workers=hparams.num_workers)
+

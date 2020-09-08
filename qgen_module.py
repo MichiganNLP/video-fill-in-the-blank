@@ -17,10 +17,11 @@ TYPE_STEP_OUTPUT = MutableMapping[str, torch.Tensor]
 
 
 class QGenLightningModel(LightningModule):
-    def __init__(self, tokenizer: PreTrainedTokenizer, hparams: argparse.Namespace) -> None:
+    def __init__(self, tokenizer: PreTrainedTokenizer, hparams: argparse.Namespace, input_type: int) -> None:
         super().__init__()
         self.tokenizer = tokenizer
         self.hparams = hparams
+        self.input_type = input_type
 
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], mask: torch.Tensor,
@@ -221,6 +222,8 @@ class QGenLightningModel(LightningModule):
         for token_count in range(max_token_count):
             text_features = []
             video_features = []
+            if self.input_type == 1:
+                boxes = []
             labels = []
             mask_positions = []
 
@@ -231,19 +234,21 @@ class QGenLightningModel(LightningModule):
             for i in range(batch_size):
                 data = batch[i]
                 text = torch.tensor(data[0])
-                # text = torch.tensor(self.tokenizer.encode(' '.join(data[0])))
-                video = data[1]
-                labels.append(data[2])
-                mask_positions.append(data[3])
-
                 text_features.append(text)
-                video_features.append(video)
+                video_features.append(data[1])
+                if self.input_type == 0:
+                    labels.append(data[2])
+                    mask_positions.append(data[3])
+                elif self.input_type == 1:
+                    boxes.append(data[2])
+                    labels.append(data[3])
+                    mask_positions.append(data[4])
 
                 total_text_len = len(text)
                 if total_text_len > max_text_len:
                     max_text_len = total_text_len
 
-                total_video_len = video.shape[0]
+                total_video_len = data[1].shape[0]
                 if total_video_len > max_video_len:
                     max_video_len = total_video_len
 
@@ -253,18 +258,22 @@ class QGenLightningModel(LightningModule):
             text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
             if self.hparams.enable_visual_features:
                 video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.float)
+                if self.input_type == 1:
+                    box_tensor = torch.zeros(batch_size, max_video_len, 4, dtype=torch.float)
             else:
                 video_tensor = None
+                if self.input_type == 1:
+                    box_tensor = None
 
             if self.hparams.enable_visual_features:
                 segments_tensor = torch.cat([torch.zeros(batch_size, max_text_len, dtype=torch.long),
-                                             torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
+                                            torch.ones(batch_size, max_video_len, dtype=torch.long)], dim=1)
                 mask = torch.zeros(batch_size, max_text_len + max_video_len, dtype=torch.bool)
                 # `-100` is the default `ignore_index` value for CrossEntropyLoss.
                 masked_lm_labels = torch.ones(batch_size, max_text_len + max_video_len, dtype=torch.long) * -100
                 position_ids = torch.cat([torch.arange(max_text_len, dtype=torch.long),
-                                          torch.arange(max_video_len, dtype=torch.long)],
-                                         dim=0).unsqueeze(0).repeat(batch_size, 1)
+                                        torch.arange(max_video_len, dtype=torch.long)],
+                                        dim=0).unsqueeze(0).repeat(batch_size, 1)
             else:
                 segments_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
                 mask = torch.zeros(batch_size, max_text_len, dtype=torch.bool)
@@ -275,6 +284,8 @@ class QGenLightningModel(LightningModule):
             for i in range(batch_size):
                 text = text_features[i]
                 video = video_features[i]
+                if self.input_type == 1:
+                    box = boxes[i]
                 text_len = len(text)
 
                 # The input to the transformer is gonna be:
@@ -295,6 +306,8 @@ class QGenLightningModel(LightningModule):
                 if self.hparams.enable_visual_features:
                     video_len = video.shape[0]
                     video_tensor[i, :video_len] = video
+                    if self.input_type == 1:
+                        box_tensor[i, :video_len] = box
                     mask[i, max_text_len - 1:max_text_len + video_len] = True
 
                 # We know label length in training. For val and testing, mask_lm_labels is not used
@@ -305,8 +318,12 @@ class QGenLightningModel(LightningModule):
                 else:
                     masked_lm_labels[i, mask_positions[i]] = self.tokenizer.convert_tokens_to_ids(labels[i][0])
 
-            out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
-                        position_ids))
+            if self.input_type == 0:
+                out.append((text_tensor, video_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
+                            position_ids))
+            elif self.input_type == 1:
+                out.append((text_tensor, video_tensor, box_tensor, mask, segments_tensor, labels, mask_positions, masked_lm_labels,
+                            position_ids))
         return out
 
     def _dataloader(self, pickle_path_inside_data_folder: str) -> DataLoader:

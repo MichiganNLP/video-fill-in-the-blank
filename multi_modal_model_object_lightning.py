@@ -10,39 +10,42 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from overrides import overrides
-from torch.optim import Optimizer  # noqa
-from torch.optim.lr_scheduler import _LRScheduler  # noqa
 from transformers import AdamW, AutoTokenizer, AutoModelWithLMHead, get_linear_schedule_with_warmup
 from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 
 from argparse_with_defaults import ArgumentParserWithDefaults
 from qgen_module import QGenLightningModel
 
-from utils import _dataloader
+from utils_grad_eval import _dataloader
 
 from torch.autograd import Variable
 
 logger = logging.getLogger(__name__)
 
 
-class MultiModalLightningModel(QGenLightningModel):
+class MultiModalLightningObjectModel(QGenLightningModel):
     def __init__(self, hparams: argparse.Namespace) -> None:
         tokenizer = AutoTokenizer.from_pretrained(hparams.transformer_model_name)
-        super().__init__(tokenizer=tokenizer, hparams=hparams, input_type=0)
+        super().__init__(tokenizer=tokenizer, hparams=hparams, input_type=1)
 
         self.encoder = AutoModelWithLMHead.from_pretrained(self.hparams.transformer_model_name)
         self.text_embedding = self.encoder.get_input_embeddings()
-        self.video_embedding = nn.Linear(self.hparams.visual_size, self.text_embedding.embedding_dim)
+        
+        self.object_embedding = nn.Linear(self.hparams.visual_size, self.text_embedding.embedding_dim)
+        self.bbox_embedding = nn.Linear(4, self.text_embedding.embedding_dim)
+
+        self.LN1 = nn.LayerNorm(self.text_embedding.embedding_dim)
+        self.LN2 = nn.LayerNorm(self.text_embedding.embedding_dim)
 
     @overrides
-    def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], mask: torch.Tensor,
+    def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], bbox: Optional[torch.Tensor], mask: torch.Tensor,
                 segment_mask: torch.Tensor, mask_lm_labels: torch.Tensor,
                 position_ids: torch.Tensor, grad_eval: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
         text_embedding = self.text_embedding(text_token_ids)
         if visual is None:
             embedding = text_embedding
         else:
-            visual_embedding = self.video_embedding(visual)
+            visual_embedding = self.LN1(self.object_embedding(visual)) + self.LN2(self.bbox_embedding(bbox))
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
 
         # if self.grad_eval:
@@ -124,7 +127,7 @@ def _get_args() -> argparse.Namespace:
     parent_parser.add_argument("--grad-eval", type=bool, default=False)
     parent_parser.add_argument("--mturk-eval", type=bool, default=False)
     parent_parser.add_argument("--mturk-data", type=str, default="")
-    parser = MultiModalLightningModel.add_model_specific_args(parent_parser)
+    parser = MultiModalLightningObjectModel.add_model_specific_args(parent_parser)
     return parser.parse_args()
 
 
@@ -141,7 +144,7 @@ def _main() -> None:
 
     
     if hparams.grad_eval:
-        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
+        model = MultiModalLightningObjectModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
         data = _dataloader('val2.pkl', hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
         for batch in data:
@@ -167,9 +170,8 @@ def _main() -> None:
                 print(embed_sum_top3[1][i])
             pass
     elif hparams.mturk_eval:
-        # model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12390904/checkpoints/epoch=1.ckpt')
-        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12389195/checkpoints/epoch=1.ckpt')
-        # model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
+        # model = MultiModalLightningObjectModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_8206545/checkpoints/epoch=1.ckpt')
+        model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
         model.eval()
         data = _dataloader(hparams.mturk_data, hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
@@ -184,7 +186,9 @@ def _main() -> None:
         for batch in data:
             batch_size = batch[0][0].shape[0]
             text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers, extended_answers = batch[0]
+            # out = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
             scores = model(text_token_ids)[0]
+            # loss, scores = out
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
             predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
@@ -245,20 +249,15 @@ def _main() -> None:
         print(acc_extended)
         print(acc_standard)
     else:
-        model = MultiModalLightningModel(hparams)
+        model = MultiModalLightningObjectModel(hparams)
 
-        # trainer = pl.Trainer(default_root_dir=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
-        #                     distributed_backend=hparams.distributed_backend, benchmark=True,
-        #                     amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
-        #                     progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
-        #                     fast_dev_run=hparams.fast_dev_run)
         trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
                             distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
                             amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
                             progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
                             fast_dev_run=hparams.fast_dev_run)
-        # trainer.fit(model)
-        trainer.test(model)
+
+        trainer.fit(model)
             
 
 

@@ -1,4 +1,4 @@
-name: lqam_back_up
+name: lqam
 channels:
   - pytorch
   - defaults
