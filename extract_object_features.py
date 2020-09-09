@@ -93,9 +93,9 @@ def postprocess_detections(class_logits,    # type: Tensor
             # keep only topk scoring predictions
             keep = keep[:detections_per_img]
             boxes, scores, labels, box_feat = boxes[keep], scores[keep], labels[keep], box_feat[keep]
-            # normalize boxes
-            boxes[:, [0,2]] /= image_shape[0]
-            boxes[:, [1,3]] /= image_shape[1]
+
+            all_boxes.append(boxes)
+            all_scores.append(scores)
             all_labels.append(labels)
             all_box_features.append(box_feat)
 
