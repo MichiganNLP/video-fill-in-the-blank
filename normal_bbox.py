@@ -15,11 +15,12 @@ for video_data in os.listdir(pickle_folder):
         video_features = pickle.load(f)
     
     for feature in video_features:
-        box = feature[0][0]
-        box[0] /= float(w)
-        box[1] /= float(h)
-        box[2] /= float(w)
-        box[3] /= float(h)
+        boxes = feature[0][0]
+        for box in boxes:
+            box[0] /= float(w)
+            box[1] /= float(h)
+            box[2] /= float(w)
+            box[3] /= float(h)
     
     with open(f'{pickle_folder}{video_data}', 'wb') as f:
         pickle.dump(video_features, f)
