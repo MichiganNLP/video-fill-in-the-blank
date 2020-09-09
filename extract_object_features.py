@@ -140,7 +140,7 @@ for video in os.listdir(folder):
             
             pred = model(image_list)
             all_boxes = pred[0]['boxes']
-            all_boxes[:, [0, 2]] /= img_tensor.shape[0]
+            all_boxes[:, [0, 2]] /= img_tensor.shape[2]
             all_boxes[:, [1, 3]] /= img_tensor.shape[1]
             all_boxes = [all_boxes]
             del image_list
