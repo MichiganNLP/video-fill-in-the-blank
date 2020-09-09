@@ -96,8 +96,6 @@ def postprocess_detections(class_logits,    # type: Tensor
             # normalize boxes
             boxes[:, [0,2]] /= image_shape[0]
             boxes[:, [1,3]] /= image_shape[1]
-            all_boxes.append(boxes)
-            all_scores.append(scores)
             all_labels.append(labels)
             all_box_features.append(box_feat)
 
@@ -141,9 +139,13 @@ for video in os.listdir(folder):
             image_list.append(img_tensor)
             
             pred = model(image_list)
+            all_boxes = pred[0]['boxes']
+            all_boxes[:, [0, 2]] /= img_tensor.shape[0]
+            all_boxes[:, [1, 3]] /= img_tensor.shape[1]
+            all_boxes = [all_boxes]
             del image_list
             # All outputs are lists, one element corresponds to one image 
-            all_boxes, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
+            _, all_scores, all_labels, all_box_features = postprocess_detections(cl, box_reg, prop, img_shapes, box_features)
 
             features.append([all_boxes, all_box_features, all_scores, all_labels])
 
