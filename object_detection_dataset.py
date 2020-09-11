@@ -62,7 +62,7 @@ class ObjectDetectionDataset(Dataset):
 
     def __getitem__(self, idx):
         key, start_time, end_time, text, label, mask_position = self.textFeatures[idx]
-        with open(f"{self.videoFolder}{key}", 'rb') as f:
+        with open(f"{self.videoFolder}/{key}", 'rb') as f:
             videoFeatures = pickle.load(f)
 
         start_idx = math.floor(start_time * 5)
