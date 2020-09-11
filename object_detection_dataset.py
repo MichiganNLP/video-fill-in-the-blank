@@ -71,7 +71,7 @@ class ObjectDetectionDataset(Dataset):
         if len(videoFeatures) > 200:
             feature = []
             for i in range(200):
-                feature.append(videoFeatures[round(i * (videoFeatures.shape[0]-1)/199)])
+                feature.append(videoFeatures[round(i * (len(videoFeatures)-1)/199)])
             videoFeatures = feature
         
         # debug
