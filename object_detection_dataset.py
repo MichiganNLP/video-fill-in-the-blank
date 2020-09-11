@@ -67,6 +67,9 @@ class ObjectDetectionDataset(Dataset):
 
         start_idx = math.floor(start_time * 5)
         end_idx = math.floor(end_time * 5)
+        # debug
+        if end_idx >= len(videoFeatures):
+            print(key, start_time, end_time)
         videoFeatures = videoFeatures[start_idx : end_idx + 1]
         if len(videoFeatures) > 200:
             feature = []
@@ -74,12 +77,10 @@ class ObjectDetectionDataset(Dataset):
                 feature.append(videoFeatures[round(i * (len(videoFeatures)-1)/199)])
             videoFeatures = feature
         
-        # debug
-        if end_idx >= len(videoFeatures):
-            print(key, start_time, end_time)
+        
 
-        boxes = torch.cat([self.aggregate(videoFeature[0][0]) for videoFeature in videoFeatures], 0)
-        box_features = torch.cat([self.aggregate(videoFeature[1][0]) for videoFeature in videoFeatures], 0)
+        boxes = torch.cat([self.aggregate(videoFeature[0][0]) for videoFeature in videoFeatures], 1)
+        box_features = torch.cat([self.aggregate(videoFeature[1][0]) for videoFeature in videoFeatures], 1)
 
         return text, box_features, boxes, label, mask_position
         
