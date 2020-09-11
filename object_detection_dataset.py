@@ -77,6 +77,8 @@ class ObjectDetectionDataset(Dataset):
             for i in range(200):
                 feature.append(videoFeatures[round(i * (len(videoFeatures)-1)/199)])
             videoFeatures = feature
+        if len(videoFeatures == 0):
+            pass
         
         
 
