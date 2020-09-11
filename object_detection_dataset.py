@@ -55,6 +55,7 @@ class ObjectDetectionDataset(Dataset):
     def aggregate(self, x):
         x = x.view(x.shape[0], -1)
         x = torch.mean(x, dim=0)
+        x = x.view(1, -1)
         return x
 
     def __len__(self):
