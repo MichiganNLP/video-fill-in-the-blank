@@ -58,7 +58,7 @@ class ObjectDetectionDataset(Dataset):
         return x
 
     def __len__(self):
-        return len(self.data)
+        return len(self.textFeatures)
 
     def __getitem__(self, idx):
         key, start_time, end_time, text, label, mask_position = self.textFeatures[idx]
