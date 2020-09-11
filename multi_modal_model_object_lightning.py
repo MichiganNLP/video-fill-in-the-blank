@@ -10,6 +10,8 @@ import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from overrides import overrides
+from torch.optim import Optimizer  # noqa
+from torch.optim.lr_scheduler import _LRScheduler  # noqa
 from transformers import AdamW, AutoTokenizer, AutoModelWithLMHead, get_linear_schedule_with_warmup
 from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 
