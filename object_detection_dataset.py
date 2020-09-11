@@ -7,9 +7,9 @@ from transformers import BertTokenizer, BertModel
 import csv
 import pickle
 
-class ActivityNetCaptionDataset(Dataset):
+class ObjectDetectionDataset(Dataset):
 
-    def __init__(self, textFile, videoFolder, duration_file, name, isTrain=True):
+    def __init__(self, textFile, videoFolder, name, isTrain=True):
         """
         Args:
             textFile: text file path

@@ -11,6 +11,7 @@ from transformers import PreTrainedTokenizer
 
 from argparse_with_defaults import ArgumentParserWithDefaults
 from data_loader_multimodal import ActivityNetCaptionsDataset
+from object_detection_dataset import ObjectDetectionDataset
 
 TYPE_BATCH = Sequence[Tuple[Any, Any, Any, Any, Any, Any, Any, Any]]
 TYPE_STEP_OUTPUT = MutableMapping[str, torch.Tensor]
@@ -325,9 +326,22 @@ class QGenLightningModel(LightningModule):
                             position_ids))
         return out
 
-    def _dataloader(self, pickle_path_inside_data_folder: str) -> DataLoader:
-        path = os.path.join(self.hparams.data_path, pickle_path_inside_data_folder)
-        dataset = ActivityNetCaptionsDataset(path)
+    def _dataloader(self, pickle_path_inside_data_folder: str) -> DataLoader:        
+        if self.input_type == 0:
+            path = os.path.join(self.hparams.data_path, pickle_path_inside_data_folder)
+            dataset = ActivityNetCaptionsDataset(path)
+        elif self.input_type == 1:
+            name = pickle_path_inside_data_folder[:-4]
+            video_folder = os.path.join(self.hparams.data_path, "object_detection_features")
+            if name == 'train':
+                file_name = "TrainSubset.csv"
+            elif name == 'test':
+                file_name = "TestSubset.csv"
+            elif name == 'val':
+                file_name = "ValidationSubset.csv"
+            textFile = os.path.join(self.hparams.data_path, "subset_data", file_name)
+
+            dataset = ObjectDetectionDataset(textFile,video_folder,name, isTrain=self.training)
 
         if self.training:
             shuffle = self.hparams.overfit_pct == 0
