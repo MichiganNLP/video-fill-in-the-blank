@@ -52,7 +52,7 @@ class ObjectDetectionDataset(Dataset):
                 data.append([key, start_time, end_time, sequence_id, label, masked_position])
         return data
 
-    def aggregate(self, x):
+    def aggregate(self, x, key):
         x = x.view(x.shape[0], -1)
         x = torch.mean(x, dim=0)
         x = x.view(1, -1)
@@ -81,8 +81,8 @@ class ObjectDetectionDataset(Dataset):
             pass
         
         
-        boxes = torch.cat([self.aggregate(videoFeature[0][0]) for videoFeature in videoFeatures], 0)
-        box_features = torch.cat([self.aggregate(videoFeature[1][0]) for videoFeature in videoFeatures], 0)
+        boxes = torch.cat([self.aggregate(videoFeature[0][0], key) for videoFeature in videoFeatures], 0)
+        box_features = torch.cat([self.aggregate(videoFeature[1][0], key) for videoFeature in videoFeatures], 0)
 
         return text, box_features, boxes, label, mask_position
         
