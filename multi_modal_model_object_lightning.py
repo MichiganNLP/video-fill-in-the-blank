@@ -16,7 +16,7 @@ from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 from argparse_with_defaults import ArgumentParserWithDefaults
 from qgen_module import QGenLightningModel
 
-from utils import _dataloader
+from utils import _dataloader_grad_eval
 
 from torch.autograd import Variable
 
@@ -145,7 +145,7 @@ def _main() -> None:
     
     if hparams.grad_eval:
         model = MultiModalLightningObjectModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
-        data = _dataloader('val2.pkl', hparams)
+        data = _dataloader_grad_eval('val2.pkl', hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
         for batch in data:
             batch_size = batch[0][0].shape[0]
@@ -173,7 +173,7 @@ def _main() -> None:
         # model = MultiModalLightningObjectModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_8206545/checkpoints/epoch=1.ckpt')
         model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
         model.eval()
-        data = _dataloader(hparams.mturk_data, hparams)
+        data = _dataloader_grad_eval(hparams.mturk_data, hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
 
         total = 0
