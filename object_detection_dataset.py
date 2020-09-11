@@ -68,10 +68,10 @@ class ObjectDetectionDataset(Dataset):
         start_idx = math.floor(start_time * 5)
         end_idx = math.floor(end_time * 5)
         videoFeatures = videoFeatures[start_idx : end_idx + 1]
-        if videoFeatures.shape[0] > 200:
-            feature = torch.zeros(200, videoFeatures.shape[1])
+        if len(videoFeatures) > 200:
+            feature = []
             for i in range(200):
-                feature[i] = videoFeatures[round(i * (videoFeatures.shape[0]-1)/199)]
+                feature.append(videoFeatures[round(i * (videoFeatures.shape[0]-1)/199)])
             videoFeatures = feature
         
         # debug
