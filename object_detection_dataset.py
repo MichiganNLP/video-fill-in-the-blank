@@ -75,10 +75,10 @@ class ObjectDetectionDataset(Dataset):
         if len(videoFeatures) > 200:
             feature = []
             for i in range(200):
-                feature.append(videoFeatures[round(i * (len(videoFeatures)-1)/199)])
+                # some frames don't have any object features
+                if videoFeatures[round(i * (len(videoFeatures)-1)/199)][0][0].shape[0] != 0:
+                    feature.append(videoFeatures[round(i * (len(videoFeatures)-1)/199)])
             videoFeatures = feature
-        if key == "v_JWN0cMm-8ug":
-            pass
         
         
         boxes = torch.cat([self.aggregate(videoFeature[0][0], key) for videoFeature in videoFeatures], 0)
