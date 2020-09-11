@@ -229,7 +229,6 @@ class QGenLightningModel(LightningModule):
 
             max_text_len = 0
             max_video_len = 0
-            video = None
 
             for i in range(batch_size):
                 data = batch[i]
@@ -257,7 +256,7 @@ class QGenLightningModel(LightningModule):
 
             text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
             if self.hparams.enable_visual_features:
-                video_tensor = torch.zeros(batch_size, max_video_len, video.shape[1], dtype=torch.float)
+                video_tensor = torch.zeros(batch_size, max_video_len, data[1].shape[1], dtype=torch.float)
                 if self.input_type == 1:
                     box_tensor = torch.zeros(batch_size, max_video_len, 4, dtype=torch.float)
             else:
