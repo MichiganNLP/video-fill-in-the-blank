@@ -80,8 +80,8 @@ class ObjectDetectionDataset(Dataset):
         
         
 
-        boxes = torch.cat([self.aggregate(videoFeature[0][0]) for videoFeature in videoFeatures], 1)
-        box_features = torch.cat([self.aggregate(videoFeature[1][0]) for videoFeature in videoFeatures], 1)
+        boxes = torch.cat([self.aggregate(videoFeature[0][0]) for videoFeature in videoFeatures], 0)
+        box_features = torch.cat([self.aggregate(videoFeature[1][0]) for videoFeature in videoFeatures], 0)
 
         return text, box_features, boxes, label, mask_position
         
