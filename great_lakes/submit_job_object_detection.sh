@@ -18,5 +18,5 @@
 # source ~/.bashrc
 eval "$(conda shell.bash hook)"
 conda activate lqam
-python extract_object_features.py
+python -u extract_object_features.py
 
