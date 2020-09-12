@@ -53,11 +53,14 @@ class QGenLightningModel(LightningModule):
 
             return torch.tensor(correct, dtype=torch.int64, device=scores.device)
 
-    def _step(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], mask: torch.Tensor,
-              segment_mask: torch.Tensor, labels: Sequence[str], mask_positions: Sequence[int],
-              mask_lm_labels: torch.Tensor,
-              position_ids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        loss, scores = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+    def _step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        if self.input_type == 0:
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch
+            loss, scores = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+        elif self.input_type == 1:
+            text_token_ids, visual, bbox, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch
+            loss, scores = self.forward(text_token_ids, visual, bbox, mask, segment_mask, mask_lm_labels, position_ids)
+
         correct = self._correct_predictions(scores, labels, mask_positions)
 
         if self.trainer.use_dp or self.trainer.use_ddp2:
@@ -150,7 +153,7 @@ class QGenLightningModel(LightningModule):
     @overrides
     def training_step(self, batch: TYPE_BATCH,
                       batch_idx: int) -> Union[int, MutableMapping[str, Union[torch.Tensor, TYPE_STEP_OUTPUT]]]:
-        accuracy, correct, batch_size, loss = self._step(*batch[0])
+        accuracy, correct, batch_size, loss = self._step(batch[0])
         metrics_to_show_and_log = {"train_loss": loss, "acc": accuracy}
         return {
             "accuracy": accuracy,
