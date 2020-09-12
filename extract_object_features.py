@@ -125,6 +125,7 @@ model.eval()
 for video in os.listdir(folder):
     if (os.path.exists(f"{output_folder}{video}.pkl")):
         continue
+    print(video)
     frame_num = len(os.listdir(f"{folder}{video}"))
     features = []
     with torch.no_grad():
