@@ -75,13 +75,11 @@ class ObjectDetectionDataset(Dataset):
         if len(videoFeatures) > 200:
             feature = []
             for i in range(200):
-                # some frames don't have any object features
-                if videoFeatures[round(i * (len(videoFeatures)-1)/199)][0][0].shape[0] != 0:
-                    feature.append(videoFeatures[round(i * (len(videoFeatures)-1)/199)])
+                feature.append(videoFeatures[round(i * (len(videoFeatures)-1)/199)])
             videoFeatures = feature
         
         
-        boxes = torch.cat([self.aggregate(videoFeature[0][0], key) for videoFeature in videoFeatures], 0)
+        boxes = torch.cat([self.aggregate(videoFeature[0][0], key)  for videoFeature in videoFeatures if videoFeature[0][0].shape[0] != 0], 0)
         box_features = torch.cat([self.aggregate(videoFeature[1][0], key) for videoFeature in videoFeatures], 0)
 
         return text, box_features, boxes, label, mask_position
