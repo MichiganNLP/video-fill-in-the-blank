@@ -8,19 +8,13 @@ video_folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Caption
 pickle_folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model/object_detection_features/"
 
 for video_data in os.listdir(pickle_folder):
-    video = video_data[:-4]
-    with Image.open(f'{video_folder}{video}/000001.jpg') as image:
-        w, h = image.size
     with open(f'{pickle_folder}{video_data}', 'rb') as f:
         video_features = pickle.load(f)
     
+    new_video_features = []
     for feature in video_features:
-        boxes = feature[0][0]
-        for box in boxes:
-            box[0] /= float(w)
-            box[1] /= float(h)
-            box[2] /= float(w)
-            box[3] /= float(h)
+        boxes, box_features, scores, labels = feature
+        new_video_features.append([[boxes[0].cpu()], [box_features[0].cpu()], [scores[0].cpu()], [labels[0].cpu()]])
     
     with open(f'{pickle_folder}{video_data}', 'wb') as f:
-        pickle.dump(video_features, f)
+        pickle.dump(new_video_features, f)
