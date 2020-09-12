@@ -123,8 +123,12 @@ class QGenLightningModel(LightningModule):
 
         #     accuracy = correct / batch_size
         batch_size = batch[0][0].shape[0]
-        text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
-        loss, scores = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+        if self.input_type == 0:
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
+            loss, scores = self.forward(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids)
+        elif self.input_type == 1:
+            text_token_ids, visual, box_tensor, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
+            loss, scores = self.forward(text_token_ids, visual,bbox, mask, segment_mask, mask_lm_labels, position_ids)
         prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
         predictions = self.tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
