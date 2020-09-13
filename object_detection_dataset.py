@@ -68,9 +68,6 @@ class ObjectDetectionDataset(Dataset):
 
         start_idx = math.floor(start_time * 5)
         end_idx = math.floor(end_time * 5)
-        # debug
-        if end_idx >= len(videoFeatures):
-            print(key, start_time, end_time)
         videoFeatures = videoFeatures[start_idx : end_idx + 1]
         if len(videoFeatures) > 200:
             feature = []
