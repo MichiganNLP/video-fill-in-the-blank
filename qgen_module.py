@@ -254,7 +254,7 @@ class QGenLightningModel(LightningModule):
                 total_text_len = len(text)
                 if total_text_len > max_text_len:
                     max_text_len = total_text_len
-                if data[1]:
+                if data[1] != None:
                     total_video_len = data[1].shape[0]
                 else:
                     total_video_len = 0
@@ -312,7 +312,7 @@ class QGenLightningModel(LightningModule):
                 else:
                     mask[i, :text_len + token_count - 1] = True
 
-                if self.hparams.enable_visual_features and video:
+                if self.hparams.enable_visual_features and video != None:
                     video_len = video.shape[0]
                     video_tensor[i, :video_len] = video
                     if self.input_type == 1:
