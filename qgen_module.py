@@ -254,8 +254,10 @@ class QGenLightningModel(LightningModule):
                 total_text_len = len(text)
                 if total_text_len > max_text_len:
                     max_text_len = total_text_len
-
-                total_video_len = data[1].shape[0]
+                if data[1]:
+                    total_video_len = data[1].shape[0]
+                else:
+                    total_video_len = 0
                 if total_video_len > max_video_len:
                     max_video_len = total_video_len
 
@@ -264,7 +266,7 @@ class QGenLightningModel(LightningModule):
 
             text_tensor = torch.zeros(batch_size, max_text_len, dtype=torch.long)
             if self.hparams.enable_visual_features:
-                video_tensor = torch.zeros(batch_size, max_video_len, data[1].shape[1], dtype=torch.float)
+                video_tensor = torch.zeros(batch_size, max_video_len, self.hparams.visual_size, dtype=torch.float)
                 if self.input_type == 1:
                     box_tensor = torch.zeros(batch_size, max_video_len, 4, dtype=torch.float)
             else:
@@ -310,7 +312,7 @@ class QGenLightningModel(LightningModule):
                 else:
                     mask[i, :text_len + token_count - 1] = True
 
-                if self.hparams.enable_visual_features:
+                if self.hparams.enable_visual_features and video:
                     video_len = video.shape[0]
                     video_tensor[i, :video_len] = video
                     if self.input_type == 1:

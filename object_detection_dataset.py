@@ -76,8 +76,14 @@ class ObjectDetectionDataset(Dataset):
             videoFeatures = feature
         
         debug = 0
-        boxes = torch.cat([self.aggregate(videoFeature[0][0], key) for videoFeature in videoFeatures if videoFeature[0][0].shape[0] != 0], 0)
-        box_features = torch.cat([self.aggregate(videoFeature[1][0], key) for videoFeature in videoFeatures if videoFeature[0][0].shape[0] != 0], 0)
+        box_list = [self.aggregate(videoFeature[0][0], key) for videoFeature in videoFeatures if videoFeature[0][0].shape[0] != 0]
+        box_feature_list = [self.aggregate(videoFeature[1][0], key) for videoFeature in videoFeatures if videoFeature[0][0].shape[0] != 0]
+        if len(box_list) != 0:
+            boxes = torch.cat(box_list, 0)
+            box_features = torch.cat(box_feature_list, 0)
+        else:
+            boxes = None
+            box_features = None
 
         return text, box_features, boxes, label, mask_position
         
