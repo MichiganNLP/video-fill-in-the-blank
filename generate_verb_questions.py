@@ -21,8 +21,8 @@ videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_act
 trainTextFile = "Train.tsv"
 valTextFile = "Validation.tsv"
 testTextFile = "Test.tsv"
-testMTurkFile = "Test_mturk.csv"
-valMTurkFile = "Validation_mturk.csv"
+testMTurkFile = "Test_mturk.tsv"
+valMTurkFile = "Validation_mturk.tsv"
 # trainTextFile = "TrainSubset.csv"
 # valTextFile = "ValidationSubset.csv"
 # testTextFile = "TestSubset.csv"
@@ -70,7 +70,7 @@ def getMturkQuestions(mturkTextFile):
         return None
     mturkQuestions = []
     with open(mturkTextFile, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file,delimiter=',')
+        csv_reader = csv.reader(csv_file,delimiter='\t')
         isHead = True
         for row in csv_reader:
             if isHead:
@@ -168,7 +168,7 @@ def getTextFeatures(textFile, mturkQuestionList, isTrain=True):
     out_text = []
     
     with open(textFile, 'r') as csv_file:
-        csv_reader = csv.reader(csv_file,delimiter=',')
+        csv_reader = csv.reader(csv_file,delimiter='\t')
         isHead = True
         for row in csv_reader:
             if (isHead):
