@@ -45,25 +45,7 @@ answerWordDict = {}
 THRESHOLD = 500
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-mturk_question_list = getMturkQuestions(mturkTextFile)
-textFeature, out_text = getTextFeatures(textFile, mturk_question_list, isTrain)
 
-with open(duration_file, 'rb') as f:
-    duration = pickle.load(f)
-
-data = getFeatures(textFeature, videoFeatures)
-
-with open(f'{name}.csv', 'w') as csvfile:
-    fieldnames = ['question', 'video_id', 'pos_tag', 'video_start_time', 'video_end_time', 'answer']
-    writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='\t')
-
-    writer.writeheader()
-    for line in self.out_text:
-        writer.writerow({'question': ' '.join(line[1]), 'video_id': line[0], 'pos_tag': line[3],
-         'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
-
-with open(f'{name}.pkl', 'wb') as f:
-    pickle.dump(self.data, f)
 
 def getMturkQuestions(mturkTextFile):
     if isTrain:
@@ -211,3 +193,22 @@ def getFeatures(textData, videoFeatures):
         features.append([data[3], videoFeature, data[4], data[5],data[0]])
     return features
 
+mturk_question_list = getMturkQuestions(mturkTextFile)
+textFeature, out_text = getTextFeatures(textFile, mturk_question_list, isTrain)
+
+with open(duration_file, 'rb') as f:
+    duration = pickle.load(f)
+
+data = getFeatures(textFeature, videoFeatures)
+
+with open(f'{name}.csv', 'w') as csvfile:
+    fieldnames = ['question', 'video_id', 'pos_tag', 'video_start_time', 'video_end_time', 'answer']
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='\t')
+
+    writer.writeheader()
+    for line in self.out_text:
+        writer.writerow({'question': ' '.join(line[1]), 'video_id': line[0], 'pos_tag': line[3],
+         'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
+
+with open(f'{name}.pkl', 'wb') as f:
+    pickle.dump(self.data, f)
