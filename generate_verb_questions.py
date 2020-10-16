@@ -67,10 +67,10 @@ def getMturkQuestions(mturkTextFile):
 def getVideoFeatures(key, startTime, endTime, videoFeatures, textLen):
     video_feature_len = videoFeatures[key]['c3d_features'].shape[0]
 
-    duration = float(duration[key])
+    duration_time = float(duration[key])
 
-    startFrame = math.floor(startTime / duration * video_feature_len)
-    endFrame  = math.floor(endTime / duration * video_feature_len)
+    startFrame = math.floor(startTime / duration_time * video_feature_len)
+    endFrame  = math.floor(endTime / duration_time * video_feature_len)
     
     feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
     # shape = feature_h5.shape
