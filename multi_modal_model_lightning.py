@@ -257,7 +257,7 @@ def _main() -> None:
                             amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
                             progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
                             fast_dev_run=hparams.fast_dev_run)
-        # trainer.fit(model)
+        trainer.fit(model)
         trainer.test(model)
             
 
