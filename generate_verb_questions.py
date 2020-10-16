@@ -30,7 +30,7 @@ valMTurkFile = "Validation-mturk.tsv"
 # testTextFile = "TestSubset.csv"
 duration_file = f"{folder}/latest_data/multimodal_model/video_duration.pkl"
 
-name = "test"
+name = "val"
 if name == "train":
     textFile = trainTextFile
     mturkTextFile = None
