@@ -173,10 +173,11 @@ def getTextFeatures(textFile, mturkQuestionList, isTrain=True):
                 data.append([key, start_time, end_time, sequence_id, label, masked_position])
                 out_text.append([key, row[1], row[2], row[3],[start_time, end_time]])
             else:                
-                text = nltk.word_tokenize(row[1].strip().lower())
-                masked_position = text.index('[MASK]') + 1 # +1 for [CLS]
+                text = row[1].strip().lower().split()
+                masked_position = text.index('[MASK]')
                 label = row[2]
-                text[masked_position - 1] = label
+                text[masked_position] = label
+                text = nltk.word_tokenize(' '.join(text))
 
                 sequence_id, label, masked_position, question_text, label_text, POS = gen(text, isTrain)        
 
