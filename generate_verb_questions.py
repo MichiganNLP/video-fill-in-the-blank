@@ -173,7 +173,7 @@ def getTextFeatures(textFile, mturkQuestionList, isTrain=True):
                 data.append([key, start_time, end_time, sequence_id, label, masked_position])
                 out_text.append([key, row[1], row[2], row[3],[start_time, end_time]])
             else:                
-                text = row[1].strip().lower().split()
+                text = row[1].strip().split()
                 masked_position = text.index('[MASK]')
                 label = row[2]
                 text[masked_position] = label
