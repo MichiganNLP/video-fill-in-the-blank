@@ -206,7 +206,7 @@ textFeature, out_text = getTextFeatures(textFile, mturk_question_list, isTrain)
 
 data = getFeatures(textFeature, videoFeatures)
 
-with open(f'{name}.csv', 'w') as csvfile:
+with open(f'{name}_verb.csv', 'w') as csvfile:
     fieldnames = ['question', 'video_id', 'pos_tag', 'video_start_time', 'video_end_time', 'answer']
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='\t')
 
