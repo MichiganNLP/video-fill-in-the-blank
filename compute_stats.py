@@ -1,6 +1,6 @@
 import pickle
 
-with open('/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model/verb_data/val.pkl', 'rb') as f:
+with open('/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model/verb_data/test.pkl', 'rb') as f:
     train_data = pickle.load(f)
 
 word_dict = {}
