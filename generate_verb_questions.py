@@ -23,14 +23,14 @@ videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_act
 trainTextFile = "Train.tsv"
 valTextFile = "Validation.tsv"
 testTextFile = "Test.tsv"
-testMTurkFile = "Test_mturk.tsv"
-valMTurkFile = "Validation_mturk.tsv"
+testMTurkFile = "Test-mturk.tsv"
+valMTurkFile = "Validation-mturk.tsv"
 # trainTextFile = "TrainSubset.csv"
 # valTextFile = "ValidationSubset.csv"
 # testTextFile = "TestSubset.csv"
 duration_file = f"{folder}/latest_data/multimodal_model/video_duration.pkl"
 
-name = "val"
+name = "test"
 if name == "train":
     textFile = trainTextFile
     mturkTextFile = None
