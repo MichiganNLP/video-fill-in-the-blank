@@ -15,7 +15,8 @@ import pickle
 
 PATH = 'Checkpoint'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
-verb_blacklist = ["can", "could", "is", "am", "are", "was", "were", "be", "been", "has", "had", "have"]
+verb_blacklist = ["can", "could", "is", "am", "are", "was", "were", "be", "been", "has", "had", "have", "seen"]
+verb_pos = ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]
 
 videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 trainTextFile = "Train.tsv"
