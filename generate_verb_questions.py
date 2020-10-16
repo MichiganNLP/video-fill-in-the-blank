@@ -182,10 +182,12 @@ def getTextFeatures(textFile, mturkQuestionList, isTrain=True):
                 text[masked_position] = label
                 text = nltk.word_tokenize(' '.join(text))
 
-                sequence_id, label, masked_position, question_text, label_text, POS = gen(text, isTrain)        
+                out = gen(text, isTrain)
+                if len(out) != 0:
+                    sequence_id, label, masked_position, question_text, label_text, POS = out        
 
-                data.append([key, start_time, end_time, sequence_id, label, masked_position])
-                out_text.append([key, question_text, label_text, POS, [start_time, end_time]])
+                    data.append([key, start_time, end_time, sequence_id, label, masked_position])
+                    out_text.append([key, question_text, label_text, POS, [start_time, end_time]])
             
     return data, out_text
 
@@ -213,5 +215,5 @@ with open(f'{name}.csv', 'w') as csvfile:
         writer.writerow({'question': ' '.join(line[1]), 'video_id': line[0], 'pos_tag': line[3],
          'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
 
-with open(f'{name}.pkl', 'wb') as f:
+with open(f'/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model/verb_data/{name}.pkl', 'wb') as f:
     pickle.dump(data, f)
