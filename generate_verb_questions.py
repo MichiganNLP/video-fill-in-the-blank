@@ -17,6 +17,7 @@ PATH = 'Checkpoint'
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions"
 verb_blacklist = ["can", "could", "is", "am", "are", "was", "were", "be", "been", "has", "had", "have", "seen"]
 verb_pos = ["VB", "VBD", "VBG", "VBN", "VBP", "VBZ"]
+noun_pos = ["NN", "NNS"]
 
 videoFeatures = h5py.File(f"{folder}/ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5", 'r')
 trainTextFile = "Train.tsv"
@@ -88,7 +89,7 @@ def gen(text, isTrain):
     position = []    
     parsed_sentence = nltk.pos_tag(text)
     for i in range(len(parsed_sentence)):
-        if (parsed_sentence[i][1] == 'VB' and parsed_sentence[i][1] not in verb_blacklist) or parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] == 'NN':
+        if (parsed_sentence[i][1] in verb_pos and parsed_sentence[i][1] not in verb_blacklist) or parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] in noun_pos:
             position.append((i, parsed_sentence[i][1]))
 
     while len(position): 
