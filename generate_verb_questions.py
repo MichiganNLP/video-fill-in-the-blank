@@ -89,7 +89,7 @@ def gen(text, isTrain):
     position = []    
     parsed_sentence = nltk.pos_tag(text)
     for i in range(len(parsed_sentence)):
-        if (parsed_sentence[i][1] in verb_pos and parsed_sentence[i][1] not in verb_blacklist) or parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] in noun_pos:
+        if (parsed_sentence[i][1] in verb_pos and parsed_sentence[i][0] not in verb_blacklist) or parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] in noun_pos:
             position.append((i, parsed_sentence[i][1]))
 
     while len(position): 
