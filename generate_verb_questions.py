@@ -159,7 +159,7 @@ def getTextFeatures(textFile, mturkQuestionList, isTrain=True):
             key = row[0] # v_*
             start_time = float(row[4])
             end_time = float(row[5])
-            if row[1] in mturkQuestionList:
+            if not isTrain and row[1] in mturkQuestionList:
                 text = self.tokenizer.tokenize(row[1])
                 masked_position = text.index('[MASK]') + 1 # +1 for [CLS]
                 label = self.tokenizer.tokenize(row[2])
