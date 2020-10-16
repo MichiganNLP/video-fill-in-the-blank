@@ -47,7 +47,8 @@ answerWordDict = {}
 THRESHOLD = 500
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
-
+with open(duration_file, 'rb') as f:
+    duration = pickle.load(f)
 
 def getMturkQuestions(mturkTextFile):
     if isTrain:
@@ -66,7 +67,7 @@ def getMturkQuestions(mturkTextFile):
 def getVideoFeatures(key, startTime, endTime, videoFeatures, textLen):
     video_feature_len = videoFeatures[key]['c3d_features'].shape[0]
 
-    duration = float(self.duration[key])
+    duration = float(duration[key])
 
     startFrame = math.floor(startTime / duration * video_feature_len)
     endFrame  = math.floor(endTime / duration * video_feature_len)
@@ -162,15 +163,15 @@ def getTextFeatures(textFile, mturkQuestionList, isTrain=True):
             start_time = float(row[4])
             end_time = float(row[5])
             if not isTrain and row[1] in mturkQuestionList:
-                text = self.tokenizer.tokenize(row[1])
+                text = tokenizer.tokenize(row[1])
                 masked_position = text.index('[MASK]') + 1 # +1 for [CLS]
-                label = self.tokenizer.tokenize(row[2])
+                label = tokenizer.tokenize(row[2])
                 correct_word_len = len(label)
                 if isTrain:
                     for _ in range(correct_word_len - 1):
                         text.insert(masked_position, '[MASK]')
 
-                sequence_id = self.tokenizer.encode(' '.join(text))        
+                sequence_id = tokenizer.encode(' '.join(text))        
 
                 data.append([key, start_time, end_time, sequence_id, label, masked_position])
                 out_text.append([key, row[1], row[2], row[3],[start_time, end_time]])
@@ -199,8 +200,7 @@ def getFeatures(textData, videoFeatures):
 mturk_question_list = getMturkQuestions(mturkTextFile)
 textFeature, out_text = getTextFeatures(textFile, mturk_question_list, isTrain)
 
-with open(duration_file, 'rb') as f:
-    duration = pickle.load(f)
+
 
 data = getFeatures(textFeature, videoFeatures)
 
@@ -209,9 +209,9 @@ with open(f'{name}.csv', 'w') as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter='\t')
 
     writer.writeheader()
-    for line in self.out_text:
+    for line in out_text:
         writer.writerow({'question': ' '.join(line[1]), 'video_id': line[0], 'pos_tag': line[3],
          'video_start_time':str(line[4][0]), 'video_end_time': str(line[4][1]), 'answer':line[2]})
 
 with open(f'{name}.pkl', 'wb') as f:
-    pickle.dump(self.data, f)
+    pickle.dump(data, f)
