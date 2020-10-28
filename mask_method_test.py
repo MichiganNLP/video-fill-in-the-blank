@@ -11,4 +11,4 @@ model = BertModel.from_pretrained('bert-base-uncased')
 
 for caption in data:
     sentence = caption["enCap"][0] # just pick the first one
-    bert_out = model(**tokenizer(sentence))
+    bert_out = model(**tokenizer(sentence, return_tensors="pt"))
