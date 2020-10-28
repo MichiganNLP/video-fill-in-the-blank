@@ -12,7 +12,7 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 data_out = []
-for i in range(500):
+for i in range(10):
     caption = data[i]
     sentence = caption["enCap"][0] # just pick the first one
     sentence_ids = tokenizer.encode(sentence)
@@ -36,29 +36,34 @@ for i in range(500):
             if sorted_index[r] == label:
                 rank = r
                 break
-        if prob_min[0] > prob:
-            prob_min = (probs[label], label)
         
+        model_predict_word = tokenizer.convert_ids_to_tokens(torch.argmax(probs))
         max_prob = torch.max(probs).item()
 
+        if prob_min[0] > prob:
+            prob_min = (probs[label], label, prob, model_predict_word, max_prob)
+
         if prob_distance[0] < max_prob - prob:
-            prob_distance = (max_prob - prob, label)
+            prob_distance = (max_prob - prob, label, prob, model_predict_word, max_prob)
 
         if prob_ratio[0] < prob / max_prob:
-            prob_ratio = (prob / max_prob, label)
+            prob_ratio = (prob / max_prob, label, prob, model_predict_word, max_prob)
 
         if prob_rank[0] < rank:
-            prob_rank = (rank, label)
+            prob_rank = (rank, label, prob, model_predict_word, max_prob)
     
     mask_based_on_prob = tokenizer.convert_ids_to_tokens(prob_min[1])
     mask_based_on_prob_distance = tokenizer.convert_ids_to_tokens(prob_distance[1])
     mask_based_on_prob_ratio = tokenizer.convert_ids_to_tokens(prob_ratio[1])
     mask_based_on_rank = tokenizer.convert_ids_to_tokens(prob_rank[1])
 
-    data_out.append([sentence, mask_based_on_prob, mask_based_on_prob_distance, mask_based_on_prob_ratio, mask_based_on_rank])
+    data_out.append([sentence, mask_based_on_prob, *prob_min[2:],
+                    mask_based_on_prob_distance, *prob_distance[2:],
+                    mask_based_on_prob_ratio, *prob_ratio[2:],
+                    mask_based_on_rank, *prob_rank[2:]])
 
 with open("mask_method_test.csv", "w") as f:
-    field_names = ["sentence", "lowest prob", "max prob distance", "max prob ratio", "max_prob_rank"]
+    field_names = ["sentence", "lowest prob", "model_pred", "max_prob", "max prob distance", "model_pred", "max_prob", "max prob ratio", "model_pred", "max_prob", "max_prob_rank", "model_pred", "max_prob",]
     writer = csv.writer(f,delimiter=",")
     writer.writerow(field_names)
     for row in data_out:
