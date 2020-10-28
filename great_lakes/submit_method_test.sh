@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python submit_method_test.sh
+python mask_method_test.py
 echo done
