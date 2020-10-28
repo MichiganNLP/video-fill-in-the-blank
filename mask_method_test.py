@@ -12,7 +12,8 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 data_out = []
-for caption in data:
+for i in range(100):
+    caption = data[i]
     sentence = caption["enCap"][0] # just pick the first one
     sentence_ids = tokenizer.encode(sentence)
     prob_min = (1, 0)
