@@ -18,7 +18,7 @@ for i in range(100):
     sentence_ids = tokenizer.encode(sentence)
     prob_min = (1, 0)
     prob_distance = (0, 0)
-    prob_ratio = (0, 0)
+    prob_ratio = (1, 0)
     prob_rank = (0, 0)
     for i in range(1, len(sentence_ids) - 1):
         tmp_sentence = sentence_ids[:]
@@ -46,7 +46,7 @@ for i in range(100):
         if prob_distance[0] < max_prob - prob:
             prob_distance = (max_prob - prob, label, prob.item(), model_predict_word, max_prob)
 
-        if prob_ratio[0] < prob / max_prob:
+        if prob_ratio[0] > prob / max_prob:
             prob_ratio = (prob / max_prob, label, prob.item(), model_predict_word, max_prob)
 
         if prob_rank[0] < rank:
