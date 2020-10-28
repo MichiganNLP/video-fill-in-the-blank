@@ -12,13 +12,14 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 data_out = []
-for i in range(100):
+for i in range(500):
     caption = data[i]
     sentence = caption["enCap"][0] # just pick the first one
     sentence_ids = tokenizer.encode(sentence)
     prob_min = (1, 0)
     prob_distance = (0, 0)
     prob_ratio = (0, 0)
+    prob_rank = (0, 0)
     for i in range(1, len(sentence_ids) - 1):
         tmp_sentence = sentence_ids[:]
         label = tmp_sentence[i]
@@ -28,7 +29,13 @@ for i in range(100):
         out = model(input_ids = torch.tensor(tmp_sentence).view(1,-1), masked_lm_labels = masked_lm_labels)
         probs = F.softmax(out[1][0][i], dim=0)
         prob = probs[label]
-
+        _, sorted_index = torch.sort(probs)
+        
+        rank = 0
+        for r in range(sorted_index.shape[0]):
+            if sorted_index[r] == label:
+                rank = r
+                break
         if prob_min[0] > prob:
             prob_min = (probs[label], label)
         
@@ -39,15 +46,19 @@ for i in range(100):
 
         if prob_ratio[0] < prob / max_prob:
             prob_ratio = (prob / max_prob, label)
+
+        if prob_rank[0] < rank:
+            prob_rank = (rank, label)
     
     mask_based_on_prob = tokenizer.convert_ids_to_tokens(prob_min[1])
     mask_based_on_prob_distance = tokenizer.convert_ids_to_tokens(prob_distance[1])
     mask_based_on_prob_ratio = tokenizer.convert_ids_to_tokens(prob_ratio[1])
-    
-    data_out.append([sentence, mask_based_on_prob, mask_based_on_prob_distance, mask_based_on_prob_ratio])
+    mask_based_on_rank - tokenizer.convert_ids_to_tokens(prob_rank[1])
+
+    data_out.append([sentence, mask_based_on_prob, mask_based_on_prob_distance, mask_based_on_prob_ratio, mask_based_on_rank])
 
 with open("mask_method_test.csv", "w") as f:
-    field_names = ["sentence", "lowest prob", "max prob distance", "max prob ratio"]
+    field_names = ["sentence", "lowest prob", "max prob distance", "max prob ratio", "max_prob_rank"]
     writer = csv.writer(f,delimiter=",")
     writer.writerow(field_names)
     for row in data_out:
