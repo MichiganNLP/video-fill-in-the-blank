@@ -37,7 +37,7 @@ for i in range(10):
                 rank = r
                 break
         
-        model_predict_word = tokenizer.convert_ids_to_tokens(torch.argmax(probs))
+        model_predict_word = tokenizer.convert_ids_to_tokens(torch.argmax(probs).item())
         max_prob = torch.max(probs).item()
 
         if prob_min[0] > prob:
