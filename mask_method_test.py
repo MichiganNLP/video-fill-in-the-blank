@@ -63,7 +63,7 @@ for i in range(100):
                     mask_based_on_rank, *prob_rank[2:]])
 
 with open("mask_method_test.csv", "w") as f:
-    field_names = ["sentence", "lowest prob", "model_pred", "max_prob", "max prob distance", "model_pred", "max_prob", "max prob ratio", "model_pred", "max_prob", "max_prob_rank", "model_pred", "max_prob","rank"]
+    field_names = ["sentence", "lowest prob", "prob", "model_pred", "max_prob", "max prob distance", "prob", "model_pred", "max_prob", "max prob ratio","prob", "model_pred", "max_prob", "max_prob_rank","prob", "model_pred", "max_prob","rank"]
     writer = csv.writer(f,delimiter=",")
     writer.writerow(field_names)
     for row in data_out:
