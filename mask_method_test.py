@@ -29,10 +29,10 @@ for i in range(500):
         out = model(input_ids = torch.tensor(tmp_sentence).view(1,-1), masked_lm_labels = masked_lm_labels)
         probs = F.softmax(out[1][0][i], dim=0)
         prob = probs[label]
-        _, sorted_index = torch.sort(probs)
+        _, sorted_index = torch.sort(probs, descending=True)
         
         rank = 0
-        for r in range(sorted_index.shape[0], descending=True):
+        for r in range(sorted_index.shape[0]):
             if sorted_index[r] == label:
                 rank = r
                 break
