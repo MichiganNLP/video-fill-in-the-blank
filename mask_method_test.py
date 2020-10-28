@@ -2,7 +2,7 @@ import json
 import torch
 from transformers import BertModel, BertTokenizer
 
-JSON_FILE = "vatex_training_v1.0.json"
+JSON_FILE = "/scratch/mihalcea_root/mihalcea1/shared_data/VATEX/captions/vatex_training_v1.0.json"
 with open(JSON_FILE, 'r') as f:
     data = json.load(f)
 
