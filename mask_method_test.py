@@ -41,16 +41,16 @@ for i in range(10):
         max_prob = torch.max(probs).item()
 
         if prob_min[0] > prob:
-            prob_min = (probs[label], label, prob, model_predict_word, max_prob)
+            prob_min = (probs[label], label, prob.item(), model_predict_word, max_prob)
 
         if prob_distance[0] < max_prob - prob:
-            prob_distance = (max_prob - prob, label, prob, model_predict_word, max_prob)
+            prob_distance = (max_prob - prob, label, prob.item(), model_predict_word, max_prob)
 
         if prob_ratio[0] < prob / max_prob:
-            prob_ratio = (prob / max_prob, label, prob, model_predict_word, max_prob)
+            prob_ratio = (prob / max_prob, label, prob.item(), model_predict_word, max_prob)
 
         if prob_rank[0] < rank:
-            prob_rank = (rank, label, prob, model_predict_word, max_prob)
+            prob_rank = (rank, label, prob.item(), model_predict_word, max_prob)
     
     mask_based_on_prob = tokenizer.convert_ids_to_tokens(prob_min[1])
     mask_based_on_prob_distance = tokenizer.convert_ids_to_tokens(prob_distance[1])
