@@ -1,4 +1,5 @@
 import json
+import csv
 import torch
 from transformers import BertForMaskedLM, BertTokenizer
 import torch.nn.functional as F
@@ -42,6 +43,10 @@ for caption in data:
     mask_based_on_prob_distance = tokenizer.convert_ids_to_tokens(prob_distance[1])
     mask_based_on_prob_ratio = tokenizer.convert_ids_to_tokens(prob_ratio[1])
     
-    data_out.append(sentence, mask_based_on_prob, mask_based_on_prob_distance, mask_based_on_prob_ratio)
+    data_out.append([sentence, mask_based_on_prob, mask_based_on_prob_distance, mask_based_on_prob_ratio])
 
-pass
+with open("mask_method_test.csv", "w") as f:
+    field_names = ["sentence", "lowest prob", "max prob distance", "max prob ratio"]
+    writer = csv.writer(f,delimiter=",", field_names = field_names)
+    for row in data_out:
+        writer.writerow(row)
