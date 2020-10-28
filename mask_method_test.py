@@ -32,7 +32,7 @@ for i in range(500):
         _, sorted_index = torch.sort(probs)
         
         rank = 0
-        for r in range(sorted_index.shape[0]):
+        for r in range(sorted_index.shape[0], descending=True):
             if sorted_index[r] == label:
                 rank = r
                 break
