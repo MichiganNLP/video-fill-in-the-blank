@@ -53,7 +53,7 @@ for i in range(500):
     mask_based_on_prob = tokenizer.convert_ids_to_tokens(prob_min[1])
     mask_based_on_prob_distance = tokenizer.convert_ids_to_tokens(prob_distance[1])
     mask_based_on_prob_ratio = tokenizer.convert_ids_to_tokens(prob_ratio[1])
-    mask_based_on_rank - tokenizer.convert_ids_to_tokens(prob_rank[1])
+    mask_based_on_rank = tokenizer.convert_ids_to_tokens(prob_rank[1])
 
     data_out.append([sentence, mask_based_on_prob, mask_based_on_prob_distance, mask_based_on_prob_ratio, mask_based_on_rank])
 
