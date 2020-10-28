@@ -17,5 +17,5 @@ for caption in data:
         label = tmp_sentence[i]
         tmp_sentence[i] = 103 # 103 is the id for [MASK]
         masked_lm_labels = torch.ones(1, len(tmp_sentence), dtype=torch.long) * -100
-        masked_lm_labels[i] = label
+        masked_lm_labels[0,i] = label
         out = model(input_ids = torch.tensor(tmp_sentence).view(1,-1), masked_lm_labels = masked_lm_labels)
