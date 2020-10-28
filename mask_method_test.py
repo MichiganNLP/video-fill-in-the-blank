@@ -48,6 +48,7 @@ for i in range(100):
 
 with open("mask_method_test.csv", "w") as f:
     field_names = ["sentence", "lowest prob", "max prob distance", "max prob ratio"]
-    writer = csv.writer(f,delimiter=",", field_names = field_names)
+    writer = csv.writer(f,delimiter=",")
+    writer.writerow(field_names)
     for row in data_out:
         writer.writerow(row)
