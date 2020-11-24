@@ -37,7 +37,7 @@ class ActivityNetCaptionDataset(Dataset):
         textFeature, self.out_text = self.getTextFeatures(textFile, isTrain)
         self.data = self.getFeatures(textFeature, videoFeatures)
 
-        with open('train', 'w') as f:
+        with open('output/train', 'w') as f:
             for line in self.out_text:
                 f.write(line[0])
                 f.write('\n')

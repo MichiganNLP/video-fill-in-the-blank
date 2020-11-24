@@ -12,9 +12,10 @@ import math
 
 
 def fit(train_text_file, num_tokens):
-    word_to_idx_file = f'/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/word_to_idx-{num_tokens}.pkl'
+    # word_to_idx_file = f'
+    # /scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/word_to_idx-{num_tokens}.pkl'
     stop_words = set(stopwords.words('english'))
-    word_to_idx = dict()
+    word_to_idx, idx_to_word = dict(), dict()
     # collect all documents into all_sentences
     documents = list()
     with open(train_text_file, 'r') as f:
@@ -33,11 +34,12 @@ def fit(train_text_file, num_tokens):
     for word, _ in top_k_words:
         if word not in word_to_idx:
             word_to_idx[word] = len(word_to_idx)
+            idx_to_word[len(idx_to_word)] = word
     # open pickle file and dump data into the file
-    pickle_file = open(word_to_idx_file, 'wb')
-    pickle.dump((word_to_idx, len(tokens)), pickle_file)
-    pickle_file.close()
-    return word_to_idx, len(counter)
+    # pickle_file = open(word_to_idx_file, 'wb')
+    # pickle.dump((word_to_idx, len(tokens)), pickle_file)
+    # pickle_file.close()
+    return idx_to_word, word_to_idx, len(word_to_idx)
 
 
 def make_bow_vector(sentence, word_to_idx):
@@ -60,7 +62,8 @@ def make_target(label, label_to_ix):
 
 def get_video_representations(key, start, end, video_features, video_duration):
     video_feature_len = video_features[key]['c3d_features'].shape[0]
-    duration = video_duration[key]
+
+    duration = float(video_duration[key])
 
     start_frame = math.floor(start / duration * video_feature_len)
     end_frame = math.floor(end / duration * video_feature_len)
@@ -77,15 +80,15 @@ def get_video_representations(key, start, end, video_features, video_duration):
     return torch.tensor(feature, dtype=torch.float32)
 
 
-def build_representation(num_tokens, masked_data_file,
-                         train_text_file, video_feature_file,
-                         bow_representation_file, video_duration):
+def build_representation(masked_data_file, video_feature_file,
+                         bow_representation_file, video_duration,
+                         word_to_idx, num_vocabs):
     # check if representation file exists
-    # if os.path.exists(bow_representation_file):
-    #     print(f'{bow_representation_file}: representations are loaded.')
-    #     return
+    if os.path.exists(bow_representation_file):
+        print(f'{bow_representation_file}: representations are loaded.')
+        return
     # construct word to index dictionary for sentence representation using training data file: train.json, etc
-    word_to_idx, num_vocabs = fit(train_text_file, num_tokens)
+    # word_to_idx, num_vocabs = fit(train_text_file, num_tokens)
     # retrieve video features from file
     video_features = h5py.File(video_feature_file, 'r')
     # data list will be saved into pickle file - each element is an tuple:
@@ -98,16 +101,16 @@ def build_representation(num_tokens, masked_data_file,
             # check if it is the end of train file
             if not key:
                 break
-            sentence = train_file.readline().strip().replace('[MASK]', '')
+            raw_sentence = train_file.readline().strip()
+            sentence = raw_sentence.replace('[MASK]', '')
             label = train_file.readline().strip()
             tt_start, tt_end = json.loads(train_file.readline().strip())
             tt_start, tt_end = float(tt_start), float(tt_end)
-            original_tt_start, original_tt_end = floor(tt_start * 2), floor(tt_end * 2)
             # escape the new line separator
             train_file.readline()
             # create sentence feature and video feature
             sentence_feature = make_bow_vector(sentence, word_to_idx)
-            video_feature = get_video_representations(key, original_tt_start, original_tt_end,
+            video_feature = get_video_representations(key, tt_start, tt_end,
                                                       video_features, video_duration)
             if video_feature.shape[0] == 0:
                 error_file.write('shape: ' + str(video_feature.shape) + '\n')
@@ -117,9 +120,10 @@ def build_representation(num_tokens, masked_data_file,
                 error_file.write('indices: [' + str(tt_start) + ' ' + str(tt_end) + ']' + '\n')
                 error_file.write('\n')
             else:
+                # average on time dimension
                 video_feature = torch.mean(video_feature, dim=0)
                 label_representation = make_target(label, word_to_idx)
-                data.append((sentence_feature, video_feature, label_representation))
+                data.append((sentence_feature, video_feature, label_representation, key, raw_sentence))
         error_file.close()
         # open pickle file and dump data into the file
         pickle_file = open(bow_representation_file, 'wb')

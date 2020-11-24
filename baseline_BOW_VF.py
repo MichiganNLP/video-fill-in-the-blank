@@ -14,13 +14,17 @@ from argparse import ArgumentParser
 
 class BaselineBowVF(pl.LightningModule):
 
-    def __init__(self, hparams, output_dim):
+    def __init__(self, hparams, idx_to_word_map, word_to_idx_map, output_dim):
         """
         In the constructor we instantiate two nn.Linear modules and assign them as
         member variables.
         """
         super(BaselineBowVF, self).__init__()
 
+        self.word_to_idx = word_to_idx_map
+        self.idx_to_word = idx_to_word_map
+        self.num_vocabs = output_dim
+        
         self.hparams = hparams
 
         self.linear1 = nn.Linear(self.hparams.text_feature_dim, self.hparams.video_feature_dim)
@@ -46,7 +50,7 @@ class BaselineBowVF(pl.LightningModule):
         return F.nll_loss(logits, labels)
 
     def training_step(self, train_batch, batch_idx):
-        text_feature, video_feature, labels = train_batch
+        text_feature, video_feature, labels, _, _ = train_batch
         # labels shape: [batch_size, 1] --> [batch_size]
         labels = labels.squeeze(dim=1)
 
@@ -57,7 +61,7 @@ class BaselineBowVF(pl.LightningModule):
         return {'loss': loss, 'log': logs}
 
     def validation_step(self, val_batch, batch_idx):
-        text_feature, video_feature, labels = val_batch
+        text_feature, video_feature, labels, video_ids, questions = val_batch
         labels = labels.squeeze(dim=1)
 
         logits = self.forward(text_feature, video_feature)
@@ -65,12 +69,30 @@ class BaselineBowVF(pl.LightningModule):
 
         # calculate accuracy
         correct_predictions, batch_size = 0, len(labels)
+        metric1_predictions, vqa1_predictions = 0, 0
         for i in range(batch_size):
-            if torch.argmax(logits[i]) == labels[i]:
+            video_id, question = video_ids[i], questions[i]
+            pred = torch.argmax(logits[i])
+            if pred == labels[i]:
                 correct_predictions += 1
+            # mturk answer check
+            pred_ans = self.idx_to_word[pred.item()]
+            worker_ans = self.mturk_val_answers[video_id][question]['worker_answers']
+            if worker_ans.get(pred_ans):
+                # metric 1
+                most_freq_ans_count = max([freq for freq, _ in worker_ans.values()])
+                pred_freq_ans_count = worker_ans[pred_ans][0]
+                metric1_predictions += pred_freq_ans_count / most_freq_ans_count
+                # vqa1
+                vqa1_predictions += 1
 
         # logging training loss
-        logs = {'val_loss': loss, 'validation_accuracy': torch.tensor([correct_predictions / batch_size])}
+        logs = {
+            'val_loss': loss,
+            'validation_accuracy': torch.tensor([correct_predictions / batch_size]),
+            'metric1_val_accuracy': torch.tensor([metric1_predictions / batch_size]),
+            'vqa1_val_accuracy': torch.tensor([vqa1_predictions / batch_size])
+        }
         return logs
 
     def validation_epoch_end(self, outputs):
@@ -78,11 +100,71 @@ class BaselineBowVF(pl.LightningModule):
         # outputs is [{'loss': batch_0_loss, 'loss': batch_1_loss, ...}]
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
         avg_accuracy = torch.stack([x['validation_accuracy'] for x in outputs]).mean()
-        tensorboard_logs = {'val_loss': avg_loss, 'validation_accuracy': avg_accuracy}
+        avg_metric1_accuracy = torch.stack([x['metric1_val_accuracy'] for x in outputs]).mean()
+        avg_vqa1_accuracy = torch.stack([x['vqa1_val_accuracy'] for x in outputs]).mean()
+
+        tensorboard_logs = {
+            'val_loss': avg_loss,
+            'validation_accuracy': avg_accuracy,
+            'metric1_val_accuracy': avg_metric1_accuracy,
+            'vqa1_val_accuracy': avg_vqa1_accuracy
+        }
 
         return {'avg_val_loss': avg_loss, 'validation_accuracy': avg_accuracy, 'log': tensorboard_logs}
 
+    # def test_step(self, test_batch, batch_idx):
+    #     text_feature, video_feature, labels, video_ids, questions = test_batch
+    #     logits = self.forward(text_feature, video_feature)
+    #     loss = self.cross_entropy(logits, labels)
+    #
+    #     correct_predictions, batch_size = 0, len(labels)
+    #     metric1_predictions, vqa1_predictions = 0, 0
+    #
+    #     for i in range(batch_size):
+    #         video_id, question = video_ids[i], questions[i]
+    #         pred = torch.argmax(logits[i])
+    #         if pred == labels[i]:
+    #             correct_predictions += 1
+    #         # # mturk answer check
+    #         pred_ans = self.idx_to_word[pred.item()]
+    #         worker_ans = self.mturk_test_answers[video_id][question]['worker_answers']
+    #         if worker_ans.get(pred_ans):
+    #             # metric 1
+    #             most_freq_ans_count = max([freq for freq, _ in worker_ans.values()])
+    #             pred_freq_ans_count = worker_ans[pred_ans][0]
+    #             metric1_predictions += pred_freq_ans_count / most_freq_ans_count
+    #             # vqa1
+    #             vqa1_predictions += 1
+    #
+    #     logs = {
+    #         'test_loss': loss,
+    #         'test_accuracy': torch.tensor([correct_predictions / batch_size]),
+    #         'metric1_test_accuracy': torch.tensor([metric1_predictions / batch_size]),
+    #         'vqa1_test_accuracy': torch.tensor([vqa1_predictions / batch_size])
+    #     }
+    #     return logs
+    #
+    # def test_epoch_end(self, outputs):
+    #     avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean()
+    #     avg_accuracy = torch.stack([x['test_accuracy'] for x in outputs]).mean()
+    #     avg_metric1_accuracy = torch.stack([x['metric1_test_accuracy'] for x in outputs]).mean()
+    #     avg_vqa1_accuracy = torch.stack([x['vqa1_test_accuracy'] for x in outputs]).mean()
+    #     tensorboard_logs = {
+    #         'test_loss': avg_loss,
+    #         'test_accuracy': avg_accuracy,
+    #         'metric1_test_accuracy': avg_metric1_accuracy,
+    #         'vqa1_test_accuracy': avg_vqa1_accuracy
+    #     }
+    #
+    #     return {'test_loss': avg_loss, 'test_accuracy': avg_accuracy, 'log': tensorboard_logs}
+        
     def prepare_data(self):
+        # load mturk worker answers
+        mturk_val_path = os.path.join(self.hparams.data_path, 'latest_data/mturk_val.pickle')
+        mturk_test_path = os.path.join(self.hparams.data_path, 'latest_data/mturk_test.pickle')
+        self.mturk_val_answers = pickle.load(open(mturk_val_path, 'rb'))
+        self.mturk_test_answers = pickle.load(open(mturk_test_path, 'rb'))
+        
         # load video duration variable from file
         duration_path = os.path.join(self.hparams.data_path, 'latest_data/multimodal_model/video_duration.pkl')
         self.video_duration = pickle.load(open(duration_path, 'rb'))
@@ -90,7 +172,6 @@ class BaselineBowVF(pl.LightningModule):
 
         video_features_file = os.path.join(self.hparams.data_path,
                                            'ActivityNet_Captions_Video_Features/sub_activitynet_v1-3.c3d.hdf5')
-        train_text_file = os.path.join(self.hparams.data_path, 'latest_data/train.json')
 
         bow_representation_train_file = os.path.join(self.hparams.data_path, 'latest_data/bow_training_data.pkl')
         bow_representation_val_file = os.path.join(self.hparams.data_path, 'latest_data/bow_validation_data.pkl')
@@ -100,12 +181,15 @@ class BaselineBowVF(pl.LightningModule):
         masked_validation_data_file = os.path.join(self.hparams.data_path, 'latest_data/val')
         masked_test_data_file = os.path.join(self.hparams.data_path, 'latest_data/test')
 
-        build_representation(self.hparams.num_tokens, masked_training_data_file, train_text_file,
-                             video_features_file, bow_representation_train_file, self.video_duration)
-        build_representation(self.hparams.num_tokens, masked_validation_data_file, train_text_file,
-                             video_features_file, bow_representation_val_file, self.video_duration)
-        build_representation(self.hparams.num_tokens, masked_test_data_file, train_text_file,
-                             video_features_file, bow_representation_test_file, self.video_duration)
+        build_representation(masked_training_data_file, video_features_file,
+                             bow_representation_train_file, self.video_duration,
+                             self.word_to_idx, self.num_vocabs)
+        build_representation(masked_validation_data_file, video_features_file,
+                             bow_representation_val_file, self.video_duration,
+                             self.word_to_idx, self.num_vocabs)
+        build_representation(masked_test_data_file, video_features_file,
+                             bow_representation_test_file, self.video_duration,
+                             self.word_to_idx, self.num_vocabs)
 
         self.training_data_set = ActivityNetCaptionsDataset(bow_representation_train_file)
         self.validation_data_set = ActivityNetCaptionsDataset(bow_representation_val_file)
@@ -120,7 +204,8 @@ class BaselineBowVF(pl.LightningModule):
                           shuffle=self.hparams.shuffle, num_workers=self.hparams.num_workers)
 
     # def test_dataloader(self):
-    #     return DataLoader(self.test_data_set, batch_size=16, shuffle=True, num_workers=0)
+    #     return DataLoader(self.test_data_set, batch_size=self.hparams.test_batch_size,
+    #                       shuffle=self.hparams.shuffle, num_workers=self.hparams.num_workers)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate,
@@ -130,7 +215,7 @@ class BaselineBowVF(pl.LightningModule):
     @staticmethod
     def add_model_specific_args(parent_parser):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument("--weight_decay", default=1e-1, type=float)
+        parser.add_argument("--weight_decay", default=0, type=float)
         parser.add_argument('--num_tokens', type=int, default=1000)
         parser.add_argument("--epochs", type=int, default=1000)
         parser.add_argument('--text_feature_dim', type=int, default=1000)
@@ -138,7 +223,8 @@ class BaselineBowVF(pl.LightningModule):
         parser.add_argument('--shuffle', type=bool, default=True)
         parser.add_argument('--num_workers', type=int, default=4)
         parser.add_argument('--train_batch_size', type=int, default=32)
-        parser.add_argument('--val_batch_size', type=int, default=16)
+        parser.add_argument('--val_batch_size', type=int, default=32)
+        parser.add_argument('--test_batch_size', type=int, default=32)
         parser.add_argument('--learning_rate', type=float, default=1e-5)
         return parser
 
@@ -172,7 +258,7 @@ if __name__ == '__main__':
     hparams = parser.parse_args()
 
     train_text_file = os.path.join(hparams.data_path, 'latest_data/train.json')
-    _, NUM_VOCABS = fit(train_text_file, hparams.num_tokens)
+    idx_to_word, word_to_idx, NUM_VOCABS = fit(train_text_file, hparams.num_tokens)
 
     parser = Trainer.add_argparse_args(parser)
 
@@ -186,5 +272,5 @@ if __name__ == '__main__':
                       resume_from_checkpoint=hparams.resume_from_checkpoint, fast_dev_run=hparams.fast_dev_run,
                       progress_bar_refresh_rate=1)
 
-    model = BaselineBowVF(hparams, NUM_VOCABS)
+    model = BaselineBowVF(hparams, idx_to_word, word_to_idx, NUM_VOCABS)
     trainer.fit(model)
