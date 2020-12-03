@@ -3,6 +3,8 @@ from transformers import AdamW, T5Tokenizer, T5ForConditionalGeneration
 from typing import Any, Dict, Iterable, Mapping, Tuple, TypeVar, Union, MutableMapping, Optional, Sequence
 import pickle
 import re
+import random
+import numpy as np
 from overrides import overrides
 import pytorch_lightning as pl
 from pytorch_lightning.core import LightningModule
@@ -13,6 +15,7 @@ from torch.optim import Optimizer
 import torch.nn as nn
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
+import torch.backends.cudnn as cudnn
 
 FRAMEWORK = "pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -285,6 +288,12 @@ class VATEXLightningModel(LightningModule):
         parser.add_argument("--visual-size", default=1024, type=int, metavar="V", help="input video feature dimension")
         parser.add_argument("--weight-decay", default=1e-4, type=float)
         return parser
+
+def _set_seed(seed: int) -> None:
+    random.seed(seed)
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    cudnn.deterministic = True
 
 class SortingHelpFormatter(argparse.HelpFormatter):
     @overrides
