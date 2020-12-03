@@ -21,8 +21,8 @@ class VATEX_Dataset(Dataset):
             raw_data = pickle.load(f)
 
         for d in raw_data:
-            question = d[2]
-            label = d[3]
+            question = d[2].lower()
+            label = "<extra_id_0> " + d[3] + " <extra_id_1>"
             videoFeature = d[4]
             
             data.append([question, videoFeature, label])
