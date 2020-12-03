@@ -263,7 +263,7 @@ class VATEXLightningModel(LightningModule):
         return self._dataloader("test.pkl")
 
     @staticmethod
-    def add_model_specific_args(cls, parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    def add_model_specific_args(parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         parser = ArgumentParserWithDefaults(parents=[parent_parser], add_help=False)
         parser.add_argument("--disable-visual-features", dest="enable_visual_features", action="store_false")
         parser.add_argument("--overfit-pct", default=0, type=float, help="How much of the data loaders to use. "
