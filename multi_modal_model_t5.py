@@ -247,7 +247,7 @@ class VATEXLightningModel(LightningModule):
     def _dataloader(self, pickle_path_inside_data_folder: str) -> DataLoader:
 
         path = os.path.join(self.hparams.data_path, pickle_path_inside_data_folder)
-        dataset = VATEXDataset(path)
+        dataset = VATEX_Dataset(path)
 
         if self.training:
             shuffle = self.hparams.overfit_pct == 0
