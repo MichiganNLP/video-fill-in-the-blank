@@ -18,7 +18,7 @@ with open(f"{DATA_FILE_FOLDER}/{DIV_NAME}.csv", 'r') as csvFile:
             continue
         videoID = row[0]
         videoFilename = videoID + "npy"
-        videoPath = os.path.join(DATA_FILE_FOLDER, val, videoFilename)
+        videoPath = os.path.join(DATA_FILE_FOLDER, "val", videoFilename)
         videoFeature_np = np.load(videoPath)
         videoFeature_pt = torch.tensor(videoFeature_np).squeeze(0)
     # videoID, caption, masked caption, label, video I3D features
