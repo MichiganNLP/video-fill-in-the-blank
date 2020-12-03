@@ -304,7 +304,7 @@ def _get_args() -> argparse.Namespace:
     parent_parser.add_argument("--save-path", metavar="DIR", default=".")
     parent_parser.add_argument("--use-16bit", action="store_true")
     parent_parser.add_argument("-v", "--verbose", action="store_true")
-    parser = MultiModalLightningModel.add_model_specific_args(parent_parser)
+    parser = VATEXLightningModel.add_model_specific_args(parent_parser)
     return parser.parse_args()
 
 def _main() -> None:
