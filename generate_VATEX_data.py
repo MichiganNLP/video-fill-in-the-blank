@@ -24,5 +24,5 @@ with open(f"{DATA_FILE}/{DIV_NAME}.csv", 'r') as csvFile:
     # videoID, caption, masked caption, label, video I3D features
     data.append(*row, videoFeature_pt)
 
-with open(f"{DIV_NAME}.pkl", 'wb') as f:
+with open(f"{DATA_FILE_FOLDER}/{DIV_NAME}.pkl", 'wb') as f:
     pickle.dump(data, f)

@@ -12,8 +12,8 @@ tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 data_out = []
-for i in range(100):
-    caption = data[i]
+for n in range(100):
+    caption = data[n]
     sentence = caption["enCap"][0] # just pick the first one
     sentence_ids = tokenizer.encode(sentence)
     prob_min = (1, 0)
@@ -63,7 +63,7 @@ for i in range(100):
                     mask_based_on_rank, *prob_rank[2:]])
 
 with open("mask_method_test.csv", "w") as f:
-    field_names = ["sentence", "lowest prob", "prob", "model_pred", "max_prob", "max prob distance", "prob", "model_pred", "max_prob", "max prob ratio","prob", "model_pred", "max_prob", "max_prob_rank","prob", "model_pred", "max_prob","rank"]
+    field_names = ["sentence", "lowest prob", "prob", "model_pred", "max_prob", "max prob distance", "prob", "model_pred", "max_prob", "min_prob_ratio","prob", "model_pred", "max_prob", "max_prob_rank","prob", "model_pred", "max_prob","rank"]
     writer = csv.writer(f,delimiter=",")
     writer.writerow(field_names)
     for row in data_out:
