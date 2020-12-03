@@ -3,6 +3,7 @@ import numpy as np
 import os
 import torch
 import pickle
+import tqdm
 
 DATA_FILE_FOLDER = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model/VATEX"
 DIV_NAME = "train"
@@ -12,7 +13,7 @@ data = []
 with open(f"{DATA_FILE_FOLDER}/{DIV_NAME}.csv", 'r') as csvFile:
     reader = csv.reader(csvFile, delimiter=",")
     isHead = True
-    for row in reader:
+    for row in tqdm(reader):
         if isHead:
             isHead = False
             continue
