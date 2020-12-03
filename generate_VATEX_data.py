@@ -22,7 +22,7 @@ with open(f"{DATA_FILE_FOLDER}/{DIV_NAME}.csv", 'r') as csvFile:
         videoFeature_np = np.load(videoPath)
         videoFeature_pt = torch.tensor(videoFeature_np).squeeze(0)
     # videoID, caption, masked caption, label, video I3D features
-        data.append(*row, videoFeature_pt)
+        data.append([*row, videoFeature_pt])
 
 with open(f"{DATA_FILE_FOLDER}/{DIV_NAME}.pkl", 'wb') as f:
     pickle.dump(data, f)
