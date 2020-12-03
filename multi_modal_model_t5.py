@@ -264,9 +264,13 @@ class VATEXLightningModel(LightningModule):
 
     @staticmethod
     def add_model_specific_args(cls, parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-        parent_parser2 = super().add_model_specific_args(parent_parser)
-
-        parser = ArgumentParserWithDefaults(parents=[parent_parser2], add_help=False)
+        parser = ArgumentParserWithDefaults(parents=[parent_parser], add_help=False)
+        parser.add_argument("--disable-visual-features", dest="enable_visual_features", action="store_false")
+        parser.add_argument("--overfit-pct", default=0, type=float, help="How much of the data loaders to use. "
+                                                                         "Useful for debugging. Data shuffling is "
+                                                                         "disabled if it's non-zero")
+        parser.add_argument("--num-workers", default=0, type=int, help="number of workers used for data loading")
+        parser.add_argument("--pin-memory", action="store_true")
         parser.add_argument("--batch-size", default=16, type=int, metavar="N",
                             help="mini-batch size. This is the total batch size of all GPUs on the current node when "
                                  "using Data Parallel or Distributed Data Parallel")
@@ -297,25 +301,25 @@ def _get_args() -> argparse.Namespace:
     parser = MultiModalLightningModel.add_model_specific_args(parent_parser)
     return parser.parse_args()
 
-    def _main() -> None:
-        hparams = _get_args()
+def _main() -> None:
+    hparams = _get_args()
 
-        if hparams.seed is not None:
-            _set_seed(hparams.seed)
+    if hparams.seed is not None:
+        _set_seed(hparams.seed)
 
-        logging_level = logging.INFO if hparams.verbose else logging.WARNING
-        logging.basicConfig(format="%(asctime)s - %(levelname)s - %(name)s - %(message)s", level=logging_level)
+    logging_level = logging.INFO if hparams.verbose else logging.WARNING
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(name)s - %(message)s", level=logging_level)
 
-        logger.info(hparams)
+    logger.info(hparams)
 
-        model = VATEXLightningModel(hparams)
-        trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
-                            distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
-                            amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
-                            progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
-                            fast_dev_run=hparams.fast_dev_run)
-        trainer.fit(model)
-        trainer.test(model)
+    model = VATEXLightningModel(hparams)
+    trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
+                        distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
+                        amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
+                        progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
+                        fast_dev_run=hparams.fast_dev_run)
+    trainer.fit(model)
+    trainer.test(model)
                 
 
 
