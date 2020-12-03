@@ -217,7 +217,10 @@ class VATEXLightningModel(LightningModule):
             if total_video_len > max_video_len:
                 max_video_len = total_video_len
         
-        text_tensor, text_attention_mask, labels = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=labels, padding=True, return_tensors="pt")
+        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=labels, padding=True, return_tensors="pt")
+        text_tensor = text_batch.input_ids
+        text_attention_mask = text_batch.attention_mask
+        labels = text_batch.labels
 
         if self.hparams.enable_visual_features:
             video_tensor = torch.zeros(batch_size, max_video_len, self.hparams.visual_size, dtype=torch.float)
