@@ -66,7 +66,7 @@ class VATEXLightningModel(LightningModule):
 
         return loss
 
-    def _test_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _testval_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         text_token_ids, labels, attention_masks, video_features = batch
         batch_size = text_token_ids.shape[0]
 
