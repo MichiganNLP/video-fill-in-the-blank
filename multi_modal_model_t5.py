@@ -71,7 +71,7 @@ class VATEXLightningModel(LightningModule):
         batch_size = text_token_ids.shape[0]
 
         correct = 0
-        for i in range(batch_size)
+        for i in range(batch_size):
             pred_tokens = self.forward(text_token_ids, video_features, attention_masks, labels)
             if self.match(pred_tokens):
                 correct += 1
