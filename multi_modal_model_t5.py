@@ -74,7 +74,7 @@ class VATEXLightningModel(LightningModule):
             return compute_mask_values(generated_ids, self.tokenizer)['<extra_id_0>']
 
     def _train_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        text_token_ids, labels, attention_masks, video_features = batch
+        text_token_ids, video_features, attention_masks, labels = batch
         loss, logits = self.forward(text_token_ids, video_features, attention_masks, labels)
 
         if self.trainer.use_dp or self.trainer.use_ddp2:
@@ -83,7 +83,7 @@ class VATEXLightningModel(LightningModule):
         return loss
 
     def _testval_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        text_token_ids, labels, attention_masks, video_features = batch
+        text_token_ids, video_features, attention_masks, labels = batch
         batch_size = text_token_ids.shape[0]
 
         correct = 0
