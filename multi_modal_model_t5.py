@@ -44,7 +44,7 @@ class VATEXLightningModel(LightningModule):
 
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], attention_mask: torch.Tensor,
-                labels: torch.Tensor, num_beams = -1 : int) -> Tuple[torch.Tensor, torch.Tensor]:
+                labels: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         text_embedding = self.text_embedding(text_token_ids)
         if visual is None:
             embedding = text_embedding
