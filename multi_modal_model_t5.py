@@ -208,7 +208,7 @@ class VATEXLightningModel(LightningModule):
             data = batch[i]
             text_features.append(data[0])
             video_features.append(data[1])
-            labels.append(data[3])
+            labels.append(data[2])
 
             if data[1] != None:
                 total_video_len = data[1].shape[0]
