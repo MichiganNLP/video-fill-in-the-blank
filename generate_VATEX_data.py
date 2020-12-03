@@ -3,7 +3,7 @@ import numpy as np
 import os
 import torch
 import pickle
-import tqdm
+from tqdm.auto import tqdm
 
 DATA_FILE_FOLDER = "/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model/VATEX"
 DIV_NAME = "train"
