@@ -19,6 +19,7 @@ DEVICE_NUMBER = 0 if DEVICE == "cuda" else -1
 
 T = TypeVar("T")
 TYPE_BATCH = Sequence[Tuple[Any, Any, Any, Any]]
+TYPE_STEP_OUTPUT = MutableMapping[str, torch.Tensor]
 
 class VATEXLightningModel(LightningModule):
     def __init__(self, hparams: argparse.Namespace) -> None:
