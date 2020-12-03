@@ -16,7 +16,9 @@ from torch.optim.lr_scheduler import _LRScheduler
 FRAMEWORK = "pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 DEVICE_NUMBER = 0 if DEVICE == "cuda" else -1
+
 T = TypeVar("T")
+TYPE_BATCH = Sequence[Tuple[Any, Any, Any, Any]]
 
 class VATEXLightningModel(LightningModule):
     def __init__(self, hparams: argparse.Namespace) -> None:
