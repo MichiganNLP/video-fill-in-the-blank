@@ -34,7 +34,7 @@ class VATEXLightningModel(LightningModule):
         next(b, None)
         return zip(a, b)
     
-    def compute_mask_values(self, generated_ids: torch.Tensor, tokenizer: PreTrainedTokenizerBase) -> Mapping[str, Iterable[str]]:
+    def compute_mask_values(self, generated_ids: torch.Tensor, tokenizer: T5Tokenizer) -> Mapping[str, Iterable[str]]:
         tokens = self.tokenizer.convert_ids_to_tokens(generated_ids)
         extra_id_indices = {token: i for i, token in enumerate(tokens) if self.RE_EXTRA_ID.match(token)}
         extra_id_indices["</s>"] = len(tokens)
