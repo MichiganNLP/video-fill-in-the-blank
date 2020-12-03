@@ -1,11 +1,12 @@
 import argparse
 from transformers import T5Tokenizer, T5ForConditionalGeneration
-from typing import Any, Dict, Iterable, Mapping, Tuple, TypeVar, Union
+from typing import Any, Dict, Iterable, Mapping, Tuple, TypeVar, Union, MutableMapping, Optional, Sequence
 import pickle
 import re
 import torch.nn as nn
 from overrides import overrides
 import pytorch_lightning as pl
+from pytorch_lightning.core import LightningModule
 from argparse_with_defaults import ArgumentParserWithDefaults
 from VATEX_dataset import VATEX_Dataset
 import torch
