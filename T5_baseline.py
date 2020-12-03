@@ -167,6 +167,8 @@ def run_exact_match(csv_file_path: str, nlp_pipeline: Pipeline):
     csv_output_path = os.path.join('./output', 'greedy-output.csv')
     train_pd_out.to_csv(csv_output_path)
     
+    if not os.path.exists('./output'):
+        os.mkdir('./output')
     print(f"Exact Match Accuracy with {len(captions)} questions: {predictions / len(captions)}.")
     print(f"{csv_output_path} is saved.")
     print(train_pd_out)
@@ -193,6 +195,8 @@ def run_beam_search(csv_file_path: str, nlp_pipeline: Pipeline, num_return_seque
     csv_output_path = os.path.join('./output', 'beam-search-output.csv')
     train_pd_out.to_csv(csv_output_path)
 
+    if not os.path.exists('./output'):
+        os.mkdir('./output')
     print(f'Beam Size = {NUM_BEAMS}, Accuracy with {len(output)} questions: {beam_5_predictions / len(output)}')
     print(f"{csv_output_path} is saved.")
     print(train_pd_out)
