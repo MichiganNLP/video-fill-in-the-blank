@@ -26,6 +26,8 @@ T = TypeVar("T")
 TYPE_BATCH = Sequence[Tuple[Any, Any, Any, Any]]
 TYPE_STEP_OUTPUT = MutableMapping[str, torch.Tensor]
 
+logger = logging.getLogger(__name__)
+
 class VATEXLightningModel(LightningModule):
     def __init__(self, hparams: argparse.Namespace) -> None:
         super().__init__()
