@@ -8,6 +8,7 @@ from overrides import overrides
 import pytorch_lightning as pl
 from argparse_with_defaults import ArgumentParserWithDefaults
 from VATEX_dataset import VATEX_Dataset
+import torch
 
 FRAMEWORK = "pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
