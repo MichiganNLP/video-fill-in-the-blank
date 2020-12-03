@@ -228,7 +228,7 @@ class VATEXLightningModel(LightningModule):
             video_tensor = None
 
         if self.hparams.enable_visual_features:
-            video_attention_mask = torch.zeros(batch_size, max_video_len, dtype=torch.bool)
+            video_attention_mask = torch.zeros(batch_size, max_video_len, dtype=torch.long)
 
         for i in range(batch_size):
             video = video_features[i]
