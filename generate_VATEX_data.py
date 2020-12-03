@@ -9,7 +9,7 @@ DIV_NAME = "train"
 
 data = []
 
-with open(f"{DATA_FILE}/{DIV_NAME}.csv", 'r') as csvFile:
+with open(f"{DATA_FILE_FOLDER}/{DIV_NAME}.csv", 'r') as csvFile:
     reader = csv.reader(csvFile, delimiter=",")
     isHead = True
     for row in reader:
