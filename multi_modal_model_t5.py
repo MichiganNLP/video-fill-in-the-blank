@@ -262,8 +262,7 @@ class VATEXLightningModel(LightningModule):
     def test_dataloader(self) -> DataLoader:
         return self._dataloader("test.pkl")
 
-    @classmethod
-    @overrides
+    @staticmethod
     def add_model_specific_args(cls, parent_parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         parent_parser2 = super().add_model_specific_args(parent_parser)
 
