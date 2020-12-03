@@ -286,6 +286,12 @@ class VATEXLightningModel(LightningModule):
         parser.add_argument("--weight-decay", default=1e-4, type=float)
         return parser
 
+class SortingHelpFormatter(argparse.HelpFormatter):
+    @overrides
+    def add_arguments(self, actions: Iterable[argparse.Action]) -> None:
+        sorted_actions = sorted(actions, key=lambda a: a.option_strings)
+        super().add_arguments(sorted_actions)
+
 def _get_args() -> argparse.Namespace:
     parent_parser = ArgumentParserWithDefaults(formatter_class=SortingHelpFormatter)  # noqa
     parent_parser.add_argument("--amp-level", choices=("O0", "O1", "O2", "O3"), default="O1",
