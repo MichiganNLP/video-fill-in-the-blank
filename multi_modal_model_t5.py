@@ -12,6 +12,7 @@ import torch
 from torch.optim import Optimizer
 import torch.nn as nn
 from torch.optim.lr_scheduler import _LRScheduler
+from torch.utils.data import DataLoader
 
 FRAMEWORK = "pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
