@@ -68,9 +68,9 @@ class VATEXLightningModel(LightningModule):
             visual_embedding = self.video_embedding(visual)
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
         if self.training:
-            return self.encoder(inputs_embeds=embedding, attention_mask=mask, labels = labels)
+            return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels)
         else:
-            generated_ids = self.encoder.generate(inputs_embeds=embedding, attention_mask=mask)
+            generated_ids = self.encoder.generate(inputs_embeds=embedding, attention_mask=attention_mask)
             return compute_mask_values(generated_ids, self.tokenizer)['<extra_id_0>']
 
     def _train_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
