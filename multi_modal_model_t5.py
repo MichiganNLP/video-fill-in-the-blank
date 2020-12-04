@@ -290,7 +290,7 @@ class VATEXLightningModel(LightningModule):
         parser.add_argument("--lr", default=0.0001, type=float)
         parser.add_argument("--lr-scheduling", choices=("", "linear_with_warmup"), default="linear_with_warmup")
         parser.add_argument("--seed", type=int, default=42)
-        model_name_choices = ["t5-small", "t5-base", "t5-large", "t5-3B", "t5-11B"]
+        model_name_choices = ["t5-small", "t5-base", "t5-large", "t5-3b", "t5-11b"]
         parser.add_argument("--transformer-model-name", choices=model_name_choices, default="t5-base")
         parser.add_argument("--visual-size", default=1024, type=int, metavar="V", help="input video feature dimension")
         parser.add_argument("--weight-decay", default=1e-4, type=float)
