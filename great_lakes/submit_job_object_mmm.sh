@@ -9,7 +9,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem-per-cpu=10000m 
 #SBATCH --gres=gpu:1
-#SBATCH --time=01-5:00:00
+#SBATCH --time=02-5:00:00
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 # The application(s) to execute along with its input arguments and options:
@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u ../multi_modal_model_lightning.py --data-path /scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model --num-workers 16 --max-token-num 1
+python -u ../multi_modal_model_object_lightning.py --data-path /scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model --num-workers 4 --max-token-num 1 --visual-size 12544
 echo done

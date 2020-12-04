@@ -18,23 +18,26 @@ from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
 from argparse_with_defaults import ArgumentParserWithDefaults
 from qgen_module import QGenLightningModel
 
+from utils import _dataloader_grad_eval
+
+from torch.autograd import Variable
+
 logger = logging.getLogger(__name__)
 
 
 class MultiModalLightningModel(QGenLightningModel):
     def __init__(self, hparams: argparse.Namespace) -> None:
         tokenizer = AutoTokenizer.from_pretrained(hparams.transformer_model_name)
-        super().__init__(tokenizer=tokenizer, hparams=hparams)
+        super().__init__(tokenizer=tokenizer, hparams=hparams, input_type=0)
 
         self.encoder = AutoModelWithLMHead.from_pretrained(self.hparams.transformer_model_name)
-
         self.text_embedding = self.encoder.get_input_embeddings()
         self.video_embedding = nn.Linear(self.hparams.visual_size, self.text_embedding.embedding_dim)
 
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], mask: torch.Tensor,
                 segment_mask: torch.Tensor, mask_lm_labels: torch.Tensor,
-                position_ids: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+                position_ids: torch.Tensor, grad_eval: bool = False) -> Tuple[torch.Tensor, torch.Tensor]:
         text_embedding = self.text_embedding(text_token_ids)
         if visual is None:
             embedding = text_embedding
@@ -42,7 +45,15 @@ class MultiModalLightningModel(QGenLightningModel):
             visual_embedding = self.video_embedding(visual)
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
 
-        return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
+        # if self.grad_eval:
+        #     return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
+        #                     masked_lm_labels=mask_lm_labels, position_ids=position_ids), text_embedding
+        if grad_eval:
+            embedding = Variable(embedding, requires_grad = True)
+            return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
+                            masked_lm_labels=mask_lm_labels, position_ids=position_ids), embedding
+        else:
+            return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
                             masked_lm_labels=mask_lm_labels, position_ids=position_ids)
 
     @overrides
@@ -110,6 +121,9 @@ def _get_args() -> argparse.Namespace:
     parent_parser.add_argument("--save-path", metavar="DIR", default=".")
     parent_parser.add_argument("--use-16bit", action="store_true")
     parent_parser.add_argument("-v", "--verbose", action="store_true")
+    parent_parser.add_argument("--grad-eval", type=bool, default=False)
+    parent_parser.add_argument("--mturk-eval", type=bool, default=False)
+    parent_parser.add_argument("--mturk-data", type=str, default="")
     parser = MultiModalLightningModel.add_model_specific_args(parent_parser)
     return parser.parse_args()
 
@@ -125,15 +139,127 @@ def _main() -> None:
 
     logger.info(hparams)
 
-    model = MultiModalLightningModel(hparams)
+    
+    if hparams.grad_eval:
+        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
+        data = _dataloader_grad_eval('val2.pkl', hparams)
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+        for batch in data:
+            batch_size = batch[0][0].shape[0]
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids = batch[0]
+            out, embed = model(text_token_ids, visual, mask, segment_mask, mask_lm_labels, position_ids, True)
+            loss, scores = out
+            prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
-    trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
-                         distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
-                         amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
-                         progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
-                         fast_dev_run=hparams.fast_dev_run)
+            predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+            correct = sum((len(label)==1 and prediction == label[0]) for prediction, label in zip(predictions, labels))
 
-    trainer.fit(model)
+            loss.backward()
+            embed_grad = embed.grad
+            embed_sum = torch.abs(embed_grad).sum(axis=2)
+            embed_sum_top3 = torch.topk(embed_sum, 3, axis=1)
+            prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
+            predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+            for i in range(embed_grad.shape[0]):
+                print(tokenizer.convert_ids_to_tokens(text_token_ids[i]))
+                print(predictions[i])
+                print(labels[i][0])
+                print(embed_sum_top3[1][i])
+            pass
+    elif hparams.mturk_eval:
+        # model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12390904/checkpoints/epoch=1.ckpt')
+        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12389195/checkpoints/epoch=1.ckpt')
+        # model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
+        model.eval()
+        data = _dataloader_grad_eval(hparams.mturk_data, hparams)
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+
+        total = 0
+        top10 = 0
+        oot = 0
+        correct_workers = 0
+        correct_extended = 0
+        correct_standard = 0
+
+        for batch in data:
+            batch_size = batch[0][0].shape[0]
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers, extended_answers = batch[0]
+            scores = model(text_token_ids)[0]
+            prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
+
+            predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
+            worker_results = [(prediction in label) for prediction, label in zip(predictions, labels)]
+            extended_results = [(prediction in label) for prediction, label in zip(predictions, extended_answers)]
+            standard_results = [(prediction == label) for prediction, label in zip(predictions, standard_answers)]
+            
+            
+            
+            for i in range(batch_size):
+                _, indices = torch.topk(scores[i,mask_positions[i]], 10)
+                predictions_top10 = tokenizer.convert_ids_to_tokens(indices)
+                correct = False
+                
+                oot_score = 0
+                total_H = 0
+                if labels[i] != []:
+                    for key in labels[i]:
+                        total_H += labels[i][key][0] / labels[i][key][1]
+
+                    for pred in predictions_top10:
+                        if pred in labels[i]:
+                            correct = True
+                            oot_score += labels[i][pred][0] / labels[i][pred][1]
+                
+                    oot_score /= total_H
+                else:
+                    for pred in predictions_top10:
+                        if pred == standard_answers[i]:
+                            correct = True
+                            oot_score = 1
+                            break
+                if correct:
+                    top10 += 1
+                oot += oot_score
+
+
+            # for i in range(len(extended_results)):
+            #     if extended_results[i] != standard_results[i]:
+            #         print(' '.join(tokenizer.convert_ids_to_tokens(text_token_ids[i].tolist())))
+            #         print(predictions[i])
+            #         print(labels[i])
+            #         print(standard_answers[i])
+            #         print()
+            correct_workers += sum(worker_results)
+            correct_extended += sum(extended_results)
+            correct_standard += sum(standard_results)
+            total += batch_size
+
+        acc_top10 = top10 / total
+        oot = oot / total
+        acc_workers = correct_workers / total
+        acc_extended = correct_extended / total
+        acc_standard = correct_standard / total
+        print(acc_top10)
+        print(oot)
+        print(acc_workers)
+        print(acc_extended)
+        print(acc_standard)
+    else:
+        model = MultiModalLightningModel(hparams)
+
+        # trainer = pl.Trainer(default_root_dir=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
+        #                     distributed_backend=hparams.distributed_backend, benchmark=True,
+        #                     amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
+        #                     progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
+        #                     fast_dev_run=hparams.fast_dev_run)
+        trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
+                            distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
+                            amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
+                            progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
+                            fast_dev_run=hparams.fast_dev_run)
+        trainer.fit(model)
+        trainer.test(model)
+            
 
 
 if __name__ == "__main__":

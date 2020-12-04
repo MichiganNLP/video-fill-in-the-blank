@@ -2,7 +2,7 @@
 
 #“#SBATCH” directives that convey submission options:
 
-#SBATCH --job-name=lightning_mm_model
+#SBATCH --job-name=lightning_mm_model_subset
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=4
 #SBATCH --nodes=1
@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u ../multi_modal_model_lightning.py --data-path /scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model --num-workers 16 --max-token-num 1
+python -u ../multi_modal_model_lightning.py --data-path /scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data/multimodal_model/subset_data --num-workers 16 --max-token-num 1
 echo done
