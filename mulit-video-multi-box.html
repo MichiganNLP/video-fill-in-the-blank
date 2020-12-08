@@ -11,7 +11,16 @@
     position: relative;
   }
 
-  button {
+  input {
+    border: 1px solid #C2C2C2;
+    box-shadow: 1px 1px 4px #EBEBEB;
+    border-radius: 4px;
+    padding: 5px;
+    margin-left: 1px;
+    margin-bottom: 2px;
+  }
+
+  .video-controls {
     border-radius: 15px;
     background-color: rgba(117, 122, 118, 0.822);
     /* Green */
@@ -20,15 +29,6 @@
     padding: 7px 15px;
     text-align: center;
     font-size: 16px;
-  }
-
-  input {
-    border: 1px solid #C2C2C2;
-    box-shadow: 1px 1px 4px #EBEBEB;
-    border-radius: 4px;
-    padding: 5px;
-    margin-left: 1px;
-    margin-bottom: 2px;
   }
 
   .pre-question-label{
@@ -88,7 +88,7 @@
 
 <crowd-form>
   <div id="container" class="container">
-    <h1>Fill in the blanks according to video content</h1>
+    <h1 id="general-title">Fill in the blanks according to video content</h1>
 
     <details id="instructions">
       <summary>Instructions (including <b>bonus</b> information)</summary>
@@ -107,47 +107,59 @@
           <b>one per box</b>.
         </li>
         <ul>
-          <li>Provide the answers in order: the first answer should be the most natural to you, 
+          <li>
+            Each answer needs to be one or more entities (a noun phrase), which should contain <b>one or more words</b>.
+          </li>
+          <li>
+            The answers may refer to different things, but could also (and likely will) be different ways of saying the same thing 
+            (as we seek diversity in the answers).
+          </li>
+        </ul>
+        <ul>
+          <li>Provide the answers <b>in order</b>: the first answer should be the most natural to you, 
             the last answer should be the least natural to you; but all should be valid answers.</li>
         </ul>
-        <li>
-          When you enter numbers, please enter digits instead of text
-          <ul>
-            <li><i>"seventeen"</i>-><i>"17"</i></li>
-          </ul>
-        </li>
         <li>If the video is unavailable, just fill in <u><i>"unavailable video"</i></u>.</li>
       </ul>
 
       <h2>How To Answer</h2>
 
-      Each answer should be <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b>,
+      Each answer should be one or more <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> entities,
       and should complete the text such that the text becomes a good description of the video.
 
       <ul>
+        <li>
+          Each answer should contain one or more words.
+        </li>
         <li>It should be valid, in the sense that it should be an appropriate answer for what is represented in the
           video.</li>
         <ul>
-          <li>E.g., saying <i>"cat"</i> when there's clearly no cat but a <i>dog</i>, is considered <u>invalid</u>.
+          <li>E.g., saying <i>"<font color="red">cat</font>"</i> when there's clearly no cat but a <i>dog</i> in the video, is considered <u>invalid</u>.
           </li>
         </ul>
         <li>It should be natural, in the sense that it should be something you would normally say in the situation shown
           in the video.</li>
         <ul>
-          <li>E.g., <i>"object"</i> and <i>"entity"</i> <u>aren't</u> something you'd naturally say.</li>
+          <li>E.g., <i>"<font color="red">object</font>"</i> and <i>"<font color="red">entity</font>"</i> <u>aren't</u> something you'd naturally say.</li>
         </ul>
         <li>They should be <u>in order</u>. The first answer should be the one that naturally comes to your mind first, 
-          and the following ones should be less and less natural to you.
+          and the following ones should feel less and less natural to you.
         </li>
         <li>Respond matter-of-factly (as objectively as possible). Stick to what you can see or hear from the video.</li>
         <ul>
-          <li>E.g., <i>“beautiful”</i> is likely <u>not</u> a good word to use within an answer.</li>
+          <li>E.g., <i>“<font color="red">beautiful</font>”</i> is likely <u>not</u> a good word to use within an answer.</li>
         </ul>
         <li>Don't use descriptors unless necessary.</li>
         <ul>
-          <li><i>"yellow ball"</i>-><i>"ball"</i></li>
-          <li><i>"cute dog"</i>-><i>"dog"</i></li>
+          <li><i>"<font color="red">yellow ball</font>"</i> -> <i>"<font color="blue">ball</font>"</i></li>
+          <li><i>"<font color="red">cute dog</font>"</i> -> <i>"<font color="blue">dog</font>"</i></li>
         </ul>
+        <li>
+          When you enter numbers, please enter digits instead of text
+          <ul>
+            <li><i>"<font color="red">Seventeen</font>"</i> -> <i>"<font color="blue">17</font>"</i></li>
+          </ul>
+        </li>
         <li>Use your best judgment.</li>
       </ul>
 
@@ -162,18 +174,52 @@
           The top workers will be awarded a <b>bonus</b>.
         </li>
       </ul>
+
+      <div class="instance" id="example" style="color: black">
+        <br>
+        <h2 style="text-align: center">Example</h2>
+        <div class="video" id="video0">
+          <p class="loading-video">Loading video...</p>
+        </div>
+        <div class="video-relates">
+          <label id="video-instruction-example" style="font-size:18px;">
+            Please watch this <i>10-second</i> video while you listen to its <b><u>audio</u></b> (you may need to adjust
+            your <b>device volume</b>).
+            <br>When the video ends, <b>do not</b> click on any other video. Click the <u>buttons below</u> to control the
+            video.
+          </label>
+          <br>
+          <button id="minus-seconds0" type="button" class="video-controls">- 5s</button>
+          <button id="speed-down0" type="button" class="video-controls">Speed<big>&#8595</big></button>
+          <button id="restart-video0" type="button" class="video-controls"><big>&#8634</big></button>
+          <button id="speed-up0" type="button" class="video-controls">Speed<big>&#8593</big></button>
+          <button id="add-seconds0" type="button" class="video-controls">+ 5s</button>
+        </div>
+        <hr>
+  
+        <label class="pre-question-label" id="pre-question-label-example"><b><i>Fill in the blank:</i></b></label>
+        <h2 class="question" id="question-example">The person drinks <a><u><i><font color="gray">&ltentity&gt</font></i></u></a>.</h2>
+        <br>
+        <div class="answer-label-div">
+          <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label1">
+            Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain one or more words;
+            <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
+            <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers (please fill in as many answers as
+            possible, while still being valid, natural, objective and brief);
+            <br>You do <b>not</b> need to fill in all boxes, but the more you fill in, with the higher probability you can get the <b>bonus</b>;
+            <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
+            <br>Write one answer per text box. (Press <u><i>Tab</i></u>: Go to the next box)</label>
+        </div>
+        <br>
+        <h5 style="text-align: center;color:gray"><i>answer 1: beer; answer 2: a bottle of beer; answer3: the beverage, answer 4: liquor; ...</i></h5>
+      </div>
+
+      <button type="button" id ="close-instructions" style="background-color: white; border: none; text-align: center; color:grey; font-size: 17px;" onclick="closeDetails()">
+         &#x25B2 Close Instructions</button>
+
     </details>
 
     <hr>
-    <div class="instance" id="example">
-      <br>
-      <h2 style="text-align: center">Example</h2>
-      <h5 style="text-align: center;color:gray"> <i>The video and the audio show a man is drinking bottled beer in a bar</i>.</h5>
-      <hr>
-      <label class="pre-question-label" id="pre-question-label-example"><b><i>Fill in the blank with <u>a noun.</u></i></b></label>
-      <h2 class="question" id="question-example">The person drinks the <a><u><i>&lta noun&gt</i></u></a>.</h2>
-      <h5 style="text-align: center;color:gray"><i>answer 1: beer; answer 2: beverage; answer 3: liquor; answer 4: juice; answer 5: bottle; ...</i></h5>
-    </div>
 
     <div class="instance" id="instance1">
       <br>
@@ -189,26 +235,26 @@
           video.
         </label>
         <br>
-        <button id="minus-seconds1" type="button">- 5s</button>
-        <button id="speed-down1" type="button">Speed<big>&#8595</big></button>
-        <button id="restart-video1" type="button"><big>&#8634</big></button>
-        <button id="speed-up1" type="button">Speed<big>&#8593</big></button>
-        <button id="add-seconds1" type="button">+ 5s</button>
+        <button id="minus-seconds1" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down1" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video1" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up1" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds1" type="button" class="video-controls">+ 5s</button>
       </div>
       <hr>
 
-      <label class="pre-question-label" id="pre-question-label1"><b><i>Fill in the blank with <u>--</u>.</i></b></label>
+      <label class="pre-question-label" id="pre-question-label1"><b><i>Fill in the blank:</i></b></label>
       <h2 class="question" id="question1">Loading question...</h2>
       <div class="alert alert-info" id="error-message1"></div>
 
       <div class="answer-label-div">
         <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label1">
-          Each provided answer needs to be <big><i><u><b>--</b></u></i></big>.
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain one or more words;
           <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
           <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers (please fill in as many answers as
           possible, while still being valid, natural, objective and brief);
           <br>You do <b>not</b> need to fill in all boxes, but the more you fill in, with the higher probability you can get the <b>bonus</b>;
-          <br>Fill them <b>in order</b> from the most natural to the least natural answer.
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
           <br>Write one answer per text box. (Press <u><i>Tab</i></u>: Go to the next box)</label>
       </div>
 
@@ -253,26 +299,26 @@
           video.
         </label>
         <br>
-        <button id="minus-seconds2" type="button">- 5s</button>
-        <button id="speed-down2" type="button">Speed<big>&#8595</big></button>
-        <button id="restart-video2" type="button"><big>&#8634</big></button>
-        <button id="speed-up2" type="button">Speed<big>&#8593</big></button>
-        <button id="add-seconds2" type="button">+ 5s</button>
+        <button id="minus-seconds2" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down2" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video2" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up2" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds2" type="button" class="video-controls">+ 5s</button>
       </div>
       <hr>
 
-      <label class="pre-question-label" id="pre-question-label2"><b><i>Fill in the blank with <u>--</u>.</i></b></label>
+      <label class="pre-question-label" id="pre-question-label2"><b><i>Fill in the blank:</i></b></label>
       <h2 class="question" id="question2">Loading question...</h2>
       <div class="alert alert-info" id="error-message2"></div>
 
       <div class="answer-label-div">
         <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label2">
-          Each provided answer needs to be <big><i><u><b>--</b></u></i></big>.
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain one or more words;
           <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
           <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers (please fill in as many answers as
           possible, while still being valid, natural, objective and brief);
           <br>You do <b>not</b> need to fill in all boxes, but the more you fill in, with the higher probability you can get the <b>bonus</b>;
-          <br>Fill them <b>in order</b> from the most natural to the least natural answer.
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
           <br>Write one answer per text box. (Press <u><i>Tab</i></u>: Go to the next box)</label>
       </div>
 
@@ -317,26 +363,26 @@
           video.
         </label>
         <br>
-        <button id="minus-seconds3" type="button">- 5s</button>
-        <button id="speed-down3" type="button">Speed<big>&#8595</big></button>
-        <button id="restart-video3" type="button"><big>&#8634</big></button>
-        <button id="speed-up3" type="button">Speed<big>&#8593</big></button>
-        <button id="add-seconds3" type="button">+ 5s</button>
+        <button id="minus-seconds3" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down3" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video3" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up3" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds3" type="button" class="video-controls">+ 5s</button>
       </div>
       <hr>
 
-      <label class="pre-question-label" id="pre-question-label3"><b><i>Fill in the blank with <u>--</u>.</i></b></label>
+      <label class="pre-question-label" id="pre-question-label3"><b><i>Fill in the blank:</i></b></label>
       <h2 class="question" id="question3">Loading question...</h2>
       <div class="alert alert-info" id="error-message3"></div>
 
       <div class="answer-label-div">
         <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label3">
-          Each provided answer needs to be <big><i><u><b>--</b></u></i></big>.
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain one or more words;
           <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
           <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers (please fill in as many answers as
           possible, while still being valid, natural, objective and brief);
           <br>You do <b>not</b> need to fill in all boxes, but the more you fill in, with the higher probability you can get the <b>bonus</b>;
-          <br>Fill them <b>in order</b> from the most natural to the least natural answer.
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
           <br>Write one answer per text box. (Press <u><i>Tab</i></u>: Go to the next box)</label>
       </div>
 
@@ -381,26 +427,26 @@
           video.
         </label>
         <br>
-        <button id="minus-seconds4" type="button">- 5s</button>
-        <button id="speed-down4" type="button">Speed<big>&#8595</big></button>
-        <button id="restart-video4" type="button"><big>&#8634</big></button>
-        <button id="speed-up4" type="button">Speed<big>&#8593</big></button>
-        <button id="add-seconds4" type="button">+ 5s</button>
+        <button id="minus-seconds4" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down4" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video4" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up4" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds4" type="button" class="video-controls">+ 5s</button>
       </div>
       <hr>
 
-      <label class="pre-question-label" id="pre-question-label4"><b><i>Fill in the blank with <u>--</u>.</i></b></label>
+      <label class="pre-question-label" id="pre-question-label4"><b><i>Fill in the blank:</i></b></label>
       <h2 class="question" id="question4">Loading question...</h2>
       <div class="alert alert-info" id="error-message4"></div>
 
       <div class="answer-label-div">
         <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label4">
-          Each provided answer needs to be <big><i><u><b>--</b></u></i></big>.
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain one or more words;
           <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
           <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers (please fill in as many answers as
           possible, while still being valid, natural, objective and brief);
           <br>You do <b>not</b> need to fill in all boxes, but the more you fill in, with the higher probability you can get the <b>bonus</b>;
-          <br>Fill them <b>in order</b> from the most natural to the least natural answer.
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
           <br>Write one answer per text box. (Press <u><i>Tab</i></u>: Go to the next box)</label>
       </div>
 
@@ -445,26 +491,26 @@
           video.
         </label>
         <br>
-        <button id="minus-seconds5" type="button">- 5s</button>
-        <button id="speed-down5" type="button">Speed<big>&#8595</big></button>
-        <button id="restart-video5" type="button"><big>&#8634</big></button>
-        <button id="speed-up5" type="button">Speed<big>&#8593</big></button>
-        <button id="add-seconds5" type="button">+ 5s</button>
+        <button id="minus-seconds5" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down5" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video5" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up5" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds5" type="button" class="video-controls">+ 5s</button>
       </div>
       <hr>
 
-      <label class="pre-question-label" id="pre-question-label5"><b><i>Fill in the blank with <u>--</u>.</i></b></label>
+      <label class="pre-question-label" id="pre-question-label5"><b><i>Fill in the blank:</i></b></label>
       <h2 class="question" id="question5">Loading question...</h2>
       <div class="alert alert-info" id="error-message5"></div>
 
       <div class="answer-label-div">
         <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label5">
-          Each provided answer needs to be <big><i><u><b>--</b></u></i></big>.
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain one or more words;
           <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
           <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers (please fill in as many answers as
           possible, while still being valid, natural, objective and brief);
           <br>You do <b>not</b> need to fill in all boxes, but the more you fill in, with the higher probability you can get the <b>bonus</b>;
-          <br>Fill them <b>in order</b> from the most natural to the least natural answer.
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
           <br>Write one answer per text box. (Press <u><i>Tab</i></u>: Go to the next box; <u><i>Ctrl+Enter</i></u>:
           Submit answers)</label>
       </div>
@@ -513,24 +559,25 @@
 
 <script type="text/javascript">
   // Define variables
-  let videoIds = ['${video1_id}', '${video2_id}', '${video3_id}', '${video4_id}', '${video5_id}'];
-  let postags = ['${pos_tag1}', '${pos_tag2}', '${pos_tag3}', '${pos_tag4}', '${pos_tag5}'];
+  let videoIds = ['k7aPk5JcT-Q','${video1_id}', '${video2_id}', '${video3_id}', '${video4_id}', '${video5_id}'];
   let questions = ['${question1}','${question2}','${question3}','${question4}','${question5}'];
-  let startTimes = [Math.floor(parseFloat('${video1_start_time}')), Math.floor(parseFloat('${video2_start_time}')),
+  let startTimes = ['0', Math.floor(parseFloat('${video1_start_time}')), Math.floor(parseFloat('${video2_start_time}')),
     Math.floor(parseFloat('${video3_start_time}')), Math.floor(parseFloat('${video4_start_time}')),
     Math.floor(parseFloat('${video5_start_time}'))];
-  let endTimes = [Math.floor(parseFloat('${video1_end_time}')), Math.floor(parseFloat('${video2_end_time}')),
+  let endTimes = ['10', Math.floor(parseFloat('${video1_end_time}')), Math.floor(parseFloat('${video2_end_time}')),
     Math.floor(parseFloat('${video3_end_time}')), Math.floor(parseFloat('${video4_end_time}')),
     Math.floor(parseFloat('${video5_end_time}'))];
-  var poswarns = ["an adjective", "an adjective", "an adjective", "an adjective", "an adjective"];
+  // var poswarns = ["an adjective", "an adjective", "an adjective", "an adjective", "an adjective"];
+  var poswarns = ["entity", "entity", "entity", "entity", "entity"];
   // Process variable
   for (ind = 0; ind != 5; ind++) {
-    videoIds[ind] = videoIds[ind].substring(2);
-    questions[ind] = questions[ind].replace("[MASK]", "<a href=\"#error-message"+(ind+1).toString()+"\" style=\"color:#B2BABB;\"><u><i>&ltadjective&gt</i></u></a>");
-    if (postags[ind] == "NN") {
-      poswarns[ind] = "a noun";
-      questions[ind] = questions[ind].replace("<u><i>&ltadjective&gt</i></u>", "<a href=\"#error-message"+(ind+1).toString()+"\" style=\"color:#B2BABB;\"><u><i>&ltnoun&gt</i></u></a>");
-    }
+    // videoIds[ind] = videoIds[ind].substring(2);
+    questions[ind] = questions[ind].replace("[MASK]", "<a href=\"#error-message"+(ind+1).toString()+"\" style=\"color:#B2BABB;\"><u><i>&ltentity&gt</i></u></a>");
+    // questions[ind] = questions[ind].replace("[MASK]", "<a href=\"#error-message"+(ind+1).toString()+"\" style=\"color:#B2BABB;\"><u><i>&ltadjective&gt</i></u></a>");
+    // if (postags[ind] == "NN") {
+    //   poswarns[ind] = "a noun";
+    //   questions[ind] = questions[ind].replace("<u><i>&ltadjective&gt</i></u>", "<a href=\"#error-message"+(ind+1).toString()+"\" style=\"color:#B2BABB;\"><u><i>&ltnoun&gt</i></u></a>");
+    // }
   }
 
   var tag = document.createElement('script');
@@ -539,10 +586,10 @@
   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
   // noinspection JSUnusedGlobalSymbols
-  let players = [0, 0, 0, 0, 0];
+  let players = [0, 0, 0, 0, 0, 0];
   function onYouTubeIframeAPIReady() {
-    for (ind = 0; ind != 5; ind++) {
-      players[ind] = new YT.Player('video' + (ind + 1).toString(), {
+    for (ind = 0; ind != 6; ind++) {
+      players[ind] = new YT.Player('video' + ind.toString(), {
         videoId: videoIds[ind],
         playerVars: {
           enablejsapi: 1,
@@ -562,41 +609,46 @@
   }
 
   // video bottons
-  for (let ind = 1; ind != 6; ind++) {
+  for (let ind = 0; ind != 6; ind++) {
     $("#restart-video"+ind.toString()).click(function () {
-      players[ind-1].seekTo(startTimes[ind-1], true);
-      players[ind-1].playVideo();
+      players[ind].seekTo(startTimes[ind], true);
+      players[ind].playVideo();
     });
 
     $("#add-seconds"+ind.toString()).click(function () {
-      let ct = players[ind-1].getCurrentTime();
-      if (ct + 5 >= endTimes[ind-1]) players[ind-1].seekTo(Math.max(endTimes[ind-1] - 1, startTimes[ind-1]), true);
-      else players[ind-1].seekTo(ct + 5, true);
+      let ct = players[ind].getCurrentTime();
+      if (ct + 5 >= endTimes[ind]) players[ind].seekTo(Math.max(endTimes[ind] - 1, startTimes[ind]), true);
+      else players[ind].seekTo(ct + 5, true);
     });
 
     $("#minus-seconds"+ind.toString()).click(function () {
-      let ct = players[ind-1].getCurrentTime();
-      if (ct - 5 <= startTimes[ind-1]) players[ind-1].seekTo(startTimes[ind-1], true);
-      else players[ind-1].seekTo(ct - 5, true);
+      let ct = players[ind].getCurrentTime();
+      if (ct - 5 <= startTimes[ind]) players[ind].seekTo(startTimes[ind], true);
+      else players[ind].seekTo(ct - 5, true);
     });
 
     let speeds = [0.25, 0.5, 1, 1.5, 2];
-    let speedIndexs =[2,2,2,2,2];
+    let speedIndexs =[2,2,2,2,2,2];
 
     $("#speed-up"+ind.toString()).click(function () {
-      if (speedIndexs[ind-1] < 4) {
-        speedIndexs[ind-1] += 1;
-        players[ind-1].setPlaybackRate(speeds[speedIndexs[ind-1]]);
+      if (speedIndexs[ind] < 4) {
+        speedIndexs[ind] += 1;
+        players[ind].setPlaybackRate(speeds[speedIndexs[ind]]);
       }
     });
 
     $("#speed-down"+ind.toString()).click(function () {
-      if (speedIndexs[ind-1] > 0) {
-        speedIndexs[ind-1] -= 1;
-        players[ind-1].setPlaybackRate(speeds[speedIndexs[ind-1]]);
+      if (speedIndexs[ind] > 0) {
+        speedIndexs[ind] -= 1;
+        players[ind].setPlaybackRate(speeds[speedIndexs[ind]]);
       }
     });
   }
+
+  function closeDetails() {
+    document.getElementById("instructions").removeAttribute("open");
+    window.location = "#general-title";
+    }
 
   function onDomContentLoaded() {
     // functions list
@@ -605,16 +657,16 @@
 
     for(let ind=1;ind!=6;ind++){
       const $video_instruction = document.getElementById("video-instruction"+ind.toString()).innerHTML;
-      const $answer_label = document.getElementById("answer-label"+ind.toString()).innerHTML;
-      const $prequestion = document.getElementById("pre-question-label"+ind.toString()).innerHTML;
+      // const $answer_label = document.getElementById("answer-label"+ind.toString()).innerHTML;
+      // const $prequestion = document.getElementById("pre-question-label"+ind.toString()).innerHTML;
       const $question = document.getElementById('question'+ind.toString());
       const $answer1 = document.getElementById('answer'+ind.toString()+'-1');
       const $errormessage = document.getElementById('error-message'+ind.toString());
       // show video length
-      document.getElementById("video-instruction"+ind.toString()).innerHTML = $video_instruction.replace("--", (endTimes[ind-1] - startTimes[ind-1]).toString());
+      document.getElementById("video-instruction"+ind.toString()).innerHTML = $video_instruction.replace("-- ", (endTimes[ind-1] - startTimes[ind-1]).toString()+"-");
       // show POS-tag
-      document.getElementById("answer-label"+ind.toString()).innerHTML = $answer_label.replace("--", poswarns[ind-1]);
-      document.getElementById("pre-question-label"+ind.toString()).innerHTML = $prequestion.replace("--", poswarns[ind-1]);
+      // document.getElementById("answer-label"+ind.toString()).innerHTML = $answer_label.replace("--", poswarns[ind-1]);
+      // document.getElementById("pre-question-label"+ind.toString()).innerHTML = $prequestion.replace("--", poswarns[ind-1]);
 
       $question.innerHTML = questions[ind-1];
       $($errormessage).text("Please fill in with at least one answer").fadeIn();
