@@ -4,14 +4,14 @@ import os
 from typing import Any, MutableMapping, Optional, Sequence, Tuple, Union
 
 import torch
+from object_detection_dataset import ObjectDetectionDataset
 from overrides import overrides
 from pytorch_lightning.core import LightningModule
 from torch.utils.data import DataLoader
 from transformers import PreTrainedTokenizer
 
-from argparse_with_defaults import ArgumentParserWithDefaults
-from data_loader_multimodal import ActivityNetCaptionsDataset
-from object_detection_dataset import ObjectDetectionDataset
+from lqam.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.data_loader_multimodal import ActivityNetCaptionsDataset
 
 TYPE_BATCH = Sequence[Tuple[Any, Any, Any, Any, Any, Any, Any, Any]]
 TYPE_STEP_OUTPUT = MutableMapping[str, torch.Tensor]

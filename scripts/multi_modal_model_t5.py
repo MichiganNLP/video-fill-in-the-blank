@@ -1,23 +1,24 @@
 import argparse
-from transformers import AdamW, T5Tokenizer, T5ForConditionalGeneration, get_linear_schedule_with_warmup
-from typing import Any, Dict, Iterable, Mapping, Tuple, TypeVar, Union, MutableMapping, Optional, Sequence
 import logging
 import os
-import pickle
-import re
 import random
+import re
+from typing import Any, Iterable, Mapping, MutableMapping, Optional, Sequence, Tuple, TypeVar, Union
+
 import numpy as np
-from overrides import overrides
 import pytorch_lightning as pl
-from pytorch_lightning.core import LightningModule
-from argparse_with_defaults import ArgumentParserWithDefaults
-from VATEX_dataset import VATEX_Dataset
 import torch
-from torch.optim import Optimizer
+import torch.backends.cudnn as cudnn
 import torch.nn as nn
+from overrides import overrides
+from pytorch_lightning.core import LightningModule
+from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
-import torch.backends.cudnn as cudnn
+from transformers import AdamW, T5ForConditionalGeneration, T5Tokenizer, get_linear_schedule_with_warmup
+
+from lqam.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.vatex import VatexDataset
 
 FRAMEWORK = "pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -28,6 +29,7 @@ TYPE_BATCH = Sequence[Tuple[Any, Any, Any, Any]]
 TYPE_STEP_OUTPUT = MutableMapping[str, torch.Tensor]
 
 logger = logging.getLogger(__name__)
+
 
 class VATEXLightningModel(LightningModule):
     def __init__(self, hparams: argparse.Namespace) -> None:
@@ -46,7 +48,7 @@ class VATEXLightningModel(LightningModule):
         a, b = itertools.tee(iterable)
         next(b, None)
         return zip(a, b)
-    
+
     def compute_mask_values(self, generated_ids: torch.Tensor, tokenizer: T5Tokenizer) -> Mapping[str, Iterable[str]]:
         tokens = self.tokenizer.convert_ids_to_tokens(generated_ids)
         extra_id_indices = {token: i for i, token in enumerate(tokens) if self.RE_EXTRA_ID.match(token)}
@@ -68,7 +70,7 @@ class VATEXLightningModel(LightningModule):
             visual_embedding = self.video_embedding(visual)
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
         if self.training:
-            return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels)
+            return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels=labels)
         else:
             generated_ids = self.encoder.generate(inputs_embeds=embedding, attention_mask=attention_mask)
             return compute_mask_values(generated_ids, self.tokenizer)['<extra_id_0>']
@@ -106,7 +108,6 @@ class VATEXLightningModel(LightningModule):
 
         return accuracy, correct, batch_size
 
-
     @overrides
     def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]]]:
         optimizer = AdamW(self.parameters(), lr=self.hparams.lr, betas=(self.hparams.beta1, self.hparams.beta2),
@@ -141,16 +142,15 @@ class VATEXLightningModel(LightningModule):
         accuracy, correct, batch_size, loss = self._testval_step(batch)
         return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size}
 
-
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
         loss_key = f"{key_prefix}loss"
         metrics: TYPE_STEP_OUTPUT = {}
 
-        if  key_prefix == 'train_':
+        if key_prefix == 'train_':
             metric_names = {loss_key}
         else:
             metric_names = {"correct", "batch_size"}
-        
+
         for metric_name in metric_names:
             metric_total = 0
 
@@ -216,8 +216,9 @@ class VATEXLightningModel(LightningModule):
                 total_video_len = 0
             if total_video_len > max_video_len:
                 max_video_len = total_video_len
-        
-        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=labels, padding=True, return_tensors="pt")
+
+        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features, tgt_texts=labels, padding=True,
+                                                          return_tensors="pt")
         text_tensor = text_batch.input_ids
         text_attention_mask = text_batch.attention_mask
         labels = text_batch.labels
@@ -246,11 +247,10 @@ class VATEXLightningModel(LightningModule):
 
         return (text_tensor, video_tensor, attention_mask, labels)
 
-
     def _dataloader(self, pickle_path_inside_data_folder: str) -> DataLoader:
 
         path = os.path.join(self.hparams.data_path, pickle_path_inside_data_folder)
-        dataset = VATEX_Dataset(path)
+        dataset = VatexDataset(path)
 
         if self.training:
             shuffle = self.hparams.overfit_pct == 0
@@ -296,17 +296,20 @@ class VATEXLightningModel(LightningModule):
         parser.add_argument("--weight-decay", default=1e-4, type=float)
         return parser
 
+
 def _set_seed(seed: int) -> None:
     random.seed(seed)
     torch.manual_seed(seed)
     np.random.seed(seed)
     cudnn.deterministic = True
 
+
 class SortingHelpFormatter(argparse.HelpFormatter):
     @overrides
     def add_arguments(self, actions: Iterable[argparse.Action]) -> None:
         sorted_actions = sorted(actions, key=lambda a: a.option_strings)
         super().add_arguments(sorted_actions)
+
 
 def _get_args() -> argparse.Namespace:
     parent_parser = ArgumentParserWithDefaults(formatter_class=SortingHelpFormatter)  # noqa
@@ -323,6 +326,7 @@ def _get_args() -> argparse.Namespace:
     parser = VATEXLightningModel.add_model_specific_args(parent_parser)
     return parser.parse_args()
 
+
 def _main() -> None:
     hparams = _get_args()
 
@@ -336,13 +340,12 @@ def _main() -> None:
 
     model = VATEXLightningModel(hparams)
     trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
-                        distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
-                        amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
-                        progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
-                        fast_dev_run=hparams.fast_dev_run)
+                         distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
+                         amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
+                         progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
+                         fast_dev_run=hparams.fast_dev_run)
     trainer.fit(model)
     trainer.test(model)
-                
 
 
 if __name__ == "__main__":

@@ -1,26 +1,24 @@
 #!/usr/bin/env python
 import argparse
+import logging
 import random
 from typing import Iterable, Optional, Tuple, Union
 
-import logging
 import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn as nn
 from overrides import overrides
+from torch.autograd import Variable
 from torch.optim import Optimizer  # noqa
 from torch.optim.lr_scheduler import _LRScheduler  # noqa
-from transformers import AdamW, AutoTokenizer, AutoModelWithLMHead, get_linear_schedule_with_warmup
-from transformers.modeling_auto import MODEL_FOR_PRETRAINING_MAPPING
+from transformers import AdamW, AutoModelWithLMHead, AutoTokenizer, MODEL_FOR_PRETRAINING_MAPPING, \
+    get_linear_schedule_with_warmup
 
-from argparse_with_defaults import ArgumentParserWithDefaults
-from qgen_module import QGenLightningModel
-
-from utils import _dataloader_grad_eval
-
-from torch.autograd import Variable
+from lqam.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.iterable_utils import _dataloader_grad_eval
+from lqam.qgen_module import QGenLightningModel
 
 logger = logging.getLogger(__name__)
 
@@ -49,12 +47,12 @@ class MultiModalLightningModel(QGenLightningModel):
         #     return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
         #                     masked_lm_labels=mask_lm_labels, position_ids=position_ids), text_embedding
         if grad_eval:
-            embedding = Variable(embedding, requires_grad = True)
+            embedding = Variable(embedding, requires_grad=True)
             return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
-                            masked_lm_labels=mask_lm_labels, position_ids=position_ids), embedding
+                                masked_lm_labels=mask_lm_labels, position_ids=position_ids), embedding
         else:
             return self.encoder(inputs_embeds=embedding, attention_mask=mask, token_type_ids=segment_mask,
-                            masked_lm_labels=mask_lm_labels, position_ids=position_ids)
+                                masked_lm_labels=mask_lm_labels, position_ids=position_ids)
 
     @overrides
     def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]]]:
@@ -139,9 +137,9 @@ def _main() -> None:
 
     logger.info(hparams)
 
-    
     if hparams.grad_eval:
-        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
+        model = MultiModalLightningModel.load_from_checkpoint(
+            checkpoint_path='/home/ruoyaow/LifeQA-methodology/lightning_logs/version_6082788/checkpoints/epoch=0.ckpt')
         data = _dataloader_grad_eval('val2.pkl', hparams)
         tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
         for batch in data:
@@ -152,7 +150,8 @@ def _main() -> None:
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
             predictions = tokenizer.convert_ids_to_tokens(prediction_indices.tolist())
-            correct = sum((len(label)==1 and prediction == label[0]) for prediction, label in zip(predictions, labels))
+            correct = sum(
+                (len(label) == 1 and prediction == label[0]) for prediction, label in zip(predictions, labels))
 
             loss.backward()
             embed_grad = embed.grad
@@ -168,7 +167,8 @@ def _main() -> None:
             pass
     elif hparams.mturk_eval:
         # model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12390904/checkpoints/epoch=1.ckpt')
-        model = MultiModalLightningModel.load_from_checkpoint(checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12389195/checkpoints/epoch=1.ckpt')
+        model = MultiModalLightningModel.load_from_checkpoint(
+            checkpoint_path='/home/ruoyaow/LifeQA-methodology/great_lakes/lightning_logs/version_12389195/checkpoints/epoch=1.ckpt')
         # model = AutoModelWithLMHead.from_pretrained('bert-base-uncased')
         model.eval()
         data = _dataloader_grad_eval(hparams.mturk_data, hparams)
@@ -183,7 +183,8 @@ def _main() -> None:
 
         for batch in data:
             batch_size = batch[0][0].shape[0]
-            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers, extended_answers = batch[0]
+            text_token_ids, visual, mask, segment_mask, labels, mask_positions, mask_lm_labels, position_ids, standard_answers, extended_answers = \
+            batch[0]
             scores = model(text_token_ids)[0]
             prediction_indices = torch.argmax(scores[list(range(batch_size)), mask_positions], dim=1)
 
@@ -191,14 +192,12 @@ def _main() -> None:
             worker_results = [(prediction in label) for prediction, label in zip(predictions, labels)]
             extended_results = [(prediction in label) for prediction, label in zip(predictions, extended_answers)]
             standard_results = [(prediction == label) for prediction, label in zip(predictions, standard_answers)]
-            
-            
-            
+
             for i in range(batch_size):
-                _, indices = torch.topk(scores[i,mask_positions[i]], 10)
+                _, indices = torch.topk(scores[i, mask_positions[i]], 10)
                 predictions_top10 = tokenizer.convert_ids_to_tokens(indices)
                 correct = False
-                
+
                 oot_score = 0
                 total_H = 0
                 if labels[i] != []:
@@ -209,7 +208,7 @@ def _main() -> None:
                         if pred in labels[i]:
                             correct = True
                             oot_score += labels[i][pred][0] / labels[i][pred][1]
-                
+
                     oot_score /= total_H
                 else:
                     for pred in predictions_top10:
@@ -220,7 +219,6 @@ def _main() -> None:
                 if correct:
                     top10 += 1
                 oot += oot_score
-
 
             # for i in range(len(extended_results)):
             #     if extended_results[i] != standard_results[i]:
@@ -253,13 +251,12 @@ def _main() -> None:
         #                     progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
         #                     fast_dev_run=hparams.fast_dev_run)
         trainer = pl.Trainer(default_save_path=hparams.save_path, gpus=hparams.gpu_count, max_epochs=hparams.epochs,
-                            distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
-                            amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
-                            progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
-                            fast_dev_run=hparams.fast_dev_run)
+                             distributed_backend=hparams.distributed_backend, use_amp=hparams.use_16bit, benchmark=True,
+                             amp_level=hparams.amp_level, resume_from_checkpoint=hparams.resume_from_checkpoint,
+                             progress_bar_refresh_rate=1, overfit_pct=hparams.overfit_pct,
+                             fast_dev_run=hparams.fast_dev_run)
         trainer.fit(model)
         trainer.test(model)
-            
 
 
 if __name__ == "__main__":

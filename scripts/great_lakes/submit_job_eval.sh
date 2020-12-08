@@ -1,15 +1,15 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #“#SBATCH” directives that convey submission options:
 
-#SBATCH --job-name=textonly
+#SBATCH --job-name=evalschedulerl2
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=4
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem-per-cpu=8000m 
+#SBATCH --mem-per-cpu=32000m 
 #SBATCH --gres=gpu:1
-#SBATCH --time=05-5:00:00
+#SBATCH --time=01-5:00:00
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 # The application(s) to execute along with its input arguments and options:
@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u train_text_only.py
-echo done
+python -u eval_mm_l2.py
+echo "done"

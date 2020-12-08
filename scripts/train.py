@@ -1,11 +1,12 @@
+import pickle
+
 import torch
 import torch.nn as nn
+from baseline_BOW_VF import baseline_BOW_VF
 from torch.utils.data import DataLoader
 
-from baseline_BOW_VF import baseline_BOW_VF
-from data_loader_multimodal import ActivityNetCaptionsDataset
-from utils import build_representation, fit
-import pickle
+from lqam.data_loader_multimodal import ActivityNetCaptionsDataset
+from lqam.iterable_utils import build_representation, fit
 
 
 def train(data, max_epoch, model, optimizer, criterion):

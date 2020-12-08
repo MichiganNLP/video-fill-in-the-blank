@@ -1,15 +1,14 @@
-from torch.utils.data import Dataset
-import torch
-from nltk.corpus import wordnet
 import json
 import math
-import nltk
-import random
-import numpy as np
-import h5py
-from transformers import BertTokenizer, BertModel
-
 import pickle
+import random
+
+import nltk
+import numpy as np
+import torch
+from torch.utils.data import Dataset
+from transformers import BertTokenizer
+
 
 class ActivityNetCaptionDataset(Dataset):
 

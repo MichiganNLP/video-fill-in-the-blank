@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #“#SBATCH” directives that convey submission options:
 
@@ -22,4 +22,4 @@ echo Sourcing
 conda activate lqam
 echo Sourced
 python -u train_mm_scratch.py
-echo done
+echo "done"
