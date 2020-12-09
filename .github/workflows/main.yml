@@ -20,15 +20,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-huggingface-
     # Don't cache more stuff because it takes more time than to install the Conda env.
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-    - name: Setup Conda
-      uses: s-weigand/setup-conda@v1
+#    - name: Setup tmate session
+#      uses: mxschmitt/action-tmate@v3
+#    - name: Setup Conda
+#      uses: s-weigand/setup-conda@v1
+#      with:
+#        activate-conda: false
+#    - name: Install Conda packages
+#      run: conda env create -f environment.yml
+    - uses: goanpeca/setup-miniconda@v2
       with:
-        activate-conda: false
-    - name: Install Conda packages
-      run: conda env create -f environment.yml
+        activate-environment: lqam
+        environment-file: environment.yml
     - name: Run tests
-      run: |
-        source activate lqam
-        python -m unittest
+      run: python -m unittest
