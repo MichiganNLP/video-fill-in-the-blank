@@ -12,18 +12,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Load PyTorch cache
+    - name: Load HuggingFace cache
       uses: actions/cache@v2
       with:
-        path: ~/.cache/torch  # transformers' downloaded models.
-        key: ${{ runner.os }}-torch-${{ hashFiles('**/*') }}
+        path: ~/.cache/huggingface  # transformers' downloaded models.
+        key: ${{ runner.os }}-huggingface-${{ hashFiles('**/*') }}
         restore-keys: |
-          ${{ runner.os }}-torch-
+          ${{ runner.os }}-huggingface-
     # Don't cache more stuff because it takes more time than to install the Conda env.
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
-      with:
-        sudo: false
     - name: Setup Conda
       uses: s-weigand/setup-conda@v1
       with:
