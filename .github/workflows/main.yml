@@ -12,6 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Cache conda
+      uses: actions/cache@v2
+      with:
+        path: ~/conda_pkgs_dir
+        key:
+          ${{ runner.os }}-conda-${{ hashFiles('environment.yml') }}
+        restore-keys: |
+          ${{ runner.os }}-conda-
+    # Don't cache more stuff because it takes more time than to install the Conda env.
+    - uses: conda-incubator/setup-miniconda@v2
+      with:
+        activate-environment: lqam
+        environment-file: environment.yml
     - name: Load HuggingFace cache
       uses: actions/cache@v2
       with:
@@ -19,18 +32,5 @@ jobs:
         key: ${{ runner.os }}-huggingface-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-huggingface-
-    # Don't cache more stuff because it takes more time than to install the Conda env.
-#    - name: Setup tmate session
-#      uses: mxschmitt/action-tmate@v3
-#    - name: Setup Conda
-#      uses: s-weigand/setup-conda@v1
-#      with:
-#        activate-conda: false
-#    - name: Install Conda packages
-#      run: conda env create
-    - uses: conda-incubator/setup-miniconda@v2
-      with:
-        activate-environment: lqam
-        environment-file: environment.yml
     - name: Run tests
       run: python -m unittest
