@@ -1,50 +1,19 @@
 #!/usr/bin/env python
 import argparse
 import os
-import re
 import sys
 from pathlib import Path
-from typing import Iterator, List, Mapping, Sequence, Tuple, Union
+from typing import Iterator, List, Sequence, Tuple, Union
 
 import pandas as pd
 import torch
-from transformers import Pipeline, PreTrainedTokenizerBase, pipeline
+from transformers import Pipeline, T5Tokenizer, pipeline
 
-from lqam import iterable_utils
+from lqam import iterable_utils, metric_utils, t5_format_processing
 from lqam.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.file_utils import cached_path
-from lqam.metric_utils import exact_match
-
-RE_EXTRA_ID = re.compile(r"<extra_id_\d+>")
 
 OUTPUT_PATH = Path("output")
-
-
-def _compute_mask_values(generated_ids: torch.Tensor, tokenizer: PreTrainedTokenizerBase) -> Mapping[str, List[str]]:
-    tokens = tokenizer.convert_ids_to_tokens(generated_ids)
-
-    extra_id_indices = {token: i for i, token in enumerate(tokens) if RE_EXTRA_ID.match(token)}
-    extra_id_indices["</s>"] = len(tokens)
-
-    return {extra_id_token: tokens[extra_id_indices[extra_id_token] + 1:extra_id_indices[next_extra_id_token]]
-            for extra_id_token, next_extra_id_token in iterable_utils.pairwise(extra_id_indices)}
-
-
-def _clean_mask_values(input_tokens: Sequence[str], mask_values: Mapping[str, List[str]]) -> Mapping[str, List[str]]:
-    return {k: v for k, v in mask_values.items() if k in set(input_tokens)}
-
-
-def _substitute_mask_values(input_text: str, generated_ids: torch.Tensor, tokenizer: PreTrainedTokenizerBase) \
-        -> Tuple[str, str]:
-    mask_values = _compute_mask_values(generated_ids, tokenizer)
-
-    new_tokens = [new_token
-                  for token in tokenizer.tokenize(input_text)
-                  for new_token in mask_values.get(token, [token])]
-
-    # FIXME: It works only when having a single blank.
-    return tokenizer.convert_tokens_to_string(new_tokens), \
-        tokenizer.convert_tokens_to_string(mask_values["<extra_id_0>"])
 
 
 def _fill_in_the_blanks(blanked_captions: Union[str, Sequence[str]], gen_pipeline: Pipeline,
@@ -52,12 +21,31 @@ def _fill_in_the_blanks(blanked_captions: Union[str, Sequence[str]], gen_pipelin
     # The generator checks explicitly for a list, so we need one.
     blanked_captions = [blanked_captions] if isinstance(blanked_captions, str) else list(blanked_captions)
 
+    # `Text2TextGenerationPipeline` doesn't support pre-tokenized text as input as we can't specify kwargs
+    # to the tokenizer.
+    # So we let the pipeline do the string-tokens-ids conversion and we later do a string-tokens conversion again.
+    # Not the most efficient thing but I think it's not a big deal.
+
     with torch.no_grad():
-        outputs = (output
-                   for batch in iterable_utils.chunks(blanked_captions, batch_size)
-                   for output in gen_pipeline(batch, return_tensors=True, return_text=False, num_beams=beam_size))
-        for blanked_caption, output in zip(blanked_captions, outputs):
-            yield _substitute_mask_values(blanked_caption, output["generated_token_ids"], gen_pipeline.tokenizer)
+        generated_ids_it = (output["generated_token_ids"]
+                            for batch in iterable_utils.chunks(blanked_captions, batch_size)
+                            for output in gen_pipeline(batch, return_tensors=True, return_text=False,
+                                                       num_beams=beam_size))  # TODO: more options?
+
+    blanked_caption_tokens_list = gen_pipeline.tokenizer.tokenize(blanked_captions)  # TODO: batch?
+
+    blank_maps = []
+    filled_tokens_list = []
+
+    for blanked_caption_tokens, generated_ids in zip(blanked_caption_tokens_list, generated_ids_it):
+        blank_map = t5_format_processing.compute_blank_map(generated_ids, gen_pipeline.tokenizer,
+                                                           blanked_caption_tokens)
+        blank_maps.append(blank_map)
+
+        filled_tokens = t5_format_processing.fill_in_the_blanks(blanked_caption_tokens, blank_map)
+        filled_tokens_list.append(filled_tokens)
+
+    yield gen_pipeline.tokenizer.convert_tokens_to_string(filled_tokens), blank_maps  # TODO: batch?
 
 
 def _compute_label_prob(logits: Sequence[torch.Tensor], label: Sequence[torch.Tensor]) -> torch.Tensor:
@@ -83,7 +71,8 @@ def _compute_pred(input_ids: List[torch.Tensor], gen_pipeline: Pipeline,
     pred_list, pred_logits_list, pred_labels_list = [], [], []
 
     for ids in generated_ids:
-        pred_tokens = _compute_mask_values(ids, gen_pipeline.tokenizer)["<extra_id_0>"]
+        pred_tokens = t5_format_processing.compute_blank_map(
+            ids, gen_pipeline.tokenizer)[gen_pipeline.tokenizer.eos_token_id]  # noqa
 
         print(pred_tokens)
 
@@ -129,7 +118,7 @@ def _evaluate_exact_match(df: pd.DataFrame, gen_pipeline: Pipeline) -> None:
     for masked_cap, ground_truth, caption, (pred_cap, pred_seq) in zip(
             df["masked caption"], df["label"], df["caption"], _fill_in_the_blanks(df["masked caption"], gen_pipeline)):
         pred_values.append([masked_cap, caption, pred_cap, ground_truth, pred_seq])
-        predictions += exact_match(pred_seq, ground_truth)
+        predictions += metric_utils.exact_match(pred_seq, ground_truth)
 
     train_pd_out = pd.DataFrame(pred_values,
                                 columns=["masked_caption", "caption", "pred_caption", "ground_truth", "pred"])
@@ -153,7 +142,7 @@ def _evaluate_beam_search(df: pd.DataFrame, gen_pipeline: Pipeline, beam_size: i
 
     for masked_caption, pred, label, pred_prob, ground_truth_prob in zip(masked_captions, preds, labels, pred_probs,
                                                                          ground_truth_probs):
-        beam_predictions += exact_match(pred, label)
+        beam_predictions += metric_utils.exact_match(pred, label)
         output.append([masked_caption, label, pred, ground_truth_prob.item(), pred_prob.item()])
 
     train_df = pd.DataFrame(output,
@@ -201,6 +190,8 @@ def main() -> None:
 
     gen_pipeline = pipeline("text2text-generation", model=args.model, framework=args.framework, device=args.device)
     gen_pipeline.model.eval()
+
+    assert isinstance(gen_pipeline.tokenizer, T5Tokenizer), "TODO"
 
     if not os.path.exists(OUTPUT_PATH):
         os.mkdir(OUTPUT_PATH)
