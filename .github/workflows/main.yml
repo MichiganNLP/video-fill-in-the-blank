@@ -33,4 +33,4 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-huggingface-
     - name: Run tests
-      run: python -m unittest
+      run: python -m unittest discover .
