@@ -2,7 +2,7 @@
 
 ## Setup
 
-If you are a macOS user, then you need to comment out following lines in `environment.yml`:
+If you are a macOS user, then you need to comment out the CUDA-related lines in `environment.yml`:
 
 ```yaml
 dependencies:
