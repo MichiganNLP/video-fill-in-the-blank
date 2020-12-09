@@ -14,7 +14,7 @@ dependencies:
 With Conda:
 
 ```bash
-conda env create -f environment.yml
+conda env create
 conda activate lqam
 # FIXME: are we still using the following?
 python -c "import nltk; nltk.download('averaged_perceptron_tagger')"

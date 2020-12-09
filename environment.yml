@@ -5,14 +5,15 @@ channels:
 dependencies:
   - pip:
     # We could use the Anaconda channel "HuggingFace".
-    # However, tokenizers was compiled with glibc 2.18, while Great Lakes has 2.17.
+    # However, `tokenizers` was compiled with glibc 2.18, while Great Lakes has 2.17.
     # There are some non-popular glibc packages available in Anaconda, but Python needs to be linked to it as well.
     # This is cumbersome, so we just use pip:
     - transformers==4.0.1
   - boto3=1.16.29
   - botocore=1.19.29
-  - cudatoolkit=11.0.221
-  - nvidia::cudnn=8.0.4  # This version isn't available from the default channel yet.
+#  - cudatoolkit=11.0.221
+#  - nvidia::cudnn=8.0.4  # This version isn't available from the default channel yet.
+  - cpuonly
   - dan_blanchard::glibc=2.18
   - nltk=3.5
   - numpy=1.18.1
