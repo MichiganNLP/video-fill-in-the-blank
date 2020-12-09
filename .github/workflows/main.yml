@@ -8,7 +8,7 @@ on:
 #    - master
 
 jobs:
-  check-qa:
+  ci:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -20,6 +20,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-torch-
     # Don't cache more stuff because it takes more time than to install the Conda env.
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      with:
+        sudo: false
     - name: Setup Conda
       uses: s-weigand/setup-conda@v1
       with:
