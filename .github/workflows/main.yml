@@ -10,6 +10,9 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - uses: actions/checkout@v2
     - name: Cache conda
@@ -25,6 +28,7 @@ jobs:
       with:
         activate-environment: lqam
         environment-file: environment.yml
+        use-only-tar-bz2: true
     - name: Load HuggingFace cache
       uses: actions/cache@v2
       with:
