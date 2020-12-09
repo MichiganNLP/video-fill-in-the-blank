@@ -28,7 +28,7 @@ jobs:
 #        activate-conda: false
 #    - name: Install Conda packages
 #      run: conda env create -f environment.yml
-    - uses: goanpeca/setup-miniconda@v2
+    - uses: conda-incubator/setup-miniconda@v2
       with:
         activate-environment: lqam
         environment-file: environment.yml
