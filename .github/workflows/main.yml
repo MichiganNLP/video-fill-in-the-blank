@@ -1,0 +1,31 @@
+name: CI
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+jobs:
+  check-qa:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Load PyTorch cache
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/torch  # transformers' downloaded models.
+        key: ${{ runner.os }}-torch-${{ hashFiles('**/*') }}
+        restore-keys: |
+          ${{ runner.os }}-torch-
+    # Don't cache more stuff because it takes more time than to install the Conda env.
+    - name: Setup Conda
+      uses: s-weigand/setup-conda@v1
+      with:
+        activate-conda: false
+    - name: Install Conda packages
+      run: conda env create -f environment.yml
+    - name: Run tests
+      run: |
+        source activate lqam
+        python -m unittest

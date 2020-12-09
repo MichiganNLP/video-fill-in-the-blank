@@ -54,31 +54,29 @@ class ActivityNetCaptionDataset(Dataset):
         with open('train.pkl', 'wb') as f:
             pickle.dump(self.data, f)
 
-
     def getVideoFeatures(self, key, startFrame, endFrame, videoFeatures, textLen):
-        feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame+1]
+        feature_np = videoFeatures[key]['c3d_features'][startFrame:endFrame + 1]
         # shape = feature_h5.shape
         # feature_np = np.zeros(shape)
         # feature_h5.read_direct(feature_np)
-        
+
         if feature_np.shape[0] > 200:
             feature = np.zeros((200, feature_np.shape[1]))
             for i in range(200):
-                feature[i] = feature_np[round(i * (feature_np.shape[0]-1)/199)]
+                feature[i] = feature_np[round(i * (feature_np.shape[0] - 1) / 199)]
         else:
             feature = feature_np
 
         return torch.tensor(feature, dtype=torch.float)
-    
+
     def gen(self, text, parsed_sentence, isTrain):
         position = []
-        
 
         for i in range(len(parsed_sentence)):
             if parsed_sentence[i][1] == 'JJ' or parsed_sentence[i][1] == 'NN':
                 position.append((i, parsed_sentence[i][1]))
 
-        while len(position): 
+        while len(position):
             idx, POS = random.sample(position, 1)[0]
             if text[idx] in self.answerWordDict and self.answerWordDict[text[idx]] >= self.THRESHOLD and isTrain:
                 position.remove((idx, POS))
@@ -102,19 +100,19 @@ class ActivityNetCaptionDataset(Dataset):
                 self.threemore_tokens += 1
 
             if isTrain:
-                sentence_for_model = new_sentence[0:idx] + ['[MASK]'] * correct_word_len + new_sentence[idx+1:]
+                sentence_for_model = new_sentence[0:idx] + ['[MASK]'] * correct_word_len + new_sentence[idx + 1:]
             else:
                 sentence_for_model = new_sentence[0:idx] + ['[MASK]'] + new_sentence[idx + 1:]
             new_sentence[idx] = '[MASK]'
 
             sequence_id = self.tokenizer.encode(' '.join(sentence_for_model))
-            return sequence_id, correct_word_tokenized, idx+1, new_sentence, correct_word, POS
+            return sequence_id, correct_word_tokenized, idx + 1, new_sentence, correct_word, POS
         return ()
 
     def getTextFeatures(self, textFile, isTrain=True):
         with open(textFile, 'r') as f:
             raw = json.load(f)
-        
+
         data = []
         out_text = []
         # debug_count = 0
@@ -132,11 +130,11 @@ class ActivityNetCaptionDataset(Dataset):
                 text = nltk.word_tokenize(sentence.strip().lower())
                 parsed_sentence = nltk.pos_tag(text)
                 out = self.gen(text, parsed_sentence, isTrain)
-                if len(out)==6:
+                if len(out) == 6:
                     masked_sentence, label, masked_position, original_sentence, correct_word, POS = out
                     data.append([key, start_frame, end_frame, masked_sentence, label, masked_position])
                     out_text.append([key, original_sentence, correct_word, POS, raw[key]['timestamps'][i]])
-                
+
         return data, out_text
 
     def getFeatures(self, textData, videoFeatures):
@@ -144,11 +142,11 @@ class ActivityNetCaptionDataset(Dataset):
         for data in textData:
             textLen = len(data[3])
             videoFeature = self.getVideoFeatures(data[0], data[1], data[2], videoFeatures, textLen)
-            features.append([data[3], videoFeature, data[4], data[5],data[0]])
+            features.append([data[3], videoFeature, data[4], data[5], data[0]])
         return features
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx] 
+        return self.data[idx]
