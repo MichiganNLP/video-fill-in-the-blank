@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 import argparse
-import os
 import sys
 from pathlib import Path
 from typing import Iterator, List, Sequence, Tuple, Union
 
 import pandas as pd
+import pytorch_lightning as pl
 import torch
-from transformers import Pipeline, T5Tokenizer, pipeline
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Pipeline
 
-from lqam import iterable_utils, metric_utils, t5_format_processing
+from lqam import iterable_utils, metrics, t5_format_processing
 from lqam.argparse_with_defaults import ArgumentParserWithDefaults
-from lqam.file_utils import cached_path
+from lqam.data_module import QGenDataModule
+from lqam.t5_module import T5Filler
 
 OUTPUT_PATH = Path("output")
 
@@ -118,7 +119,7 @@ def _evaluate_exact_match(df: pd.DataFrame, gen_pipeline: Pipeline) -> None:
     for masked_cap, ground_truth, caption, (pred_cap, pred_seq) in zip(
             df["masked caption"], df["label"], df["caption"], _fill_in_the_blanks(df["masked caption"], gen_pipeline)):
         pred_values.append([masked_cap, caption, pred_cap, ground_truth, pred_seq])
-        predictions += metric_utils.exact_match(pred_seq, ground_truth)
+        predictions += metrics.exact_match(pred_seq, ground_truth)
 
     train_pd_out = pd.DataFrame(pred_values,
                                 columns=["masked_caption", "caption", "pred_caption", "ground_truth", "pred"])
@@ -142,7 +143,7 @@ def _evaluate_beam_search(df: pd.DataFrame, gen_pipeline: Pipeline, beam_size: i
 
     for masked_caption, pred, label, pred_prob, ground_truth_prob in zip(masked_captions, preds, labels, pred_probs,
                                                                          ground_truth_probs):
-        beam_predictions += metric_utils.exact_match(pred, label)
+        beam_predictions += metrics.exact_match(pred, label)
         output.append([masked_caption, label, pred, ground_truth_prob.item(), pred_prob.item()])
 
     train_df = pd.DataFrame(output,
@@ -184,19 +185,25 @@ def _parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    args = _parse_args()
+    # args = _parse_args()
+    #
+    # df = pd.read_csv(cached_path(args.csv_file_path))[:args.max_data_points]
+    #
+    # gen_pipeline = pipeline("text2text-generation", model=args.model, framework=args.framework, device=args.device)
+    # gen_pipeline.model.eval()
+    #
+    # assert isinstance(gen_pipeline.tokenizer, T5Tokenizer), "TODO"
+    #
+    # if not os.path.exists(OUTPUT_PATH):
+    #     os.mkdir(OUTPUT_PATH)
+    #
+    # _evaluate(df, gen_pipeline, args.beam_size)
 
-    df = pd.read_csv(cached_path(args.csv_file_path))[:args.max_data_points]
-
-    gen_pipeline = pipeline("text2text-generation", model=args.model, framework=args.framework, device=args.device)
-    gen_pipeline.model.eval()
-
-    assert isinstance(gen_pipeline.tokenizer, T5Tokenizer), "TODO"
-
-    if not os.path.exists(OUTPUT_PATH):
-        os.mkdir(OUTPUT_PATH)
-
-    _evaluate(df, gen_pipeline, args.beam_size)
+    model_name = "t5-base"
+    model = T5Filler(t5_like_pretrained_model=AutoModelForSeq2SeqLM.from_pretrained(model_name))
+    data_module = QGenDataModule(tokenizer=AutoTokenizer.from_pretrained(model_name), batch_size=512, num_workers=20)
+    trainer = pl.Trainer(gpus=1)
+    print(trainer.test(model, test_dataloaders=data_module.val_dataloader()))
 
 
 if __name__ == "__main__":

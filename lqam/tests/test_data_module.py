@@ -12,8 +12,11 @@ class TestQGenDataset(TestCase):
                               tokenizer=tokenizer)
         masked_caption = "A person is cleaning a window with <extra_id_0>."
         label = "a long window wiper"
-        expected_first_item = (tokenizer(masked_caption, return_tensors="pt")["input_ids"],
-                               tokenizer(label, return_tensors="pt")["input_ids"])
+        expected_first_item = {
+            "masked_caption_ids": dataset._tokenize(masked_caption),
+            "label_ids": dataset._tokenize(label),
+        }
         actual_first_item = dataset[0]
-        self.assertTrue((expected_first_item[0] == actual_first_item[0]).all())
-        self.assertTrue((expected_first_item[1] == actual_first_item[1]).all())
+        self.assertEqual(expected_first_item.keys(), actual_first_item.keys())
+        for k in expected_first_item.keys():
+            self.assertTrue((expected_first_item[k] == actual_first_item[k]).all())
