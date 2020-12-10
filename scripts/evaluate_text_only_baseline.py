@@ -12,7 +12,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Pipeline
 from lqam import iterable_utils, metrics, t5_format_processing
 from lqam.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.data_module import QGenDataModule
-from lqam.t5_module import T5Filler
+from lqam.t5_module import T5FillerModel
 
 OUTPUT_PATH = Path("output")
 
@@ -200,10 +200,15 @@ def main() -> None:
     # _evaluate(df, gen_pipeline, args.beam_size)
 
     model_name = "t5-base"
-    model = T5Filler(t5_like_pretrained_model=AutoModelForSeq2SeqLM.from_pretrained(model_name))
-    data_module = QGenDataModule(tokenizer=AutoTokenizer.from_pretrained(model_name), batch_size=512, num_workers=20)
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    data_module = QGenDataModule(tokenizer=tokenizer, batch_size=512, num_workers=20)
+
+    t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer)
+
     trainer = pl.Trainer(gpus=1)
-    print(trainer.test(model, test_dataloaders=data_module.val_dataloader()))
+    print(trainer.test(filler, test_dataloaders=data_module.val_dataloader()))
 
 
 if __name__ == "__main__":

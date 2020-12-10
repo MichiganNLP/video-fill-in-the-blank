@@ -62,9 +62,6 @@ class QGenDataModule(pl.LightningDataModule):  # noqa
         self.batch_size = batch_size
         self.eval_batch_size = eval_batch_size or batch_size
 
-    # def setup(self, stage: Optional[Literal["fit", "test"]] = None) -> None:
-    #     pass
-
     def _dataloader(self, data_path: str, batch_size: int, shuffle: bool = False) -> DataLoader:
         dataset = QGenDataset(data_path, tokenizer=self.tokenizer)
         # TODO: bucket batching
