@@ -1,4 +1,4 @@
-from typing import Any, Iterator, Mapping, Optional
+from typing import Any, Mapping, Optional
 
 import pytorch_lightning as pl
 import torch
@@ -25,29 +25,23 @@ class T5FillerModel(pl.LightningModule):
     def forward(self, masked_caption_ids: torch.Tensor, label_ids: Optional[torch.Tensor] = None) -> Seq2SeqLMOutput:
         return self.t5_pretrained_model(masked_caption_ids, labels=label_ids)
 
-    def _step(self, batch: TYPE_BATCH) -> torch.Tensor:
-        return self(**batch)["loss"]
-
-    def _ids_to_clean_text(self, generated_ids: Iterator[int]):
-        return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
+    def _step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor) -> torch.Tensor:
+        return self(masked_caption_ids, label_ids)["loss"]
 
     def _generative_step(self, batch: TYPE_BATCH) -> Mapping[str, torch.Tensor]:
         masked_caption_ids = batch["masked_caption_ids"]
+        label_ids = batch["label_ids"]
 
         generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, **self.generate_kwargs)
-
-        generated_tokens = [compute_blank_map(generated_ids_instance, self.tokenizer,
-                                              self.tokenizer.convert_ids_to_tokens(
-                                                  masked_caption_ids_instance))["<extra_id_0>"]
-                            for masked_caption_ids_instance, generated_ids_instance in zip(masked_caption_ids,
-                                                                                           generated_ids)]
+        # Use `decode` directly here as it's not a batch an we don't need to skip special tokens.
+        generated = [{self.tokenizer.decode(k): self.tokenizer.decode(v) for k, v in blank_map_instance.items()}
+                     for blank_map_instance in compute_blank_map(generated_ids, self.tokenizer, masked_caption_ids)]
 
         return {
-            "loss": self._step(batch),
-            "masked_caption": self._ids_to_clean_text(masked_caption_ids),  # TODO: also pass as arg.
-            "ground_truth": self._ids_to_clean_text(batch["label_ids"]),  # TODO: also pass as arg.
-            "generated": [self.tokenizer.convert_tokens_to_string(generated_tokens_instance)
-                          for generated_tokens_instance in generated_tokens],  # TODO: make it better.
+            "loss": self._step(masked_caption_ids, label_ids),
+            "masked_caption": batch["masked_caption"],
+            "ground_truth": batch["label"],
+            "generated": generated,
         }
 
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> Mapping[str, torch.Tensor]:

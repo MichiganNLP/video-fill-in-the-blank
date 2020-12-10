@@ -1,4 +1,4 @@
-from typing import Iterable, Literal, Mapping, Optional, Tuple, Union
+from typing import Any, Iterable, Literal, Mapping, Optional, Tuple, Union
 
 import pandas as pd
 import pytorch_lightning as pl
@@ -9,7 +9,7 @@ from transformers.tokenization_utils_base import PaddingStrategy
 
 from lqam.file_utils import cached_path
 
-TYPE_BATCH = Mapping[str, torch.Tensor]
+TYPE_BATCH = Mapping[str, Any]
 
 
 # From https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/utils_rag.py#L35
@@ -40,17 +40,24 @@ class QGenDataset(Dataset):
     def __getitem__(self, i: int) -> TYPE_BATCH:
         row = self.df.iloc[i]
         # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
+        masked_caption = row["masked caption"]
+        label = row["label"]
         return {
-            "masked_caption_ids": self._tokenize(row["masked caption"]),
-            "label_ids": self._tokenize(row["label"]),
+            "masked_caption": masked_caption,
+            "label": label,
+            "masked_caption_ids": self._tokenize(masked_caption),
+            "label_ids": self._tokenize(label),
         }
 
     def __len__(self) -> int:
         return len(self.df)
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
-        return {k: trim_batch(torch.stack([x[k] for x in instances]), self.tokenizer.pad_token_id)
-                for k in ["masked_caption_ids", "label_ids"]}
+        batch = {k: trim_batch(torch.stack([x[k] for x in instances]), self.tokenizer.pad_token_id)
+                 for k in ["masked_caption_ids", "label_ids"]}
+        for k in ["masked_caption", "label"]:
+            batch[k] = [x[k] for x in instances]
+        return batch
 
 
 class QGenDataModule(pl.LightningDataModule):  # noqa

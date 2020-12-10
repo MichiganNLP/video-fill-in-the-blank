@@ -12,9 +12,10 @@ It's possible that it contains extra token IDs that aren't present in the input 
 
 See https://huggingface.co/transformers/model_doc/t5.html for more info.
 """
-import re
-from typing import Iterator, List, Mapping, Optional
+import itertools
+from typing import Iterator, List, Mapping, Optional, Sequence
 
+import torch
 from transformers import PreTrainedTokenizerBase
 
 from lqam import iterable_utils
@@ -28,37 +29,34 @@ from lqam import iterable_utils
 # these conversations from inside the functions but also from outside of them (at least for the use-case that they were
 # created).
 
-# Note some `Tokenizer`'s methods explicitly use lists, as opposed to other iterable types.
-TYPE_BLANK_MAP = Mapping[str, List[str]]
-
-RE_EXTRA_ID = re.compile(r"<extra_id_\d+>")
+TYPE_BLANK_MAP = Mapping[int, torch.Tensor]
 
 
-def is_extra_token(token: str) -> bool:
-    return RE_EXTRA_ID.match(token) is not None
+def is_extra_token(token_id: int, tokenizer: PreTrainedTokenizerBase) -> bool:
+    # It should work for any tokenizer with extra IDs.
+    return token_id >= tokenizer.vocab_size - tokenizer._extra_ids
 
 
-def compute_blank_map(generated_ids: Iterator[int], tokenizer: PreTrainedTokenizerBase,
-                      input_tokens: Optional[Iterator[str]] = None) -> TYPE_BLANK_MAP:
+def compute_blank_map_instance(generated_ids: torch.Tensor, tokenizer: PreTrainedTokenizerBase,
+                               masked_caption_ids: Optional[torch.Tensor] = None) -> TYPE_BLANK_MAP:
+    # Use a primitive type for the key so `in` and `__getitem__` work.
+    extra_id_to_position = {id_.item(): i for i, id_ in enumerate(generated_ids) if is_extra_token(id_, tokenizer)}
+    extra_id_to_position[tokenizer.eos_token_id] = len(generated_ids)
+
+    return {extra_id: generated_ids[extra_id_to_position[extra_id] + 1:extra_id_to_position[next_extra_id]]
+            for extra_id, next_extra_id in iterable_utils.pairwise(extra_id_to_position)
+            if masked_caption_ids is None or (extra_id == masked_caption_ids).any()}  # noqa
+
+
+def compute_blank_map(generated_ids: Iterator[torch.Tensor], tokenizer: PreTrainedTokenizerBase,
+                      masked_caption_ids: Optional[torch.Tensor] = None) -> Iterator[TYPE_BLANK_MAP]:
     """
     Converts the output of a T5-like pretrained model into a mapping.
 
-    `generated_ids` is a 1D tensor.
+    `generated_ids` is a 2D tensor.
 
-    The `input_text` is optional and it's useful to remove any spurious extra token.
+    `masked_caption_ids` is an optional 2D tensor useful to remove any spurious extra token.
     """
-    tokens = tokenizer.convert_ids_to_tokens(list(generated_ids))
-
-    extra_token_ids = {token: i for i, token in enumerate(tokens) if is_extra_token(token)}
-    extra_token_ids[tokenizer.eos_token] = len(tokens)
-
-    input_tokens = set(input_tokens) if input_tokens else None
-
-    return {extra_token: tokens[extra_token_ids[extra_token] + 1:extra_token_ids[next_extra_token]]
-            for extra_token, next_extra_token in iterable_utils.pairwise(extra_token_ids)
-            if input_tokens is None or extra_token in input_tokens}
-
-
-def fill_in_the_blanks(input_tokens: Iterator[str], blank_map: TYPE_BLANK_MAP) -> Iterator[str]:
-    for token in input_tokens:
-        yield from blank_map.get(token, [token])
+    masked_caption_ids = itertools.repeat(None) if masked_caption_ids is None else masked_caption_ids
+    for generated_ids_instance, masked_caption_ids_instance in zip(generated_ids, masked_caption_ids):
+        yield compute_blank_map_instance(generated_ids_instance, tokenizer, masked_caption_ids_instance)
