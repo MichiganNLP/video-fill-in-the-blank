@@ -323,7 +323,7 @@ class VATEXLightningModel(LightningModule):
         generated_ids = None
         pad_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
         eos_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
-        decoder_inputs = torch.tensor(input_embeds.shape[0], 1).fill_(pad_token_id).to(DEVICE).long()
+        decoder_inputs = torch.Tensor(input_embeds.shape[0], 1).fill_(pad_token_id).to(DEVICE).long()
 
         while cur_len < max_length:
 
