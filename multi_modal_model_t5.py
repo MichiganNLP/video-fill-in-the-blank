@@ -56,7 +56,7 @@ class VATEXLightningModel(LightningModule):
 
     def match(self, pred: str, label: str) -> bool:
         special_label_len = len("<extra_id_0>")
-        label = label[:special_label_len, -special_label_len]
+        label = label[special_label_len: -special_label_len]
         return pred.strip() == label.strip()
 
     @overrides
