@@ -317,17 +317,19 @@ class VATEXLightningModel(LightningModule):
         #pad_token_id = pad_token_id if pad_token_id is not None else self.tokenizer.convert_tokens_to_ids("<pad>")
         pad_token_id = 0 # for convenience, set <pad> to zero (which is default as well)
         eos_token_id = eos_token_id if eos_token_id is not None else self.tokenizer.convert_tokens_to_ids("</s>")
+        start_token_id = self.tokenizer.convert_tokens_to_ids("<extra_id_0>")
 
         cur_len = input_embeds.shape[1]
 
         generated_ids = None
         pad_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
         eos_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
+        decoder_inputs = input_embeds.new(input_embeds.shape[0], 1).fill_(start_token_id)
 
         while cur_len < max_length:
 
             # forward pass to get next token
-            outputs = self.encoder(inputs_embeds=input_embeds, attention_mask=attention_mask, return_dict=True)
+            outputs = self.encoder(inputs_embeds=input_embeds, attention_mask=attention_mask, decoder_inputs=decoder_inputs, return_dict=True)
             pad_mask = torch.mul(pad_mask, eos_mask)
             attention_mask = torch.cat([attention_mask, pad_mask], dim = 1)
             next_token_logits = outputs.logits[:, -1, :]
@@ -338,9 +340,8 @@ class VATEXLightningModel(LightningModule):
             # argmax
             next_tokens = torch.argmax(scores, dim=-1)
 
-            # concat generated text to inputs
-            generated_embeds = self.text_embedding(next_tokens).unsqueeze(1)
-            input_embeds = torch.cat([input_embeds, generated_embeds], dim = 1)
+            # concat generated text to decoder inputs
+            decoder_inputs = torch.cat([decoder_inputs, next_tokens], dim=1)
             
             # save generated ids
             if generated_ids is None:
