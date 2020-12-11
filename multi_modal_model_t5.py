@@ -324,13 +324,18 @@ class VATEXLightningModel(LightningModule):
         pad_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
         eos_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
         decoder_inputs = torch.Tensor(input_embeds.shape[0], 1).fill_(pad_token_id).to(DEVICE).long()
+        decoder_mask = None
 
         while cur_len < max_length:
 
             # forward pass to get next token
-            outputs = self.encoder(inputs_embeds=input_embeds, attention_mask=attention_mask, decoder_input_ids=decoder_inputs, return_dict=True)
+            if decoder_mask is None:
+                decoder_mask = pad_mask
+            else:
+                decoder_mask = torch.cat([decoder_mask, mask], dim = 1)
+            outputs = self.encoder(inputs_embeds=input_embeds, attention_mask=attention_mask, 
+                            decoder_input_ids=decoder_inputs, decoder_attention_mask = decoder_mask, return_dict=True)
             pad_mask = torch.mul(pad_mask, eos_mask)
-            attention_mask = torch.cat([attention_mask, pad_mask], dim = 1)
             next_token_logits = outputs.logits[:, -1, :]
 
             # pre-process distribution
