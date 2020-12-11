@@ -121,7 +121,7 @@ class VATEXLightningModel(LightningModule):
     @overrides
     def training_step(self, batch: TYPE_BATCH,
                       batch_idx: int) -> Union[int, MutableMapping[str, Union[torch.Tensor, TYPE_STEP_OUTPUT]]]:
-        accuracy, correct, batch_size, loss = self._train_step(batch)
+        loss = self._train_step(batch)
         metrics_to_show_and_log = {"train_loss": loss}
         return {
             "loss": loss,
