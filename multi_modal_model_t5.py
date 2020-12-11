@@ -229,7 +229,7 @@ class VATEXLightningModel(LightningModule):
         labels = text_batch.labels
 
         if self.hparams.enable_visual_features:
-            video_tensor = torch.zeros(batch_size, max_video_len, self.hparams.visual_size, dtype=torch.long)
+            video_tensor = torch.zeros(batch_size, max_video_len, self.hparams.visual_size, dtype=torch.float)
         else:
             video_tensor = None
 
