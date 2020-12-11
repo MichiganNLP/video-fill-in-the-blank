@@ -97,17 +97,14 @@ class VATEXLightningModel(LightningModule):
             if self.match(generated_text[i], label_list[i]):
                 correct += 1
 
-        correct = torch.tensor(correct, dtype=torch.long, device=text_token_ids.device)
+        correct = torch.tensor(correct, device=text_token_ids.device)
 
         if self.trainer.use_dp or self.trainer.use_ddp2:
             correct = correct.unsqueeze(0)
 
         batch_size = torch.empty_like(correct).fill_(batch_size)
 
-        accuracy = correct / batch_size
-
-        if correct != 0 and accuracy == 0:
-            print("#########DEBUG: DTYPE ERROR#############")
+        accuracy = correct.float() / batch_size.float()
 
         return accuracy, correct, batch_size
 
@@ -176,7 +173,7 @@ class VATEXLightningModel(LightningModule):
                 metrics[metric_name] = metric_total  # noqa
 
         if key_prefix != "":
-            metrics[f"{key_prefix}acc"] = metrics["correct"].long() / metrics["batch_size"].long()
+            metrics[f"{key_prefix}acc"] = metrics["correct"].float() / metrics["batch_size"].float()
 
             del metrics["correct"]
             del metrics["batch_size"]
