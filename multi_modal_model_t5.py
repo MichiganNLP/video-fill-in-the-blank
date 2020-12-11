@@ -64,14 +64,15 @@ class VATEXLightningModel(LightningModule):
                 labels: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         text_embedding = self.text_embedding(text_token_ids)
         
-        ## for debug
-        self.greedy_search(text_embedding,)
         
         if visual is None:
             embedding = text_embedding
         else:
             visual_embedding = self.video_embedding(visual)
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
+        ## for debug
+        generated_ids = self.greedy_search(embedding, attention_mask)
+        
         if self.training:
             return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels)
         else:
@@ -330,7 +331,7 @@ class VATEXLightningModel(LightningModule):
             # forward pass to get next token
             pad_mask = torch.mul(pad_mask, eos_mask)
             attention_mask = torch.cat([attention_mask, pad_mask], dim = 1)
-            outputs = self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, return_dict=True)
+            outputs = self.encoder(inputs_embeds=input_embeds, attention_mask=attention_mask, return_dict=True)
             next_token_logits = outputs.logits[:, -1, :]
 
             # pre-process distribution
@@ -338,6 +339,12 @@ class VATEXLightningModel(LightningModule):
 
             # argmax
             next_tokens = torch.argmax(scores, dim=-1)
+
+            # concat generated text to inputs
+            generated_embeds = self.text_embedding(next_tokens).unsqueeze(1)
+            input_embeds = torch.cat([input_embeds, generated_embeds], dim = 1)
+            
+            # save generated ids
             if generated_ids is None:
                 generated_ids = next_tokens
             else:
