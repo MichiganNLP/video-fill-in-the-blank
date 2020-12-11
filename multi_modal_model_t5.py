@@ -352,7 +352,7 @@ class VATEXLightningModel(LightningModule):
             if generated_ids is None:
                 generated_ids = next_tokens
             else:
-                torch.cat([generated_ids, next_tokens], dim=1)
+                generated_ids = torch.cat([generated_ids, next_tokens], dim=1)
 
             # prepare to mask sentences that reaches </s>
             eos_mask = torch.mul(eos_mask, (next_tokens != eos_token_id))
