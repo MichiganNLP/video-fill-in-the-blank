@@ -39,22 +39,15 @@ class VATEXLightningModel(LightningModule):
         self.encoder = T5ForConditionalGeneration.from_pretrained(hparams.transformer_model_name)
         self.text_embedding = self.encoder.get_input_embeddings()
         self.video_embedding = nn.Linear(self.hparams.visual_size, self.text_embedding.embedding_dim)
-        self.RE_EXTRA_ID = re.compile(r"<extra_id_\d+>")
-
-    # From https://stackoverflow.com/a/5434936/1165181
-    def pairwise(self, iterable: Iterable[T]) -> Iterable[Tuple[T, T]]:
-        "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-        a, b = itertools.tee(iterable)
-        next(b, None)
-        return zip(a, b)
     
-    def compute_mask_values(self, generated_ids: torch.Tensor, tokenizer: T5Tokenizer) -> Mapping[str, Iterable[str]]:
-        tokens = self.tokenizer.convert_ids_to_tokens(generated_ids)
-        extra_id_indices = {token: i for i, token in enumerate(tokens) if self.RE_EXTRA_ID.match(token)}
-        extra_id_indices["</s>"] = len(tokens)
+    def compute_mask_values(self, generated_ids: torch.Tensor, tokenizer: T5Tokenizer) -> Iterable[str]:
+        pattern = r"<extra_id_0>(.*)<extra_id_1>"
+        out = []
+        for i in range(generated_ids.shape[0]):
+            tokens = self.tokenizer.convert_ids_to_tokens(generated_ids[i])
+            out.append(re.match(pattern, ' '.join(tokens)).group(1))
 
-        return {extra_id_token: tokens[extra_id_indices[extra_id_token] + 1:extra_id_indices[next_extra_id_token]]
-                for extra_id_token, next_extra_id_token in self.pairwise(extra_id_indices)}
+        return out
 
     def match(self, pred: str, label: str) -> bool:
         return pred.lower() == label.lower()
@@ -70,14 +63,12 @@ class VATEXLightningModel(LightningModule):
         else:
             visual_embedding = self.video_embedding(visual)
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
-        ## for debug
-        generated_ids = self.greedy_search(embedding, attention_mask)
         
         if self.training:
             return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels)
         else:
-            generated_ids = self.encoder.generate(inputs_embeds=embedding, attention_mask=attention_mask)
-            return compute_mask_values(generated_ids, self.tokenizer)['<extra_id_0>']
+            generated_ids = self.greedy_search(embedding, attention_mask)
+            return compute_mask_values(generated_ids, self.tokenizer)
 
     def _train_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         text_token_ids, video_features, attention_masks, labels = batch
@@ -91,10 +82,11 @@ class VATEXLightningModel(LightningModule):
     def _testval_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         text_token_ids, video_features, attention_masks, labels = batch
         batch_size = text_token_ids.shape[0]
+        
+        generated_ids = self.forward(text_token_ids, video_features, attention_masks, labels)
 
         correct = 0
         for i in range(batch_size):
-            pred_tokens = self.forward(text_token_ids, video_features, attention_masks, labels)
             if self.match(pred_tokens):
                 correct += 1
 
