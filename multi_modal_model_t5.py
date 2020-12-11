@@ -45,7 +45,7 @@ class VATEXLightningModel(LightningModule):
         out = []
         for i in range(generated_ids.shape[0]):
             tokens = self.tokenizer.convert_ids_to_tokens(generated_ids[i])
-            out.append(re.match(pattern, ' '.join(tokens)).group(1))
+            out.append(self.tokenizer.convert_tokens_to_string(re.match(pattern, ' '.join(tokens)).group(0).split(" ")))
 
         return out
 
