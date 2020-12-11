@@ -317,15 +317,13 @@ class VATEXLightningModel(LightningModule):
         #pad_token_id = pad_token_id if pad_token_id is not None else self.tokenizer.convert_tokens_to_ids("<pad>")
         pad_token_id = 0 # for convenience, set <pad> to zero (which is default as well)
         eos_token_id = eos_token_id if eos_token_id is not None else self.tokenizer.convert_tokens_to_ids("</s>")
-        start_token_id = self.tokenizer.convert_tokens_to_ids("<extra_id_0>")
 
         cur_len = input_embeds.shape[1]
 
         generated_ids = None
         pad_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
         eos_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
-        decoder_inputs = torch.LongTensor(input_embeds.shape[0], 1).fill_(start_token_id)
-        decoder_inputs = decoder_inputs.to(DEVICE)
+        decoder_inputs = torch.tensor(input_embeds.shape[0], 1).fill_(pad_token_id).to(DEVICE).long()
 
         while cur_len < max_length:
 
