@@ -342,7 +342,7 @@ class VATEXLightningModel(LightningModule):
             scores = F.softmax(next_token_logits)
 
             # argmax
-            next_tokens = torch.argmax(scores, dim=-1)
+            next_tokens = torch.argmax(scores, dim=-1).unsqueeze(1)
 
             # concat generated text to decoder inputs
             decoder_inputs = torch.cat([decoder_inputs, next_tokens], dim=1)
