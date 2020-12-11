@@ -305,7 +305,7 @@ class VATEXLightningModel(LightningModule):
     def greedy_search(
         self,
         input_embeds: torch.LongTensor, # N * T * V
-        attention_mask: torch.LongTensor
+        attention_mask: torch.LongTensor,
         max_length: Optional[int] = None,
         pad_token_id: Optional[int] = None,
         eos_token_id: Optional[int] = None,
