@@ -99,6 +99,9 @@ class VATEXLightningModel(LightningModule):
 
         accuracy = correct / batch_size
 
+        if correct != 0 and accuracy == 0:
+            print("#########DEBUG: DTYPE ERROR#############")
+
         return accuracy, correct, batch_size
 
 
@@ -166,9 +169,8 @@ class VATEXLightningModel(LightningModule):
             else:
                 metrics[metric_name] = metric_total  # noqa
 
-        dtype = metrics[loss_key].dtype
-
         if key_prefix != 'train_':
+            dtype = metrics[loss_key].dtype
             metrics[f"{key_prefix}acc"] = metrics["correct"].to(dtype=dtype) / metrics["batch_size"].to(dtype=dtype)
 
             del metrics["correct"]
