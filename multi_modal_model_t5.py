@@ -169,7 +169,6 @@ class VATEXLightningModel(LightningModule):
                 metrics[metric_name] = metric_total  # noqa
 
         if key_prefix != 'train_':
-            dtype = metrics[loss_key].dtype
             metrics[f"{key_prefix}acc"] = metrics["correct"].long() / metrics["batch_size"].long()
 
             del metrics["correct"]
