@@ -71,7 +71,7 @@ class VATEXLightningModel(LightningModule):
             return compute_mask_values(generated_ids, self.tokenizer)
 
     def _train_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        text_token_ids, video_features, attention_masks, labels = batch
+        text_token_ids, video_features, attention_masks, labels, _ = batch
         loss, logits = self.forward(text_token_ids, video_features, attention_masks, labels)
 
         if self.trainer.use_dp or self.trainer.use_ddp2:
@@ -80,27 +80,25 @@ class VATEXLightningModel(LightningModule):
         return loss
 
     def _testval_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        text_token_ids, video_features, attention_masks, labels = batch
+        text_token_ids, video_features, attention_masks, labels, label_list = batch
         batch_size = text_token_ids.shape[0]
         
-        generated_ids = self.forward(text_token_ids, video_features, attention_masks, labels)
+        generated_text = self.forward(text_token_ids, video_features, attention_masks, labels)
 
         correct = 0
         for i in range(batch_size):
-            if self.match(pred_tokens):
+            if self.match(generated_text[i], label_list[i]):
                 correct += 1
 
-        torch.tensor(correct, dtype=torch.int64, device=text_token_ids.device)
+        correct = torch.tensor(correct, dtype=torch.long, device=text_token_ids.device)
 
         if self.trainer.use_dp or self.trainer.use_ddp2:
-            loss = loss.unsqueeze(0)
             correct = correct.unsqueeze(0)
 
         batch_size = torch.empty_like(correct)
         batch_size.fill_(scores.shape[0])
 
-        dtype = loss.dtype
-        accuracy = correct.to(dtype=dtype) / batch_size.to(dtype=dtype)
+        accuracy = correct / batch_size
 
         return accuracy, correct, batch_size
 
@@ -198,7 +196,7 @@ class VATEXLightningModel(LightningModule):
         batch_size = len(batch)
         text_features = []
         video_features = []
-        labels = []
+        label_list = []
 
         max_video_len = 0
 
@@ -206,7 +204,7 @@ class VATEXLightningModel(LightningModule):
             data = batch[i]
             text_features.append(data[0])
             video_features.append(data[1])
-            labels.append(data[2])
+            label_list.append(data[2])
 
             if data[1] != None:
                 total_video_len = data[1].shape[0]
@@ -215,7 +213,7 @@ class VATEXLightningModel(LightningModule):
             if total_video_len > max_video_len:
                 max_video_len = total_video_len
         
-        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=labels, padding=True, return_tensors="pt")
+        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=label_list, padding=True, return_tensors="pt")
         text_tensor = text_batch.input_ids
         text_attention_mask = text_batch.attention_mask
         labels = text_batch.labels
@@ -242,7 +240,7 @@ class VATEXLightningModel(LightningModule):
 
         attention_mask = torch.cat([text_attention_mask, video_attention_mask], 1)
 
-        return (text_tensor, video_tensor, attention_mask, labels)
+        return (text_tensor, video_tensor, attention_mask, labels, label_list)
 
 
     def _dataloader(self, pickle_path_inside_data_folder: str) -> DataLoader:
