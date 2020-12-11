@@ -65,14 +65,14 @@ class VATEXLightningModel(LightningModule):
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
         
         if self.training:
-            return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels)
+            return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels, return_dict = True)
         else:
             generated_ids = self.greedy_search(embedding, attention_mask)
             return self.compute_mask_values(generated_ids, self.tokenizer)
 
     def _train_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         text_token_ids, video_features, attention_masks, labels, _ = batch
-        loss, logits = self.forward(text_token_ids, video_features, attention_masks, labels)
+        loss = self.forward(text_token_ids, video_features, attention_masks, labels).loss
 
         if self.trainer.use_dp or self.trainer.use_ddp2:
             loss = loss.unsqueeze(0)
