@@ -147,8 +147,8 @@ class VATEXLightningModel(LightningModule):
 
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
         metrics: TYPE_STEP_OUTPUT = {}
-        loss_key = f"{key_prefix}loss"
-        if  key_prefix == 'train_':
+        loss_key = "loss"
+        if  key_prefix == "":
             metric_names = {loss_key}
         else:
             metric_names = {"correct", "batch_size"}
@@ -173,7 +173,7 @@ class VATEXLightningModel(LightningModule):
             else:
                 metrics[metric_name] = metric_total  # noqa
 
-        if key_prefix != 'train_':
+        if key_prefix != "":
             metrics[f"{key_prefix}acc"] = metrics["correct"].long() / metrics["batch_size"].long()
 
             del metrics["correct"]
@@ -183,7 +183,7 @@ class VATEXLightningModel(LightningModule):
 
     @overrides
     def training_epoch_end(self, outputs: Sequence[TYPE_STEP_OUTPUT]) -> MutableMapping[str, TYPE_STEP_OUTPUT]:
-        metrics = self._average_metrics(outputs, "train_")
+        metrics = self._average_metrics(outputs)
         return {"progress_bar": metrics, "log": metrics}
 
     @overrides
