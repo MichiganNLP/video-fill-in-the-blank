@@ -129,7 +129,7 @@ class VATEXLightningModel(LightningModule):
         loss = self._train_step(batch)
         metrics_to_show_and_log = {"train_loss": loss}
         return {
-            "train_loss": loss,
+            "loss": loss,
             "progress_bar": metrics_to_show_and_log,
             "log": metrics_to_show_and_log,
         }
