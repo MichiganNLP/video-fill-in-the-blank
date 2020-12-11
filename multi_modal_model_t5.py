@@ -45,7 +45,12 @@ class VATEXLightningModel(LightningModule):
         out = []
         for i in range(generated_ids.shape[0]):
             tokens = self.tokenizer.convert_ids_to_tokens(generated_ids[i])
-            out.append(self.tokenizer.convert_tokens_to_string(re.match(pattern, ' '.join(tokens)).group(0).split(" ")))
+            m = re.match(pattern, ' '.join(tokens))
+            if m:
+                out.append(self.tokenizer.convert_tokens_to_string(m.group(0).split(" ")))
+            else:
+                print(tokens)
+                out.append("[NO VALID GENERATION]")
 
         return out
 
