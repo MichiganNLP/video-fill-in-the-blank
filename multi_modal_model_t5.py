@@ -68,7 +68,7 @@ class VATEXLightningModel(LightningModule):
             return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels)
         else:
             generated_ids = self.greedy_search(embedding, attention_mask)
-            return compute_mask_values(generated_ids, self.tokenizer)
+            return self.compute_mask_values(generated_ids, self.tokenizer)
 
     def _train_step(self, batch) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         text_token_ids, video_features, attention_masks, labels, _ = batch
