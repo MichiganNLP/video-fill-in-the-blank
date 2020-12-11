@@ -47,7 +47,7 @@ class VATEXLightningModel(LightningModule):
             tokens = self.tokenizer.convert_ids_to_tokens(generated_ids[i])
             m = re.match(pattern, ' '.join(tokens))
             if m:
-                out.append(self.tokenizer.convert_tokens_to_string(m.group(0).split(" ")))
+                out.append(self.tokenizer.convert_tokens_to_string(m.group(1).split(" ")))
             else:
                 print(tokens)
                 out.append("[NO VALID GENERATION]")
@@ -55,7 +55,9 @@ class VATEXLightningModel(LightningModule):
         return out
 
     def match(self, pred: str, label: str) -> bool:
-        return pred.lower() == label.lower()
+        special_label_len = len("<extra_id_0>")
+        label = label[:special_label_len, -special_label_len]
+        return pred.strip() == label.strip()
 
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: Optional[torch.Tensor], attention_mask: torch.Tensor,
