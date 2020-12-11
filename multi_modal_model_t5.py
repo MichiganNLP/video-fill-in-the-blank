@@ -142,9 +142,9 @@ class VATEXLightningModel(LightningModule):
 
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
         metrics: TYPE_STEP_OUTPUT = {}
-
+        loss_key = f"{key_prefix}loss"
         if  key_prefix == 'train_':
-            metric_names = {f"{key_prefix}loss"}
+            metric_names = {loss_key}
         else:
             metric_names = {"correct", "batch_size"}
         
