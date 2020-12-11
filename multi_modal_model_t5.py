@@ -95,8 +95,7 @@ class VATEXLightningModel(LightningModule):
         if self.trainer.use_dp or self.trainer.use_ddp2:
             correct = correct.unsqueeze(0)
 
-        batch_size = torch.empty_like(correct)
-        batch_size.fill_(batch_size)
+        batch_size = torch.empty_like(correct).fill_(batch_size)
 
         accuracy = correct / batch_size
 
