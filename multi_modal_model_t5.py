@@ -316,7 +316,8 @@ class VATEXLightningModel(LightningModule):
         max_length = max_length if max_length is not None else self.hparams.max_length
         #pad_token_id = pad_token_id if pad_token_id is not None else self.tokenizer.convert_tokens_to_ids("<pad>")
         pad_token_id = 0 # for convenience, set <pad> to zero (which is default as well)
-        eos_token_id = eos_token_id if eos_token_id is not None else self.tokenizer.convert_tokens_to_ids("</s>")
+        # Since we only fill in one blank, generation stops at <extra_id_1> instead of </s>
+        eos_token_id = eos_token_id if eos_token_id is not None else self.tokenizer.convert_tokens_to_ids("<extra_id_1>")
 
         cur_len = input_embeds.shape[1]
 
