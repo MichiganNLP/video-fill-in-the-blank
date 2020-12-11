@@ -136,7 +136,7 @@ class VATEXLightningModel(LightningModule):
 
     @overrides
     def test_step(self, batch: Tuple[Any], batch_idx: int) -> TYPE_STEP_OUTPUT:
-        accuracy, correct, batch_size, loss = self._testval_step(batch)
+        accuracy, correct, batch_size = self._testval_step(batch)
         return {"test_accuracy": accuracy, "correct": correct, "batch_size": batch_size}
 
 
