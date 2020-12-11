@@ -332,7 +332,7 @@ class VATEXLightningModel(LightningModule):
             if decoder_mask is None:
                 decoder_mask = pad_mask
             else:
-                decoder_mask = torch.cat([decoder_mask, mask], dim = 1)
+                decoder_mask = torch.cat([decoder_mask, pad_mask], dim = 1)
             outputs = self.encoder(inputs_embeds=input_embeds, attention_mask=attention_mask, 
                             decoder_input_ids=decoder_inputs, decoder_attention_mask = decoder_mask, return_dict=True)
             pad_mask = torch.mul(pad_mask, eos_mask)
