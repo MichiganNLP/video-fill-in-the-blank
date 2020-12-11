@@ -325,8 +325,6 @@ class VATEXLightningModel(LightningModule):
         eos_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
 
         while cur_len < max_length:
-            # prepare model inputs
-            model_inputs = self.prepare_inputs_for_generation(input_ids, **model_kwargs)
 
             # forward pass to get next token
             pad_mask = torch.mul(pad_mask, eos_mask)
