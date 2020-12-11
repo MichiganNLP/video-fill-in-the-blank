@@ -327,9 +327,9 @@ class VATEXLightningModel(LightningModule):
         while cur_len < max_length:
 
             # forward pass to get next token
+            outputs = self.encoder(inputs_embeds=input_embeds, attention_mask=attention_mask, return_dict=True)
             pad_mask = torch.mul(pad_mask, eos_mask)
             attention_mask = torch.cat([attention_mask, pad_mask], dim = 1)
-            outputs = self.encoder(inputs_embeds=input_embeds, attention_mask=attention_mask, return_dict=True)
             next_token_logits = outputs.logits[:, -1, :]
 
             # pre-process distribution
