@@ -13,7 +13,7 @@ It's possible that it contains extra token IDs that aren't present in the input 
 See https://huggingface.co/transformers/model_doc/t5.html for more info.
 """
 import itertools
-from typing import Iterator, List, Mapping, Optional, Sequence
+from typing import Iterator, Mapping, Optional
 
 import torch
 from transformers import PreTrainedTokenizerBase

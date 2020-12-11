@@ -208,7 +208,7 @@ def main() -> None:
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer)
 
     trainer = pl.Trainer(gpus=1)
-    print(trainer.test(filler, test_dataloaders=data_module.val_dataloader()))
+    trainer.test(filler, test_dataloaders=data_module.train_dataloader())
 
 
 if __name__ == "__main__":

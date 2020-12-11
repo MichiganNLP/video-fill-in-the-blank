@@ -1,5 +1,6 @@
 import re
 import string
+from typing import Sequence
 
 import pytorch_lightning as pl
 import torch
@@ -18,16 +19,13 @@ def exact_match(label1: str, label2: str) -> bool:
 class AlmostExactMatchAccuracy(pl.metrics.Metric):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-
         self.add_state("correct", default=torch.tensor(0), dist_reduce_fx="sum")
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
-    def update(self, preds: torch.Tensor, target: torch.Tensor) -> None:  # noqa
-        preds, target = self._input_format(preds, target)
-        assert preds.shape == target.shape
-
-        self.correct += (preds == target).sum()  # noqa
-        self.total += target.numel()
+    def update(self, preds: Sequence[str], targets: Sequence[str]) -> None:  # noqa
+        assert len(preds) == len(targets)
+        self.correct += sum(exact_match(pred, target) for pred, target in zip(preds, targets))
+        self.total += len(targets)
 
     def compute(self) -> float:
         return self.correct.float() / self.total

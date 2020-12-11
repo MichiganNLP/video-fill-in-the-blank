@@ -6,6 +6,7 @@ from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
 from lqam.data_module import TYPE_BATCH
+from lqam.metrics import AlmostExactMatchAccuracy
 from lqam.t5_format_processing import compute_blank_map
 
 
@@ -20,6 +21,7 @@ class T5FillerModel(pl.LightningModule):
         assert isinstance(t5_like_pretrained_model, tuple(MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.values()))
         self.t5_pretrained_model = t5_like_pretrained_model
         self.tokenizer = tokenizer
+        self.accuracy = AlmostExactMatchAccuracy()
         self.generate_kwargs = generate_kwargs or {}
 
     def forward(self, masked_caption_ids: torch.Tensor, label_ids: Optional[torch.Tensor] = None) -> Seq2SeqLMOutput:
@@ -31,16 +33,19 @@ class T5FillerModel(pl.LightningModule):
     def _generative_step(self, batch: TYPE_BATCH) -> Mapping[str, torch.Tensor]:
         masked_caption_ids = batch["masked_caption_ids"]
         label_ids = batch["label_ids"]
+        label = batch["label"]
 
         generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, **self.generate_kwargs)
         # Use `decode` directly here as it's not a batch an we don't need to skip special tokens.
         generated = [{self.tokenizer.decode(k): self.tokenizer.decode(v) for k, v in blank_map_instance.items()}
                      for blank_map_instance in compute_blank_map(generated_ids, self.tokenizer, masked_caption_ids)]
+        generated = [generated_instance["<extra_id_0>"] for generated_instance in generated]  # FIXME
 
         return {
             "loss": self._step(masked_caption_ids, label_ids),
+            "accuracy": self.accuracy(generated, label),
             "masked_caption": batch["masked_caption"],
-            "ground_truth": batch["label"],
+            "ground_truth": label,
             "generated": generated,
         }
 
