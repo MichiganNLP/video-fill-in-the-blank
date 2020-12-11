@@ -96,7 +96,7 @@ class VATEXLightningModel(LightningModule):
             correct = correct.unsqueeze(0)
 
         batch_size = torch.empty_like(correct)
-        batch_size.fill_(scores.shape[0])
+        batch_size.fill_(batch_size)
 
         accuracy = correct / batch_size
 
