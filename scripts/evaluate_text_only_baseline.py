@@ -121,11 +121,15 @@ def _evaluate_beam_search(df: pd.DataFrame, gen_pipeline: Pipeline, beam_size: i
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = ArgumentParserWithDefaults(description="Evaluate the text-only baseline.")
+    parser = ArgumentParserWithDefaults(description="Evaluate the T5 text-only baseline.")
+
     parser.add_argument("--data-path", default="https://drive.google.com/uc?id=1-JRsjFzP3Qmjti_w8ILV06msXjw4OXoB"
                                                "&export=download")
+    parser.add_argument("--batch-size", type=int, default=512)
+    parser.add_argument("--num-workers", "-j", type=int, default=0)
 
     parser.add_argument("--gpus", type=int)
+
     # The only models that work with the used pipelines are the ones from `MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING`.
     # The model config names can't be obtained easily. You can obtain all the officially supported ones, of all types,
     # but then it's hard to know which ones are in this list.
@@ -134,11 +138,9 @@ def _parse_args() -> argparse.Namespace:
     # I guess we can check the options from the URL below, though I'm not sure if that's the exact filter tag.
     parser.add_argument("--model", default="t5-base",
                         help="pipeline model. Check the options in https://huggingface.co/models?filter=seq2seq")
-
-    parser.add_argument("--beam-size", type=int, default=1)  # TODO: change to 5
-
-    parser.add_argument("--batch-size", type=int, default=512)
-    parser.add_argument("--num-workers", "-j", type=int, default=0)
+    parser.add_argument("--beam-size", type=int, default=1)
+    parser.add_argument("--generation-early-stopping", type=bool)
+    parser.add_argument("--no-repeat-ngram-size", type=int)
 
     return parser.parse_args()
 
@@ -151,7 +153,9 @@ def main() -> None:
 
     t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
-                           generate_kwargs={"num_beams": args.beam_size})
+                           generate_kwargs={"num_beams": args.beam_size,
+                                            "early_stopping": args.generation_early_stopping,
+                                            "no_repeat_ngram_size": args.no_repeat_ngram_size})
 
     trainer = pl.Trainer(gpus=args.gpus)
     trainer.test(filler, test_dataloaders=data_module.val_dataloader(args.data_path))
