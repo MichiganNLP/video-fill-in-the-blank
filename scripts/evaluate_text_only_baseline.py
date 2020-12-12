@@ -1,52 +1,16 @@
 #!/usr/bin/env python
 import argparse
-import sys
-from pathlib import Path
-from typing import Iterator, List, Sequence, Tuple, Union
+from typing import List, Sequence, Tuple
 
 import pandas as pd
 import pytorch_lightning as pl
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer, Pipeline
 
-from lqam import iterable_utils, metrics, t5_format_processing
+from lqam import metrics, t5_format_processing
 from lqam.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.data_module import QGenDataModule
 from lqam.t5_module import T5FillerModel
-
-OUTPUT_PATH = Path("output")
-
-
-def _fill_in_the_blanks(blanked_captions: Union[str, Sequence[str]], gen_pipeline: Pipeline,
-                        batch_size: int = sys.maxsize, beam_size: int = 1) -> Iterator[Tuple[str, str]]:
-    # The generator checks explicitly for a list, so we need one.
-    blanked_captions = [blanked_captions] if isinstance(blanked_captions, str) else list(blanked_captions)
-
-    # `Text2TextGenerationPipeline` doesn't support pre-tokenized text as input as we can't specify kwargs
-    # to the tokenizer.
-    # So we let the pipeline do the string-tokens-ids conversion and we later do a string-tokens conversion again.
-    # Not the most efficient thing but I think it's not a big deal.
-
-    with torch.no_grad():
-        generated_ids_it = (output["generated_token_ids"]
-                            for batch in iterable_utils.chunks(blanked_captions, batch_size)
-                            for output in gen_pipeline(batch, return_tensors=True, return_text=False,
-                                                       num_beams=beam_size))  # TODO: more options?
-
-    blanked_caption_tokens_list = gen_pipeline.tokenizer.tokenize(blanked_captions)  # TODO: batch?
-
-    blank_maps = []
-    filled_tokens_list = []
-
-    for blanked_caption_tokens, generated_ids in zip(blanked_caption_tokens_list, generated_ids_it):
-        blank_map = t5_format_processing.compute_blank_map(generated_ids, gen_pipeline.tokenizer,
-                                                           blanked_caption_tokens)
-        blank_maps.append(blank_map)
-
-        filled_tokens = t5_format_processing.fill_in_the_blanks(blanked_caption_tokens, blank_map)
-        filled_tokens_list.append(filled_tokens)
-
-    yield gen_pipeline.tokenizer.convert_tokens_to_string(filled_tokens), blank_maps  # TODO: batch?
 
 
 def _compute_label_prob(logits: Sequence[torch.Tensor], label: Sequence[torch.Tensor]) -> torch.Tensor:
@@ -137,7 +101,7 @@ def _evaluate_beam_search(df: pd.DataFrame, gen_pipeline: Pipeline, beam_size: i
 
     beam_predictions = 0
     output = []
-    new_labels = [f"<extra_id_0> {label} <extra_id_1>" for label in labels[:10]]  # FIXME: 10?
+    new_labels = [f"<extra_id_0> {label} <extra_id_1>" for label in labels[:10]]
     ground_truth_probs, pred_probs, preds = _compute_prob_and_pred(masked_captions[:10], gen_pipeline, new_labels,
                                                                    beam_size=beam_size)
 
@@ -156,20 +120,12 @@ def _evaluate_beam_search(df: pd.DataFrame, gen_pipeline: Pipeline, beam_size: i
     print(train_df)
 
 
-def _evaluate(df: pd.DataFrame, gen_pipeline: Pipeline, beam_size: int) -> None:
-    if beam_size == 1:
-        _evaluate_exact_match(df, gen_pipeline)
-    else:
-        _evaluate_beam_search(df, gen_pipeline, beam_size=beam_size)
-
-
 def _parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults(description="Evaluate the text-only baseline.")
-    parser.add_argument("csv_file_path")
+    parser.add_argument("--data-path", default="https://drive.google.com/uc?id=1-JRsjFzP3Qmjti_w8ILV06msXjw4OXoB"
+                                               "&export=download")
 
-    parser.add_argument("--device", type=int, default=0, help="-1 is CPU, otherwise the GPU device ID.")
-    parser.add_argument("--framework", default="pt")
-    parser.add_argument("--max-data-points", type=int, default=100)
+    parser.add_argument("--gpus", type=int)
     # The only models that work with the used pipelines are the ones from `MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING`.
     # The model config names can't be obtained easily. You can obtain all the officially supported ones, of all types,
     # but then it's hard to know which ones are in this list.
@@ -181,34 +137,24 @@ def _parse_args() -> argparse.Namespace:
 
     parser.add_argument("--beam-size", type=int, default=1)  # TODO: change to 5
 
+    parser.add_argument("--batch-size", type=int, default=512)
+    parser.add_argument("--num-workers", "-j", type=int, default=0)
+
     return parser.parse_args()
 
 
 def main() -> None:
-    # args = _parse_args()
-    #
-    # df = pd.read_csv(cached_path(args.csv_file_path))[:args.max_data_points]
-    #
-    # gen_pipeline = pipeline("text2text-generation", model=args.model, framework=args.framework, device=args.device)
-    # gen_pipeline.model.eval()
-    #
-    # assert isinstance(gen_pipeline.tokenizer, T5Tokenizer), "TODO"
-    #
-    # if not os.path.exists(OUTPUT_PATH):
-    #     os.mkdir(OUTPUT_PATH)
-    #
-    # _evaluate(df, gen_pipeline, args.beam_size)
+    args = _parse_args()
 
-    model_name = "t5-base"
+    tokenizer = AutoTokenizer.from_pretrained(args.model)
+    data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers)
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    data_module = QGenDataModule(tokenizer=tokenizer, batch_size=512, num_workers=20)
+    t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
+    filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
+                           generate_kwargs={"num_beams": args.beam_size})
 
-    t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-    filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer)
-
-    trainer = pl.Trainer(gpus=1)
-    trainer.test(filler, test_dataloaders=data_module.train_dataloader())
+    trainer = pl.Trainer(gpus=args.gpus)
+    trainer.test(filler, test_dataloaders=data_module.val_dataloader(args.data_path))
 
 
 if __name__ == "__main__":

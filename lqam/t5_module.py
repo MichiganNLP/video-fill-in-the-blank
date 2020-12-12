@@ -2,6 +2,7 @@ from typing import Any, Mapping, Optional
 
 import pytorch_lightning as pl
 import torch
+from overrides import overrides
 from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
@@ -24,6 +25,13 @@ class T5FillerModel(pl.LightningModule):
         self.accuracy = AlmostExactMatchAccuracy()
         self.generate_kwargs = generate_kwargs or {}
 
+        self.extra_id_0 = self.tokenizer.convert_tokens_to_ids(["<extra_id_0>"])[0]
+
+    @overrides
+    def on_epoch_start(self) -> None:
+        self.accuracy.reset()
+
+    @overrides
     def forward(self, masked_caption_ids: torch.Tensor, label_ids: Optional[torch.Tensor] = None) -> Seq2SeqLMOutput:
         return self.t5_pretrained_model(masked_caption_ids, labels=label_ids)
 
@@ -49,8 +57,10 @@ class T5FillerModel(pl.LightningModule):
             "generated": generated,
         }
 
+    @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> Mapping[str, torch.Tensor]:
         return self._generative_step(batch)
 
+    @overrides
     def test_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> Mapping[str, torch.Tensor]:
         return self._generative_step(batch)
