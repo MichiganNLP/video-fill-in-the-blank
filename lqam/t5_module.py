@@ -11,7 +11,7 @@ from lqam.metrics import AlmostExactMatchAccuracy
 from lqam.t5_format_processing import compute_blank_map
 
 
-# Many things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
+# Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
 class T5FillerModel(pl.LightningModule):
     def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
                  generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
@@ -38,29 +38,27 @@ class T5FillerModel(pl.LightningModule):
     def _step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor) -> torch.Tensor:
         return self(masked_caption_ids, label_ids)["loss"]
 
-    def _generative_step(self, batch: TYPE_BATCH) -> Mapping[str, torch.Tensor]:
-        masked_caption_ids = batch["masked_caption_ids"]
-        label_ids = batch["label_ids"]
-        label = batch["label"]
+    def _generative_step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, masked_caption: str,
+                         label: str, **_kwargs) -> None:
+        self.write_prediction("masked_caption", masked_caption)
+        self.write_prediction("ground_truth", label)
+
+        loss = self._step(masked_caption_ids, label_ids)
+        self.log("loss", loss, prog_bar=True)
 
         generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, **self.generate_kwargs)
-        # Use `decode` directly here as it's not a batch an we don't need to skip special tokens.
-        generated = [{self.tokenizer.decode(k): self.tokenizer.decode(v) for k, v in blank_map_instance.items()}
-                     for blank_map_instance in compute_blank_map(generated_ids, self.tokenizer, masked_caption_ids)]
-        generated = [generated_instance["<extra_id_0>"] for generated_instance in generated]  # FIXME
+        generated = self.tokenizer.batch_decode(
+            blank_map_instance[self.extra_id_0]
+            for blank_map_instance in compute_blank_map(generated_ids, self.tokenizer, masked_caption_ids))
+        self.write_prediction("generated", generated)
 
-        return {
-            "loss": self._step(masked_caption_ids, label_ids),
-            "accuracy": self.accuracy(generated, label),
-            "masked_caption": batch["masked_caption"],
-            "ground_truth": label,
-            "generated": generated,
-        }
+        accuracy = self.accuracy(generated, label)
+        self.log("accuracy", accuracy, prog_bar=True)
 
     @overrides
-    def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> Mapping[str, torch.Tensor]:
-        return self._generative_step(batch)
+    def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
+        self._generative_step(**batch)
 
     @overrides
-    def test_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> Mapping[str, torch.Tensor]:
-        return self._generative_step(batch)
+    def test_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
+        self._generative_step(**batch)

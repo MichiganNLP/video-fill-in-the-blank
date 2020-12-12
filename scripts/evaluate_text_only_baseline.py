@@ -142,6 +142,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--generation-early-stopping", type=bool)
     parser.add_argument("--no-repeat-ngram-size", type=int)
 
+    parser.add_argument("--predictions-output-path", default="predictions.csv")
+
     return parser.parse_args()
 
 
@@ -159,6 +161,11 @@ def main() -> None:
 
     trainer = pl.Trainer(gpus=args.gpus)
     trainer.test(filler, test_dataloaders=data_module.val_dataloader(args.data_path))
+
+    predictions = next(iter(trainer.evaluation_loop.predictions.predictions.values()))
+    df = pd.DataFrame.from_dict(predictions)
+    df.to_csv(args.predictions_output_path, index=False)
+    print(f"Predictions saved in {args.predictions_output_path}.")
 
 
 if __name__ == "__main__":
