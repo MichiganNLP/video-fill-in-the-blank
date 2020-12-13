@@ -25,10 +25,11 @@ def trim_batch(input_ids: torch.Tensor, pad_token_id: int,
 
 
 class QGenDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase) -> None:
+    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, return_visual: bool = False) -> None:
         super().__init__()
         self.df = pd.read_csv(cached_path(data_path))
         self.tokenizer = tokenizer
+        self.return_visual = return_visual
 
     def _tokenize(self, s: str, truncation: bool = True,
                   return_tensors: Optional[Union[Literal["pt"], TensorType]] = "pt",
@@ -43,6 +44,7 @@ class QGenDataset(Dataset):
         # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
         masked_caption = row["masked caption"]
         label = row["label"]
+        # TODO: return the visual features if `self.return_visual`.
         return {
             "masked_caption": masked_caption,
             "label": label,
