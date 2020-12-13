@@ -61,14 +61,20 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("ground_truth_prob", ground_truth_prob)
 
         generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, **self.generate_kwargs)
+        # TODO: just get the first blank result?
+        #   ideally we shouldn't clean it because it should bea already generated until the first blank.
         generated = self.tokenizer.batch_decode(
             blank_map_instance[self.extra_id_0]
             for blank_map_instance in compute_blank_map(generated_ids, self.tokenizer, masked_caption_ids))
         self.write_prediction("generated", generated)
 
-        # TODO: optimize?
-        pred_output = self(masked_caption_ids, generated_ids)
-        pred_prob = compute_label_prob(pred_output["logits"], generated_ids,
+        clean_generated_ids = self.tokenizer(["<extra_id_0> " + generated_instance + " <extra_id_1>"
+                                             for generated_instance in generated], return_tensors="pt", truncation=True,
+                                             padding="longest")["input_ids"].to(generated_ids.device)
+
+        # TODO: optimize encoder part?
+        pred_output = self(masked_caption_ids, clean_generated_ids)
+        pred_prob = compute_label_prob(pred_output["logits"], clean_generated_ids,
                                        self.t5_pretrained_model.config.pad_token_id)
         self.write_prediction("pred_prob", pred_prob)
 
