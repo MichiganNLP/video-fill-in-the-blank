@@ -37,6 +37,12 @@ class QGenDataset(Dataset):
         for k in ["masked_caption", "label"]:
             stack = [x[k] for x in instances]
             batch[k] = stack
+            # We tokenize in batches, in parallel. Probably there's a little gain than each worker tokenizing
+            # separately each item in a batch because the padding is known a priori and there may be other parallel
+            # optimizations. And it's more elegant. Still, it's likely marginal. Though now the workers aren't serial
+            # anymore, so we shouldn't use as many workers as CPU cores but just a small number so the compute
+            # devices aren't starving but not large so they never compete a lot with each other (esp. at the
+            # beginning, where the pipeline of workers is starting).
             batch[f"{k}_ids"] = self.tokenizer(stack, padding="longest", truncation=True,
                                                return_tensors="pt")["input_ids"]
         return batch
