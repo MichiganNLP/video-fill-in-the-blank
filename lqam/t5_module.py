@@ -53,12 +53,17 @@ class T5FillerModel(pl.LightningModule):
         extra_id_1_col = torch.ones(len(label_ids), 1, dtype=label_ids.dtype, device=label_ids.device) * self.extra_id_1
         label_ids = torch.cat((extra_id_0_col, label_ids, extra_id_1_col), dim=1)
 
-        ground_truth_output = self(masked_caption_ids, label_ids)
-        self.log("loss", ground_truth_output["loss"], prog_bar=True)
+        label_output = self(masked_caption_ids, label_ids)
+        self.log("loss", label_output["loss"], prog_bar=True)
 
-        ground_truth_prob = compute_label_prob(ground_truth_output["logits"], label_ids,
-                                               self.t5_pretrained_model.config.pad_token_id)
-        self.write_prediction("ground_truth_prob", ground_truth_prob)
+        # We ignore the EOS token as it's about the EOS of the generation stream, not the end of the blank.
+        # The end of the blank is marked by the next extra token.
+        # The end of the generation stream was defined on how the model was trained.
+        # It's irrelevant when computing the joint probability.
+        label_prob = compute_label_prob(label_output["logits"], label_ids,
+                                        pad_token_id=self.t5_pretrained_model.config.pad_token_id,
+                                        eos_token_id=self.t5_pretrained_model.config.eos_token_id)
+        self.write_prediction("ground_truth_prob", label_prob)
 
         generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, **self.generate_kwargs)
         # TODO: just get the first blank result?
@@ -69,14 +74,16 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("generated", generated)
 
         clean_generated_ids = self.tokenizer(["<extra_id_0> " + generated_instance + " <extra_id_1>"
-                                             for generated_instance in generated], return_tensors="pt", truncation=True,
+                                              for generated_instance in generated], return_tensors="pt",
+                                             truncation=True,
                                              padding="longest")["input_ids"].to(generated_ids.device)
 
         # TODO: optimize encoder part?
-        pred_output = self(masked_caption_ids, clean_generated_ids)
-        pred_prob = compute_label_prob(pred_output["logits"], clean_generated_ids,
-                                       self.t5_pretrained_model.config.pad_token_id)
-        self.write_prediction("pred_prob", pred_prob)
+        generated_output = self(masked_caption_ids, clean_generated_ids)
+        generated_prob = compute_label_prob(generated_output["logits"], clean_generated_ids,
+                                            pad_token_id=self.t5_pretrained_model.config.pad_token_id,
+                                            eos_token_id=self.t5_pretrained_model.config.eos_token_id)
+        self.write_prediction("generated_prob", generated_prob)
 
         accuracy = self.accuracy(generated, label)
         self.log("accuracy", accuracy, prog_bar=True)

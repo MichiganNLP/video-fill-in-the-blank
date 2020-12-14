@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 
+import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
@@ -59,6 +60,8 @@ def main() -> None:
     df.to_csv(args.predictions_output_path, index=False)
     print(f"Predictions saved in {args.predictions_output_path}. First rows:")
     print()
+    pd.options.display.float_format = \
+        lambda x: np.format_float_scientific(x, exp_digits=1, precision=0, trim="-") if abs(x) < 0.005 else f"{x:.2f}"
     print(df.head(10))
 
 

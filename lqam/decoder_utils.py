@@ -4,12 +4,13 @@ import torch
 
 
 def compute_label_prob(logits: torch.Tensor, label_ids: torch.Tensor,
-                       pad_token_id: Optional[int] = None) -> torch.Tensor:
+                       pad_token_id: Optional[int] = None, eos_token_id: Optional[int] = None) -> torch.Tensor:
     """Computes the joint probability of the given labels using the logits.
 
     :param logits: has shape (N, L, V) and dtype float.
     :param label_ids: has shape (N, L) and dtype int.
-    :param pad_token_id: padding token ID. Optional.
+    :param pad_token_id: padding token ID, to ignore it. Optional.
+    :param eos_token_id: end-of-stream token ID. Optional. Provide it only if you want to ignore it.
 
     :return: joint probabilities with shape (N,).
     """
@@ -18,5 +19,7 @@ def compute_label_prob(logits: torch.Tensor, label_ids: torch.Tensor,
     probs_label_ids = probs[torch.arange(N)[:, None], torch.arange(L)[None], label_ids]
     if pad_token_id is not None:
         probs_label_ids[label_ids == pad_token_id] = 1
+    if eos_token_id is not None:
+        probs_label_ids[label_ids == eos_token_id] = 1
     # There should be just a few factors, so the product should be numerically stable.
     return probs_label_ids.prod(dim=-1)
