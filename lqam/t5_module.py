@@ -49,9 +49,9 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("masked_caption", masked_caption)
         self.write_prediction("ground_truth", label)
 
-        extra_id_0_col = torch.ones(len(label_ids), 1, dtype=label_ids.dtype, device=label_ids.device) * self.extra_id_0
-        extra_id_1_col = torch.ones(len(label_ids), 1, dtype=label_ids.dtype, device=label_ids.device) * self.extra_id_1
-        label_ids = torch.cat((extra_id_0_col, label_ids, extra_id_1_col), dim=1)
+        extra_id_0s = torch.ones(len(label_ids), 1, dtype=label_ids.dtype, device=label_ids.device) * self.extra_id_0
+        extra_id_1s = torch.ones(len(label_ids), 1, dtype=label_ids.dtype, device=label_ids.device) * self.extra_id_1
+        label_ids = torch.cat((extra_id_0s, label_ids, extra_id_1s), dim=1)
 
         label_output = self(masked_caption_ids, label_ids)
         self.log("loss", label_output["loss"], prog_bar=True)

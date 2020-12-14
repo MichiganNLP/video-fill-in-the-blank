@@ -48,7 +48,7 @@ class QGenDataset(Dataset):
         return {
             "masked_caption": masked_caption,
             "label": label,
-            "masked_caption_ids": self._tokenize(masked_caption),
+            "masked_caption_ids": self._tokenize(masked_caption),  # TODO: batch tokenize during collate?
             "label_ids": self._tokenize(label),
         }
 
