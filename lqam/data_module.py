@@ -1,27 +1,14 @@
-from typing import Any, Iterable, Literal, Mapping, Optional, Tuple, Union
+from typing import Any, Iterable, Mapping, Optional
 
 import pandas as pd
 import pytorch_lightning as pl
-import torch
 from overrides import overrides
 from torch.utils.data import DataLoader, Dataset
-from transformers import PreTrainedTokenizerBase, TensorType
-from transformers.tokenization_utils_base import PaddingStrategy
+from transformers import PreTrainedTokenizerBase
 
 from lqam.file_utils import cached_path
 
 TYPE_BATCH = Mapping[str, Any]
-
-
-# From https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/utils_rag.py#L35
-def trim_batch(input_ids: torch.Tensor, pad_token_id: int,
-               attention_mask: Optional[torch.Tensor] = None) -> Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]:
-    """Remove columns that are populated exclusively by `pad_token_id`."""
-    keep_column_mask = (input_ids != pad_token_id).any(dim=0)
-    if attention_mask is None:
-        return input_ids[:, keep_column_mask]
-    else:
-        return input_ids[:, keep_column_mask], attention_mask[:, keep_column_mask]
 
 
 class QGenDataset(Dataset):
@@ -30,14 +17,6 @@ class QGenDataset(Dataset):
         self.df = pd.read_csv(cached_path(data_path))
         self.tokenizer = tokenizer
         self.return_visual = return_visual
-
-    def _tokenize(self, s: str, truncation: bool = True,
-                  return_tensors: Optional[Union[Literal["pt"], TensorType]] = "pt",
-                  padding: Optional[Union[bool, Literal["longest", "max_length", "do_not_pad"],
-                                          PaddingStrategy]] = "max_length",
-                  **kwargs) -> torch.Tensor:
-        return self.tokenizer(s, padding=padding, truncation=truncation, return_tensors=return_tensors,
-                              **kwargs)["input_ids"]
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
         row = self.df.iloc[i]
@@ -48,18 +27,18 @@ class QGenDataset(Dataset):
         return {
             "masked_caption": masked_caption,
             "label": label,
-            "masked_caption_ids": self._tokenize(masked_caption),  # TODO: batch tokenize during collate?
-            "label_ids": self._tokenize(label),
         }
 
     def __len__(self) -> int:
         return len(self.df)
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
-        batch = {k: trim_batch(torch.stack([x[k] for x in instances]), self.tokenizer.pad_token_id)
-                 for k in ["masked_caption_ids", "label_ids"]}
+        batch = {}
         for k in ["masked_caption", "label"]:
-            batch[k] = [x[k] for x in instances]
+            stack = [x[k] for x in instances]
+            batch[k] = stack
+            batch[f"{k}_ids"] = self.tokenizer(stack, padding="longest", truncation=True,
+                                               return_tensors="pt")["input_ids"]
         return batch
 
 
