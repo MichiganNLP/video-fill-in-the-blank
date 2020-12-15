@@ -57,23 +57,23 @@ class QGenDataModule(pl.LightningDataModule):  # noqa
         self.batch_size = batch_size
         self.eval_batch_size = eval_batch_size or batch_size
 
-    def _dataloader(self, data_path: str, batch_size: int, shuffle: bool = False) -> DataLoader:
+    def _dataloader(self, data_path: str, batch_size: int, train: bool) -> DataLoader:
         dataset = QGenDataset(data_path, tokenizer=self.tokenizer)
-        # TODO: bucket batching
-        return DataLoader(dataset, shuffle=shuffle, batch_size=batch_size, num_workers=self.num_workers,
+        # TODO: bucket-batching could make training faster, and consume less memory.
+        return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
                           pin_memory=True, collate_fn=dataset.collate_fn)
 
     @overrides
     def train_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1-5nFmc0bkNUn7V4wMB6j3mOCksX18Lr0"
                                                 "&export=download") -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.batch_size, shuffle=True)
+        return self._dataloader(data_path, batch_size=self.batch_size, train=True)
 
     @overrides
     def val_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1-JRsjFzP3Qmjti_w8ILV06msXjw4OXoB"
                                               "&export=download") -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.eval_batch_size)
+        return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
 
     @overrides
     def test_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1-5rnoxSGkf9UyO9xhhwkf7tuElyXG4Yn"
                                                "&export=download") -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.eval_batch_size)
+        return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
