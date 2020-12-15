@@ -40,8 +40,8 @@ class T5FillerModel(pl.LightningModule):
                 **kwargs) -> Seq2SeqLMOutput:
         return self.t5_pretrained_model(masked_caption_ids, labels=label_ids, **kwargs)
 
-    def _step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, **_kwargs) -> torch.Tensor:
-        return self(masked_caption_ids, label_ids)["loss"]
+    def _step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, **kwargs) -> torch.Tensor:
+        return self(masked_caption_ids, label_ids, **kwargs)["loss"]
 
     def training_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> torch.Tensor:
         return self._step(**batch)
@@ -55,7 +55,16 @@ class T5FillerModel(pl.LightningModule):
         extra_id_1s = torch.ones(len(label_ids), 1, dtype=label_ids.dtype, device=label_ids.device) * self.extra_id_1
         label_ids = torch.cat((extra_id_0s, label_ids, extra_id_1s), dim=1)
 
-        label_output = self(masked_caption_ids, label_ids)
+        model_kwargs = {}
+
+        if self.t5_pretrained_model.config.is_encoder_decoder:
+            # Compute the encoder part only once.
+            # For the `generate` method it doesn't apply because it always computes it. We can't do much w/o
+            # implementing our own version.
+            encoder = self.t5_pretrained_model.get_encoder()
+            model_kwargs["encoder_outputs"] = encoder(masked_caption_ids)
+
+        label_output = self(masked_caption_ids, label_ids, **model_kwargs)
         self.log("loss", label_output["loss"], prog_bar=True)
 
         # We ignore the EOS token as it's about the EOS of the generation stream, not the end of the blank.
@@ -79,8 +88,7 @@ class T5FillerModel(pl.LightningModule):
             ["<extra_id_0> " + generated_instance + " <extra_id_1>" for generated_instance in generated],
             return_tensors="pt", truncation=True, padding="longest")["input_ids"].to(generated_ids.device)
 
-        # TODO: optimize encoder part?
-        generated_output = self(masked_caption_ids, clean_generated_ids)
+        generated_output = self(masked_caption_ids, clean_generated_ids, **model_kwargs)
         generated_prob = compute_label_prob(generated_output["logits"], clean_generated_ids,
                                             pad_token_id=self.t5_pretrained_model.config.pad_token_id,
                                             eos_token_id=self.t5_pretrained_model.config.eos_token_id)
