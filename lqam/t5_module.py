@@ -113,7 +113,7 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("generated_prob", generated_prob)
 
         accuracy = self.accuracy(generated, label)
-        self.log("accuracy", accuracy, prog_bar=True)
+        self.log("accuracy_step", accuracy, prog_bar=True)
 
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
@@ -122,3 +122,12 @@ class T5FillerModel(pl.LightningModule):
     @overrides
     def test_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
         self._generative_step(**batch)
+
+    def _on_epoch_end(self) -> None:
+        self.log("accuracy", self.accuracy.compute(), prog_bar=True)
+
+    def on_validation_epoch_end(self) -> None:
+        self._on_epoch_end()
+
+    def on_test_epoch_end(self) -> None:
+        self._on_epoch_end()
