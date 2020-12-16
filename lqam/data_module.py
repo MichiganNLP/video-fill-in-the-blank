@@ -12,11 +12,13 @@ TYPE_BATCH = Mapping[str, Any]
 
 
 class QGenDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, return_visual: bool = False) -> None:
+    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, return_visual: bool = False,
+                 t5_format: bool = True) -> None:
         super().__init__()
         self.df = pd.read_csv(cached_path(data_path))
         self.tokenizer = tokenizer
         self.return_visual = return_visual
+        self.t5_format = t5_format
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
         row = self.df.iloc[i]
@@ -35,15 +37,21 @@ class QGenDataset(Dataset):
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
         batch = {}
         for k in ["masked_caption", "label"]:
-            stack = [x[k] for x in instances]
+            stack = [instance[k] for instance in instances]
             batch[k] = stack
+
+            if self.t5_format and k == "label":
+                to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
+            else:
+                to_tokenize = stack
+
             # We tokenize in batches, in parallel. Probably there's a little gain than each worker tokenizing
             # separately each item in a batch because the padding is known a priori and there may be other parallel
             # optimizations. And it's more elegant. Still, it's likely marginal. Though now the workers aren't serial
             # anymore, so we shouldn't use as many workers as CPU cores but just a small number so the compute
             # devices aren't starving but not large so they never compete a lot with each other (esp. at the
             # beginning, where the pipeline of workers is starting).
-            batch[f"{k}_ids"] = self.tokenizer(stack, padding="longest", truncation=True,
+            batch[f"{k}_ids"] = self.tokenizer(to_tokenize, padding="longest", truncation=True,
                                                return_tensors="pt")["input_ids"]
         return batch
 
