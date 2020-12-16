@@ -33,8 +33,9 @@ def _parse_args() -> argparse.Namespace:
     # I guess we can check the options from the URL below, though I'm not sure if that's the exact filter tag.
     parser.add_argument("--model", default="t5-base",
                         help="pipeline model. Check the options in https://huggingface.co/models?filter=seq2seq")
+    parser.add_argument("--max-length", type=int, default=10)
     parser.add_argument("--beam-size", type=int, default=1)
-    parser.add_argument("--generation-early-stopping", type=bool)
+    parser.add_argument("--generation-early-stopping", action="store_true")
     parser.add_argument("--no-repeat-ngram-size", type=int)
     parser.add_argument("--only-noun-phrases", action="store_true")
 
@@ -52,7 +53,8 @@ def main() -> None:
     t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                            only_noun_phrases=args.only_noun_phrases,
-                           generate_kwargs={"num_beams": args.beam_size,
+                           generate_kwargs={"max_length": args.max_length,
+                                            "num_beams": args.beam_size,
                                             "early_stopping": args.generation_early_stopping,
                                             "no_repeat_ngram_size": args.no_repeat_ngram_size})
 

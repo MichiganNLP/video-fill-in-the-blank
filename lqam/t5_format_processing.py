@@ -62,3 +62,17 @@ def compute_blank_map(generated_ids: Iterator[torch.Tensor], tokenizer: PreTrain
     masked_caption_ids = itertools.repeat(None) if masked_caption_ids is None else masked_caption_ids
     for generated_ids_instance, masked_caption_ids_instance in zip(generated_ids, masked_caption_ids):
         yield compute_blank_map_instance(generated_ids_instance, tokenizer, masked_caption_ids_instance)
+
+
+def compute_first_blank_instance(generated_ids: torch.Tensor, decoder_start_token_id: int, extra_id_0: int,
+                                 extra_id_1: int) -> torch.Tensor:
+    extra_id_0_i = 1 if generated_ids[0] == decoder_start_token_id else 0
+    assert generated_ids[extra_id_0_i] == extra_id_0
+    extra_id_1_i = next(iter((generated_ids == extra_id_1).nonzero(as_tuple=True)[0]), len(generated_ids))
+    return generated_ids[extra_id_0_i + 1:extra_id_1_i]
+
+
+def compute_first_blank(generated_ids: torch.Tensor, decoder_start_token_id: int, extra_id_0: int,
+                        extra_id_1: int) -> Iterator[torch.Tensor]:
+    for generated_ids_instance in generated_ids:
+        yield compute_first_blank_instance(generated_ids_instance, decoder_start_token_id, extra_id_0, extra_id_1)

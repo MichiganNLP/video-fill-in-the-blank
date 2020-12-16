@@ -9,7 +9,7 @@ from transformers.modeling_outputs import Seq2SeqLMOutput
 from lqam.data_module import TYPE_BATCH
 from lqam.decoder_utils import compute_label_prob
 from lqam.metrics import AlmostExactMatchAccuracy
-from lqam.t5_format_processing import compute_blank_map
+from lqam.t5_format_processing import compute_first_blank
 
 
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
@@ -31,7 +31,7 @@ class T5FillerModel(pl.LightningModule):
 
         self.only_noun_phrases = only_noun_phrases
         if only_noun_phrases:
-            # `num_beams` is needed, otherwise the flag doesn't make sense.
+            # Note `num_beams` is needed, otherwise the flag doesn't make sense.
             self.generate_kwargs.setdefault("num_return_sequences", self.generate_kwargs["num_beams"])
 
         self.all_token_ids = torch.arange(self.tokenizer.vocab_size)
@@ -91,20 +91,24 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("ground_truth_prob", label_prob)
 
         generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, **self.generate_kwargs)
-        # TODO: just get the first blank result?
-        #   ideally we shouldn't clean it because it should be already generated until the first blank.
         generated = self.tokenizer.batch_decode(
-            blank_map_instance[self.extra_id_0]
-            for blank_map_instance in compute_blank_map(generated_ids, self.tokenizer, masked_caption_ids))
+            compute_first_blank(generated_ids, self.t5_pretrained_model.config.decoder_start_token_id,
+                                self.extra_id_0, self.extra_id_1))
 
         if self.only_noun_phrases:
             raise NotImplementedError  # TODO: filter `generated` by the first noun phrase or else the first one.
 
         self.write_prediction("generated", generated)
 
-        clean_generated_ids = self.tokenizer(
-            ["<extra_id_0> " + generated_instance + " <extra_id_1>" for generated_instance in generated],
-            return_tensors="pt", truncation=True, padding="longest")["input_ids"].to(generated_ids.device)
+        if "prefix_allowed_tokens_fn" in self.generate_kwargs:
+            # The generation was constrained, so it's already clean. But we need to remove the BoS token used to
+            # start the generation. I noticed later that there's some `view(...)` in T5 code that fails due to the
+            # inside  stride after doing this. So I added a `clone()`.
+            clean_generated_ids = generated_ids[:, 1:].clone()
+        else:
+            clean_generated_ids = self.tokenizer(
+                ["<extra_id_0> " + generated_instance + " <extra_id_1>" for generated_instance in generated],
+                return_tensors="pt", truncation=True, padding="longest")["input_ids"].to(generated_ids.device)
 
         generated_output = self(masked_caption_ids, clean_generated_ids, **model_kwargs)
         generated_prob = compute_label_prob(generated_output["logits"], clean_generated_ids,
