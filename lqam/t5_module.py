@@ -1,4 +1,4 @@
-from typing import Any, Mapping, Optional
+from typing import Any, Mapping, Optional, Sequence
 
 import pytorch_lightning as pl
 import torch
@@ -15,7 +15,7 @@ from lqam.t5_format_processing import compute_blank_map
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
 class T5FillerModel(pl.LightningModule):
     def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
-                 generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
+                 only_noun_phrases: bool = False, generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
         super().__init__()
         # TODO: hparams
         # The model doesn't necessarily use T5 classes (e.g., `T5PreTrainedModel`).
@@ -29,7 +29,14 @@ class T5FillerModel(pl.LightningModule):
         self.extra_id_0 = self.tokenizer.convert_tokens_to_ids(["<extra_id_0>"])[0]
         self.extra_id_1 = self.tokenizer.convert_tokens_to_ids(["<extra_id_1>"])[0]
 
-        # TODO: add an option to select only the noun phrases.
+        self.only_noun_phrases = only_noun_phrases
+        if only_noun_phrases:
+            # `num_beams` is needed, otherwise the flag doesn't make sense.
+            self.generate_kwargs.setdefault("num_return_sequences", self.generate_kwargs["num_beams"])
+
+        self.all_token_ids = torch.arange(self.tokenizer.vocab_size)
+        if self.generate_kwargs.get("num_beams", 1) > 1:
+            self.generate_kwargs.setdefault("prefix_allowed_tokens_fn", self._prefix_allowed_ids)
 
     @overrides
     def on_epoch_start(self) -> None:
@@ -45,6 +52,9 @@ class T5FillerModel(pl.LightningModule):
 
     def training_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> torch.Tensor:
         return self._step(**batch)
+
+    def _prefix_allowed_ids(self, _batch_id: int, input_ids: torch.Tensor) -> Sequence[int]:
+        return [self.tokenizer.eos_token_id] if input_ids[-1] == self.extra_id_1 else self.all_token_ids
 
     def _generative_step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, masked_caption: str,
                          label: str, **_kwargs) -> None:
@@ -82,6 +92,10 @@ class T5FillerModel(pl.LightningModule):
         generated = self.tokenizer.batch_decode(
             blank_map_instance[self.extra_id_0]
             for blank_map_instance in compute_blank_map(generated_ids, self.tokenizer, masked_caption_ids))
+
+        if self.only_noun_phrases:
+            raise NotImplementedError  # TODO: filter `generated` by the first noun phrase or else the first one.
+
         self.write_prediction("generated", generated)
 
         clean_generated_ids = self.tokenizer(

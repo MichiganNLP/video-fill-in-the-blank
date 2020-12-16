@@ -40,12 +40,14 @@ def is_extra_token(token_id: int, tokenizer: PreTrainedTokenizerBase) -> bool:
 def compute_blank_map_instance(generated_ids: torch.Tensor, tokenizer: PreTrainedTokenizerBase,
                                masked_caption_ids: Optional[torch.Tensor] = None) -> TYPE_BLANK_MAP:
     # Use a primitive type for the key so `in` and `__getitem__` work.
-    extra_id_to_position = {id_.item(): i for i, id_ in enumerate(generated_ids) if is_extra_token(id_, tokenizer)}
-    extra_id_to_position[tokenizer.eos_token_id] = len(generated_ids)
+    extra_id_to_position = {id_.item(): i
+                            for i, id_ in enumerate(generated_ids)
+                            if is_extra_token(id_, tokenizer) or id_ == tokenizer.eos_token_id}
+    extra_id_to_position.setdefault(tokenizer.eos_token_id, len(generated_ids))
 
-    return {extra_id: generated_ids[extra_id_to_position[extra_id] + 1:extra_id_to_position[next_extra_id]]
-            for extra_id, next_extra_id in iterable_utils.pairwise(extra_id_to_position)
-            if masked_caption_ids is None or (extra_id == masked_caption_ids).any()}  # noqa
+    return {extra_id: generated_ids[i + 1:next_i]
+            for (extra_id, i), (_, next_i) in iterable_utils.pairwise(extra_id_to_position.items())
+            if next_i > i + 1 and (masked_caption_ids is None or (extra_id == masked_caption_ids).any())}  # noqa
 
 
 def compute_blank_map(generated_ids: Iterator[torch.Tensor], tokenizer: PreTrainedTokenizerBase,
