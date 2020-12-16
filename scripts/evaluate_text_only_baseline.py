@@ -17,7 +17,7 @@ def _parse_args() -> argparse.Namespace:
 
     parser.add_argument("--data-path", default="https://drive.google.com/uc?id=1-JRsjFzP3Qmjti_w8ILV06msXjw4OXoB"
                                                "&export=download")
-    parser.add_argument("--batch-size", type=int, default=512)
+    parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", "-j", type=int, default=0,
                         help="data loader workers. Each worker batch-tokenizes in parallel, "
                              "so maybe don't make this number equal to the number of CPU cores but just a small "
