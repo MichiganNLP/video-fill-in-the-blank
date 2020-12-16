@@ -3,16 +3,17 @@ from typing import Iterator, Mapping
 from unittest import TestCase
 
 import torch
-from transformers import AutoTokenizer
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from lqam.t5_format_processing import compute_blank_map, is_extra_token
+from lqam.t5_format_processing import compute_blank_map, compute_first_blank, is_extra_token
 
 
 class T5FormatProcessingTest(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.tokenizer = AutoTokenizer.from_pretrained("t5-small")
+        cls.model_name = "t5-small"
+        cls.tokenizer = AutoTokenizer.from_pretrained(cls.model_name)
 
     def test_is_extra_token_id_0(self):
         token_id = self.tokenizer("<extra_id_0>", add_special_tokens=False)["input_ids"][0]
@@ -54,7 +55,6 @@ class T5FormatProcessingTest(TestCase):
             "<extra_id_0>": ["▁cute", "▁dog"],
             "<extra_id_1>": ["▁the"],
             "<extra_id_2>": ["▁them"],
-            "<extra_id_3>": [self.tokenizer.eos_token],
         }]
         expected_blank_map = [
             {self.tokenizer.convert_tokens_to_ids(k): torch.tensor(self.tokenizer.convert_tokens_to_ids(v))
@@ -63,3 +63,19 @@ class T5FormatProcessingTest(TestCase):
         ]
         actual_blank_map = compute_blank_map(generated_ids, self.tokenizer)
         self._compare_iterators_of_dicts_of_tensors(actual_blank_map, expected_blank_map)
+
+    def test_compute_first_blank(self):
+        generated_ids = self.tokenizer(
+            ["<extra_id_0> cute dog <extra_id_1> the <extra_id_2> them <extra_id_3>"], return_tensors="pt")["input_ids"]
+
+        expected_first_blank_ids = self.tokenizer(["cute dog"], add_special_tokens=False,
+                                                  return_tensors="pt")["input_ids"][0]
+
+        decoder_start_token_id = AutoModelForSeq2SeqLM.from_pretrained(self.model_name).config.decoder_start_token_id
+        extra_id_0 = self.tokenizer.convert_tokens_to_ids(["<extra_id_0>"])[0]
+        extra_id_1 = self.tokenizer.convert_tokens_to_ids(["<extra_id_1>"])[0]
+        actual_first_blank_ids = next(iter(compute_first_blank(generated_ids,
+                                                               decoder_start_token_id=decoder_start_token_id,
+                                                               extra_id_0=extra_id_0, extra_id_1=extra_id_1)))
+
+        self.assertTrue((expected_first_blank_ids == actual_first_blank_ids).all())
