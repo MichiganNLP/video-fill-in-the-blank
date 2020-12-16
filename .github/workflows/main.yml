@@ -39,4 +39,4 @@ jobs:
     - name: Run tests
       run: python -m unittest discover .
     - name: Evaluate text-only T5 baseline
-      run: ./scripts/evaluate_text_only_baseline.py
+      run: PYTHONPATH=. ./scripts/evaluate_text_only_baseline.py
