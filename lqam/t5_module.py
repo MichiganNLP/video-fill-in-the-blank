@@ -36,6 +36,10 @@ class T5FillerModel(pl.LightningModule):
 
         self.all_token_ids = torch.arange(self.tokenizer.vocab_size)
         if self.generate_kwargs.get("num_beams", 1) > 1:
+            # We constrain the generation to one blank during beam search. If we don't constrain it, it produces
+            # gibberish after generating the first blank value. During beam search, the beams may differ only in
+            # gibberish, that's why we want to constrain it. For greedy search it doesn't change anything and it just
+            # makes it slower, so we disable it.
             self.generate_kwargs.setdefault("prefix_allowed_tokens_fn", self._prefix_allowed_ids)
 
     @overrides
