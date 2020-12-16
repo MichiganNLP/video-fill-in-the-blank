@@ -13,7 +13,7 @@ from heapq import heappop, heappush
 from typing import Callable, Iterator, List, Sequence, Tuple, TypeVar
 
 import torch
-from torch.utils.data import Dataset, IterableDataset  # noqa
+from torch.utils.data import IterableDataset
 from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 
 T = TypeVar("T")
