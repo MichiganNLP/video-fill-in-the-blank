@@ -1,17 +1,22 @@
 # lqam
 
 ## Setup
-If you are a Mac OS user, then you need to comment out following lines in `environment.yml`:
-```
-  - cudatoolkit=10.1.243
-  - cudnn==7.6.5
+
+If you are a macOS user, then you need to comment out the CUDA-related lines in `environment.yml`:
+
+```yaml
+dependencies:
+  # ...
+  - cudatoolkit=...
+  - cudnn==...
 ```
 
 With Conda:
 
 ```bash
-conda env create -f environment.yml
+conda env create
 conda activate lqam
+# FIXME: are we still using the following?
 python -c "import nltk; nltk.download('averaged_perceptron_tagger')"
 ```
 
