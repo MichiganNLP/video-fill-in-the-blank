@@ -310,9 +310,10 @@ class VATEXLightningModel(LightningModule):
         #pad_token_id = pad_token_id if pad_token_id is not None else self.tokenizer.convert_tokens_to_ids("<pad>")
         pad_token_id = 0 # for convenience, set <pad> to zero (which is default as well)
         # Since we only fill in one blank, generation stops at <extra_id_1> instead of </s>
+        # TODO: </s> can be generated earlier than <extra_id_1>
         eos_token_id = eos_token_id if eos_token_id is not None else self.tokenizer.convert_tokens_to_ids("<extra_id_1>")
 
-        cur_len = input_embeds.shape[1]
+        cur_len = 0
 
         generated_ids = None
         pad_mask = attention_mask.new(attention_mask.shape[0], 1).fill_(1)
