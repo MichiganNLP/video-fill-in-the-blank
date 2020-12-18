@@ -7,13 +7,15 @@ import spacy
 import pandas as pd
 import json
 
-with open("vatex_training_v1.0.json") as file:
+folder = "/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/VATEX/"
+
+with open(f"{folder}vatex_training_v1.0.json") as file:
     instances_train = json.load(file)
 
-with open("vatex_public_test_english_v1.1.json") as file:
+with open(f"{folder}vatex_public_test_english_v1.1.json") as file:
     instances_test = json.load(file)
 
-with open("vatex_validation_v1.0.json") as file:
+with open(f"{folder}vatex_validation_v1.0.json") as file:
     instances_val = json.load(file)
 
 nlp_spacy = spacy.load("en_core_web_sm")
@@ -74,7 +76,6 @@ def generate_data(instances):
     random_df = pd.DataFrame(random_choice, columns=["videoID", "caption", "masked caption", "label"])
     return random_df
 
-folder = "/content/drive/My Drive/"
 
 random_df_train = generate_data(instances_train)
 random_df_test = generate_data(instances_test)
