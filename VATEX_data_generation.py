@@ -1,6 +1,7 @@
 import random
 import math
 from typing import Sequence
+from tqdm.auto import tqdm
 
 import torch
 import spacy
