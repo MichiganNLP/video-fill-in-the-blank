@@ -39,7 +39,7 @@ def preprocess_caption(caption: str) -> str:
 def generate_data(instances):
     random_choice = []
     with torch.no_grad():
-        for instance in tqdm(instances[:10]):
+        for instance in tqdm(instances):
             caption_list = instance_to_caption_list(instance)
 
             for caption in caption_list:
@@ -68,6 +68,6 @@ random_df_train = generate_data(instances_train)
 random_df_test = generate_data(instances_test)
 random_df_val = generate_data(instances_val)
 
-# random_df_train.to_csv(f'{folder}train.csv',index=False)
-# random_df_val.to_csv(f'{folder}val.csv',index=False)
-# random_df_test.to_csv(f'{folder}test.csv',index=False)
+random_df_train.to_csv(f'{folder}train.csv',index=False)
+random_df_val.to_csv(f'{folder}val.csv',index=False)
+random_df_test.to_csv(f'{folder}test.csv',index=False)
