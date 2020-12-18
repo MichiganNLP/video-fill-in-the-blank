@@ -23,7 +23,7 @@ nlp_spacy = spacy.load("en_core_web_sm")
 # make sure we generate the same data
 random.seed(2)
 
-def instance_to_caption_list(instance: Dict[str, Any]) -> Sequence[str]:
+def instance_to_caption_list(instance):
     return instance["enCap"]  # Just pick the first one.
 
 def preprocess_caption(caption: str) -> str:
