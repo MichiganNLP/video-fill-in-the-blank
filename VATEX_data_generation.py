@@ -41,7 +41,6 @@ def generate_data(instances):
         for instance in tqdm(instances[:10]):
             caption_list = instance_to_caption_list(instance)
 
-            chunk = None
             for caption in caption_list:
                 caption = preprocess_caption(caption)
                 spacy_doc = nlp_spacy(caption)
@@ -52,23 +51,10 @@ def generate_data(instances):
                 chunk_end_in_caption = spacy_doc[chunk.end - 1].idx + len(spacy_doc[chunk.end - 1])
 
                 masked_caption = caption[:chunk_start_in_caption] + "<extra_id_0>" + caption[chunk_end_in_caption:]
-                ground_truth_label = "<extra_id_0> " + chunk.text + " <extra_id_1>" 
                 
                 random_choice.append((instance["videoID"], caption, masked_caption, chunk.text))
-                chunk_start_in_caption = spacy_doc[chunk.start].idx
-                chunk_end_in_caption = spacy_doc[chunk.end - 1].idx + len(spacy_doc[chunk.end - 1])
+                break
 
-                masked_caption = caption[:chunk_start_in_caption] + "<extra_id_0>" + caption[chunk_end_in_caption:]
-                ground_truth_label = "<extra_id_0> " + chunk.text + " <extra_id_1>"
-
-            if chunk == None:
-                continue
-
-            chunk_start_in_caption = spacy_doc[chunk.start].idx
-            chunk_end_in_caption = spacy_doc[chunk.end - 1].idx + len(spacy_doc[chunk.end - 1])
-
-            masked_caption = caption[:chunk_start_in_caption] + "<extra_id_0>" + caption[chunk_end_in_caption:]
-            ground_truth_label = "<extra_id_0> " + chunk.text + " <extra_id_1>" 
 
     random.shuffle(random_choice)
 
