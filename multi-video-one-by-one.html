@@ -1,0 +1,780 @@
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+      integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+<style>
+    #instructions, li {
+        color: gray;
+    }
+
+    #container {
+        position: relative;
+    }
+
+    #example-instance {
+        color: black;
+    }
+
+    .example-answer {
+        color: blue;
+    }
+
+    .counterexample-answer {
+        color: red;
+    }
+
+    #collapse-instructions {
+        background-color: white;
+        border: none;
+        text-align: center;
+        color: grey;
+        font-size: 17px;
+    }
+
+    #video-instruction--example {
+        font-size: 18px;
+    }
+
+    #comments {
+        border-radius: 15px;
+        border: 4px dashed #cee3e9;
+    }
+
+    .in-box-answer {
+        border: 2px solid #C2C2C2;
+        box-shadow: 1px 1px 4px #EBEBEB;
+        border-radius: 4px;
+        padding: 5px;
+        margin-left: 1px;
+        margin-bottom: 2px;
+        font-size: 17px;
+        width: 250px;
+        height: 40px;
+    }
+
+    .in-box-answer:hover {
+        border: 2px solid black;
+    }
+
+    .video-controls {
+        border-radius: 15px;
+        background-color: rgba(117, 122, 118, 0.822);
+        /* Green */
+        border: white;
+        color: white;
+        padding: 7px 15px;
+        text-align: center;
+        font-size: 16px;
+    }
+
+    .pre-question-label {
+        font-size: 23px;
+        padding-left: 40px;
+    }
+
+    .question {
+        margin: auto auto 20px auto;
+        text-align: center;
+    }
+
+    .video {
+        display: block;
+        height: 360px;
+        margin: 10px auto;
+    }
+
+    .loading-video {
+        position: relative;
+        top: 50%;
+        text-align: center;
+    }
+
+    .video-relates {
+        position: relative;
+        text-align: center;
+    }
+
+    .answer-label-div {
+        text-align: center;
+    }
+
+    .instance {
+        border-radius: 15px;
+        border: 4px dashed #cee3e9;
+        margin-bottom: 10px;
+    }
+
+    .removeClick {
+        background-color: #888888;
+        border-radius: 50%;
+        color: white;
+        height: 25px;
+        border: 2px solid white;
+        vertical-align: middle;
+        line-height: 9px;
+    }
+
+    .removeClick:hover {
+        background-color: white;
+        color: black;
+        border: 2px solid grey;
+    }
+
+    .out-box-answer {
+        height: 24px;
+        width: auto;
+        font-style: italic;
+        text-align: center;
+        border-radius: 12px;
+        background-color: #E0E0E0;
+        border: white;
+    }
+
+    .less-2 {
+        text-align: center; /*让div内部文字居中*/
+        font-size: 24px;
+    }
+
+    .less-2-checkbox {
+        width: 22px;
+        height: 22px;
+    }
+
+    #error-message-1,
+    #error-message-2,
+    #error-message-3,
+    #error-message-4,
+    #error-message-5 {
+        margin: auto;
+        width: 50%;
+        display: none;
+        text-align: center;
+    }
+</style>
+
+<crowd-form onsubmit="return checkValid()">
+  <div id="container" class="container">
+    <h1 id="top">Fill in the blanks according to video content</h1>
+
+    <details id="instructions">
+      <summary>Instructions (including <b>bonus</b> information)</summary>
+
+      <br>
+
+      <p>We need help answering (&quot;filling&quot;) these blanks based on video content (including the audio).</p>
+
+      <h2>Basic Instructions</h2>
+
+      <ul>
+        <li>There are five sentences with a blank, you need to fill in <u>all</u> five blanks
+          according to the content in the video (including audio).
+        </li>
+        <li>
+          To &quot;fill in the blank&quot;, write in the text box and press Enter. Provide one or more answers.
+
+          <ul>
+            <li>
+              Each answer needs to be one or more entities (a noun phrase), which should contain <b>one or more
+              words</b>.
+            </li>
+            <li>
+              The answers may refer to different things, but could also (and likely will) be different ways of saying
+              the same thing (as we seek diversity in the answers).
+            </li>
+            <li>
+              Provide the answers <b>in order</b>: the first answer should be the most natural to you,
+              the last answer should be the least natural to you; but all should be valid answers.
+            </li>
+          </ul>
+        </li>
+        <li>If the video is unavailable, just fill in <u><i>&quot;unavailable video&quot;</i></u>.</li>
+      </ul>
+
+      <h2>How To Answer</h2>
+
+      Each answer should be one or more <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> entities,
+      and should complete the text such that the text becomes a good description of the video.
+
+      <ul>
+        <li>
+          Each answer should contain one or more words.
+        </li>
+        <li>
+          It should be valid, in the sense that it should be an appropriate answer for what is represented in the video.
+
+          <ul>
+            <li>E.g., saying <i>&quot;<span class="counterexample-answer">cat</span>&quot;</i> when there's clearly no
+              cat but a <i>dog</i> in the video, is considered <u>invalid</u>.
+            </li>
+          </ul>
+        </li>
+        <li>
+          It should be natural, in the sense that it should be something you would normally say in the situation shown
+          in the video.
+
+          <ul>
+            <li>
+              E.g., <i>&quot;<span class="counterexample-answer">object</span>&quot;</i> and <i>&quot;<span
+                class="counterexample-answer">entity</span>&quot;</i> <u>aren't</u> something you'd naturally say.
+            </li>
+          </ul>
+        </li>
+        <li>
+          They should be <u>in order</u>. The first answer should be the one that naturally comes to your mind first,
+          and the following ones should feel less and less natural to you.
+        </li>
+        <li>
+          Respond matter-of-factly (as objectively as possible). Stick to what you can see or hear from the video.
+
+          <ul>
+            <li>E.g., <i>&quot;<span class="counterexample-answer">beautiful</span>&quot;</i> is likely <u>not</u> a
+              good word to use within an answer.
+            </li>
+          </ul>
+        </li>
+        <li>
+          Don't use descriptors unless necessary.
+
+          <ul>
+            <li>
+              <i>&quot;<span class="counterexample-answer">yellow ball</span>&quot;</i> ->
+              <i>&quot;<span class="example-answer">ball</span>&quot;</i>
+            </li>
+            <li>
+              <i>&quot;<span class="counterexample-answer">cute dog</span>&quot;</i> ->
+              <i>&quot;<span class="example-answer">dog</span>&quot;</i></li>
+          </ul>
+        </li>
+        <li>
+          When you enter numbers, please enter digits instead of text.
+
+          <ul>
+            <li><i>&quot;<span class="counterexample-answer">Seventeen</span>&quot;</i> ->
+              <i>&quot;<span class="example-answer">17</span>&quot;</i></li>
+          </ul>
+        </li>
+        <li>Try not to use the title or the description from the video to fill in the blank.</li>
+        <li>Use your best judgment.</li>
+      </ul>
+
+      <h2>HIT Acceptance</h2>
+
+      Your HITs will be accepted based on how <b>accurate</b> and <b>comprehensive</b> your answers are.
+
+      <ul>
+        <li>Generally speaking, the more answers you provide, the better.</li>
+        <li>
+          But remember, every answer has to be <u>valid</u>, <u>natural</u>, <u>objective</u>, and <u>brief</u> for
+          the given context.
+        </li>
+        <li>
+          The top workers will be awarded a <b>bonus</b>.
+        </li>
+      </ul>
+
+      <div class="instance" id="example-instance">
+        <br>
+        <h2 style="text-align: center">Example</h2>
+        <div class="video" id="video0">
+          <p class="loading-video">Loading video...</p>
+        </div>
+        <div class="video-relates">
+          <label id="video-instruction--example">
+            Please watch this <i>10-second</i> video while you listen to its <b><u>audio</u></b> (you may need to adjust
+            your <b>device volume</b>).
+            <br>
+            When the video ends, <b>do not</b> click on any other video. Click the <u>buttons below</u> to control
+            the video.
+          </label>
+          <br>
+          <button id="minus-seconds0" type="button" class="video-controls">- 5s</button>
+          <button id="speed-down0" type="button" class="video-controls">Speed<big>&#8595</big></button>
+          <button id="restart-video0" type="button" class="video-controls"><big>&#8634</big></button>
+          <button id="speed-up0" type="button" class="video-controls">Speed<big>&#8593</big></button>
+          <button id="add-seconds0" type="button" class="video-controls">+ 5s</button>
+        </div>
+        <hr>
+
+        <label class="pre-question-label" id="pre-question-label-example" for="in-answer-box-0">
+          <i><b>Fill in the blank</b> (type an entity and hit <kbd>Enter</kbd>):</i>
+        </label>
+        <h2 class="question" id="question0">
+          The person drinks <input type="text" class="in-box-answer" id="in-answer-box-0" name="in-answer-box-0"
+                                   placeholder="Type an entity and hit Enter" disabled="disabled"> in a bar.
+        </h2>
+        <div class="input-answers" id="input-answers0">
+          <input type="text" class="out-box-answer" value="beer" name="answer-example-1" style="width: 63px;"
+                 disabled="disabled">
+          <button class="removeClick" disabled="disabled">x</button>
+          <input type="text" class="out-box-answer" value="a bottle of beer" name="answer-example-2"
+                 style="width: 189px;" disabled="disabled">
+          <button class="removeClick" disabled="disabled">x</button>
+          <input type="text" class="out-box-answer" value="the beverage" name="answer-example-3" style="width: 147px;"
+                 disabled="disabled">
+          <button class="removeClick" disabled="disabled">x</button>
+          <input type="text" class="out-box-answer" value="liquor" name="answer-example-4" style="width: 84px;"
+                 disabled="disabled">
+          <button class="removeClick" disabled="disabled">x</button>
+        </div>
+
+        <div class="answer-label-div">
+          <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label1">
+            Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain
+            one or more words;
+            <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
+            <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b>;
+            <br>You need to fill in at least 2 answers;
+            <br>The more you fill in, the higher chances you can get the <b>bonus</b>;
+            <br>Try not to use the title or the description from the video to fill in the blank;
+            <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
+          </label>
+        </div>
+        <br>
+      </div>
+
+      <button type="button" id="collapse-instructions" onclick="collapseInstructions()">
+        &#x25B2 Collapse instructions
+      </button>
+
+    </details>
+
+    <hr>
+
+    <div class="instance" id="instance1">
+      <br>
+      <h2 style="text-align: center">Blank 1</h2>
+      <div class="video" id="video1">
+        <p class="loading-video">Loading video...</p>
+      </div>
+      <div class="video-relates">
+        <label id="video-instruction-1" style="font-size:18px;">
+          Please watch this <i>-- second</i> video while you listen to its <b><u>audio</u></b> (you may need to adjust
+          your <b>device volume</b>).
+          <br>When the video ends, <b>do not</b> click on any other video. Click the <u>buttons below</u> to control the
+          video.
+        </label>
+        <br>
+        <button id="minus-seconds1" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down1" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video1" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up1" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds1" type="button" class="video-controls">+ 5s</button>
+      </div>
+      <hr>
+
+      <label class="pre-question-label" id="pre-question-label1"><i><b>Fill in the blank</b> (Type an entity and hit
+        Enter):</i></label>
+      <h2 class="question" id="question1">Loading question...</h2>
+      <div class="input-answers" id="input-answers1"></div>
+      <div class="less-2" id="less-2-1">
+        <p>
+          <input type="checkbox" class="less-2-checkbox" id="less-2-checkbox1" name="less-2-checkbox1"
+                 value="Can not fill in 2 or more answers.">
+          Can not fill in 2 or more answers.
+        </p>
+      </div>
+
+      <div class="alert alert-info" id="error-message-1"></div>
+
+      <div class="answer-label-div">
+        <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label1">
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain
+          one or more words;
+          <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
+          <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers;
+          <br>You need to fill in at least 2 answers;
+          <br>The more you fill in, the higher chances you can get the <b>bonus</b>;
+          <br>Try not to use the title or the description from the video to fill in the blank;
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
+      </div>
+
+    </div>
+    <div class="instance" id="instance2">
+      <br>
+      <h2 style="text-align: center">Blank 2</h2>
+      <div class="video" id="video2">
+        <p class="loading-video">Loading video...</p>
+      </div>
+      <div class="video-relates">
+        <label id="video-instruction-2" style="font-size:18px;">
+          Please watch this <i>-- second</i> video while you listen to its <b><u>audio</u></b> (you may need to adjust
+          your <b>device volume</b>).
+          <br>When the video ends, <b>do not</b> click on any other video. Click the <u>buttons below</u> to control the
+          video.
+        </label>
+        <br>
+        <button id="minus-seconds2" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down2" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video2" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up2" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds2" type="button" class="video-controls">+ 5s</button>
+      </div>
+      <hr>
+
+      <label class="pre-question-label" id="pre-question-label2"><i><b>Fill in the blank</b> (Type an entity and hit
+        Enter):</i></label>
+      <h2 class="question" id="question2">Loading question...</h2>
+      <div class="input-answers" id="input-answers2"></div>
+      <div class="less-2" id="less-2-2">
+        <p>
+          <input type="checkbox" class="less-2-checkbox" id="less-2-checkbox2" name="less-2-checkbox2"
+                 value="Can not fill in 2 or more answers.">
+          Can not fill in 2 or more answers.
+        </p>
+      </div>
+
+      <div class="alert alert-info" id="error-message-2"></div>
+
+      <div class="answer-label-div">
+        <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label2">
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain
+          one or more words;
+          <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
+          <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers;
+          <br>You need to fill in at least 2 answers;
+          <br>The more you fill in, the higher chances you can get the <b>bonus</b>;
+          <br>Try not to use the title or the description from the video to fill in the blank;
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
+      </div>
+
+    </div>
+    <div class="instance" id="instance3">
+      <br>
+      <h2 style="text-align: center">Blank 3</h2>
+      <div class="video" id="video3">
+        <p class="loading-video">Loading video...</p>
+      </div>
+      <div class="video-relates">
+        <label id="video-instruction-3" style="font-size:18px;">
+          Please watch this <i>-- second</i> video while you listen to its <b><u>audio</u></b> (you may need to adjust
+          your <b>device volume</b>).
+          <br>When the video ends, <b>do not</b> click on any other video. Click the <u>buttons below</u> to control the
+          video.
+        </label>
+        <br>
+        <button id="minus-seconds3" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down3" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video3" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up3" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds3" type="button" class="video-controls">+ 5s</button>
+      </div>
+      <hr>
+
+      <label class="pre-question-label" id="pre-question-label3"><i><b>Fill in the blank</b> (Type an entity and hit
+        Enter):</i></label>
+      <h2 class="question" id="question3">Loading question...</h2>
+      <div class="input-answers" id="input-answers3"></div>
+      <div class="less-2" id="less-2-3">
+        <p>
+          <input type="checkbox" class="less-2-checkbox" id="less-2-checkbox3" name="less-2-checkbox3"
+                 value="Can not fill in 2 or more answers.">
+          Can not fill in 2 or more answers.
+        </p>
+      </div>
+
+      <div class="alert alert-info" id="error-message-3"></div>
+
+      <div class="answer-label-div">
+        <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label3">
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain
+          one or more words;
+          <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
+          <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers;
+          <br>You need to fill in at least 2 answers;
+          <br>The more you fill in, the higher chances you can get the <b>bonus</b>;
+          <br>Try not to use the title or the description from the video to fill in the blank;
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
+      </div>
+
+    </div>
+    <div class="instance" id="instance4">
+      <br>
+      <h2 style="text-align: center">Blank 4</h2>
+      <div class="video" id="video4">
+        <p class="loading-video">Loading video...</p>
+      </div>
+      <div class="video-relates">
+        <label id="video-instruction-4" style="font-size:18px;">
+          Please watch this <i>-- second</i> video while you listen to its <b><u>audio</u></b> (you may need to adjust
+          your <b>device volume</b>).
+          <br>When the video ends, <b>do not</b> click on any other video. Click the <u>buttons below</u> to control the
+          video.
+        </label>
+        <br>
+        <button id="minus-seconds4" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down4" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video4" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up4" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds4" type="button" class="video-controls">+ 5s</button>
+      </div>
+      <hr>
+
+      <label class="pre-question-label" id="pre-question-label4"><i><b>Fill in the blank</b> (Type an entity and hit
+        Enter):</i></label>
+      <h2 class="question" id="question4">Loading question...</h2>
+      <div class="input-answers" id="input-answers4"></div>
+      <div class="less-2" id="less-2-4">
+        <p>
+          <input type="checkbox" class="less-2-checkbox" id="less-2-checkbox4" name="less-2-checkbox4"
+                 value="Can not fill in 2 or more answers.">
+          Can not fill in 2 or more answers.
+        </p>
+      </div>
+
+      <div class="alert alert-info" id="error-message-4"></div>
+
+      <div class="answer-label-div">
+        <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label4">
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain
+          one or more words;
+          <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
+          <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers;
+          <br>You need to fill in at least 2 answers;
+          <br>The more you fill in, the higher chances you can get the <b>bonus</b>;
+          <br>Try not to use the title or the description from the video to fill in the blank;
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
+      </div>
+
+    </div>
+    <div class="instance" id="instance5">
+      <br>
+      <h2 style="text-align: center">Blank 5</h2>
+      <div class="video" id="video5">
+        <p class="loading-video">Loading video...</p>
+      </div>
+      <div class="video-relates">
+        <label id="video-instruction-5" style="font-size:18px;">
+          Please watch this <i>-- second</i> video while you listen to its <b><u>audio</u></b> (you may need to adjust
+          your <b>device volume</b>).
+          <br>When the video ends, <b>do not</b> click on any other video. Click the <u>buttons below</u> to control the
+          video.
+        </label>
+        <br>
+        <button id="minus-seconds5" type="button" class="video-controls">- 5s</button>
+        <button id="speed-down5" type="button" class="video-controls">Speed<big>&#8595</big></button>
+        <button id="restart-video5" type="button" class="video-controls"><big>&#8634</big></button>
+        <button id="speed-up5" type="button" class="video-controls">Speed<big>&#8593</big></button>
+        <button id="add-seconds5" type="button" class="video-controls">+ 5s</button>
+      </div>
+      <hr>
+
+      <label class="pre-question-label" id="pre-question-label5"><i><b>Fill in the blank</b> (Type an entity and hit
+        Enter):</i></label>
+      <h2 class="question" id="question5">Loading question...</h2>
+      <div class="input-answers" id="input-answers5"></div>
+      <div class="less-2" id="less-2-5">
+        <p>
+          <input type="checkbox" class="less-2-checkbox" id="less-2-checkbox5" name="less-2-checkbox5"
+                 value="Can not fill in 2 or more answers.">
+          Can not fill in 2 or more answers.
+        </p>
+      </div>
+
+      <div class="alert alert-info" id="error-message-5"></div>
+
+      <div class="answer-label-div">
+        <label style="font-size:18px;" for="answers" class="answer-label" id="answer-label5">
+          Each provided answer needs to be <big><i><u><b>one or more entities</b></u></i></big>, which should contain
+          one or more words;
+          <br>Please review the <a href="#instructions">Instructions</a> (includes information about the <b>bonus</b>);
+          <br>Fill in <b>valid</b>, <b>natural</b>, <b>objective</b> and <b>brief</b> answers;
+          <br>You need to fill in at least 2 answers;
+          <br>The more you fill in, the higher chances you can get the <b>bonus</b>;
+          <br>Try not to use the title or the description from the video to fill in the blank;
+          <br>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.
+        </label>
+      </div>
+
+    </div>
+    <div>
+      <textarea class="form-control" id="comments" name="comments" rows="10"
+                placeholder="Please, write any comment/error/suggestion you have."></textarea>
+    </div>
+
+  </div>
+
+  <crowd-button id="submit-button" form-action="submit" variant="primary">Submit</crowd-button>
+</crowd-form>
+
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"
+        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx"
+        crossorigin="anonymous"></script>
+<script type="text/javascript">
+  const ENTER_KEY_CODE = 13;
+
+  const videoIds = ["k7aPk5JcT-Q", "${video1_id}", "${video2_id}", "${video3_id}", "${video4_id}", "${video5_id}"];
+  const questions = ["The person drinks [MASK] in a bar.", "${question1}", "${question2}", "${question3}",
+    "${question4}", "${question5}"]
+      .map((q, i) => q.replace("[MASK]",
+          `<input type="text" class="in-box-answer" id="in-answer-box-${i + 1}" name="in-answer-box-${i + 1}"
+          placeholder="Type an entity and hit Enter">`));
+  const startTimes = ["0", "${video1_start_time}", "${video2_start_time}", "${video3_start_time}",
+    "${video4_start_time}", "${video5_start_time}"].map(parseFloat).map(Math.round);
+  const endTimes = ["10", "${video_1_end_time}", "${video_2_end_time}", "${video_3_end_time}",
+    "${video_4_end_time}", "${video_5_end_time}"].map(parseFloat).map(Math.round);
+
+  // console.assert(videoIds.length === questions.length && videoIds.length === startTimes.length
+  //     && videoIds.length === endTimes.length);
+
+  const speeds = [0.25, 0.5, 1, 1.5, 2];
+  const videoSpeedIndices = Array(videoIds.length).fill(speeds.findIndex(x => x === 1));
+  let players = [];
+
+  // noinspection JSUnusedGlobalSymbols
+  function onYouTubeIframeAPIReady() {
+    players = videoIds.map((videoId, i) => new YT.Player(`video${i}`, {
+      videoId: videoId,
+      playerVars: {
+        enablejsapi: 1,
+        loop: 1,
+        autoplay: 0,
+        controls: 0,            // hide the controls
+        disablekb: 1,           // not respond to keyboard controls
+        modestbranding: 1,
+        fs: 0,                  // full screen button
+        cc_load_policy: 0,      // Hide closed captions
+        iv_load_policy: 3,      // Hide the Video Annotations
+        start: startTimes[i],
+        end: endTimes[i],
+      }
+    }));
+  }
+
+  function setUpVideoButtons() {
+    videoIds.forEach((_, i) => {
+      $(`#restart-video${i}`).click(() => {
+        players[i].seekTo(startTimes[i], true);
+        players[i].playVideo();
+      });
+
+      $(`#add-seconds${i}`)
+          .click(() => players[i].seekTo(Math.min(Math.max(endTimes[i] - 1, startTimes[i]),
+              players[i].getCurrentTime() + 5), true));
+
+      $(`#minus-seconds${i}`)
+          .click(() => players[i].seekTo(Math.max(players[i].getCurrentTime() - 5, startTimes[i]), true));
+
+      $(`#speed-up${i}`).click(() => {
+        if (videoSpeedIndices[i] < speeds.length - 1) {
+          videoSpeedIndices[i]++;
+          players[i].setPlaybackRate(speeds[videoSpeedIndices[i]]);
+        }
+      });
+
+      $(`#speed-down${i}`).click(() => {
+        if (videoSpeedIndices[i] > 0) {
+          videoSpeedIndices[i]--;
+          players[i].setPlaybackRate(speeds[videoSpeedIndices[i]]);
+        }
+      });
+    });
+  }
+
+  function setUpVideos() {
+    setUpVideoButtons();
+  }
+
+  function collapseInstructions() {
+    $("#instructions").removeAttr("open");
+    window.location = "#top";
+  }
+
+  function checkValid() {
+    const completed = videoIds.every((_, i) => {
+      const answerCount = $(`#instance${i} .out-box-answer`).filter($e => $e.val() !== "").length;
+      return answerCount >= 2 || (answerCount === 1 && $(`#less-2-checkbox${i}`).checked);
+    });
+    if (!completed) {
+      alert("Fill in at least 2 answers for each question.");
+    }
+    return completed;
+  }
+
+  function setUpInputListeners() {
+    const toNextBoxFns = [];
+    const atLeastOneFilledFns = [];
+
+    videoIds.forEach((_, i) => {
+      const $videoInstruction = $(`#video-instruction-${i}`);
+      const $question = $(`#question${i}`);
+      const $inAnswerBox = $(`#in-answer-box-${i}`);
+      const $errormessage = $(`#error-message-${i}`);
+      const $less3div = $(`#less-2-${i}`);
+
+      $videoInstruction.html($videoInstruction.html().replace("-- ", `${endTimes[i - 1] - startTimes[i - 1]}-`));
+      $question.html(questions[i]);
+
+      $errormessage.text("Please fill in with at least two answers").fadeIn();
+      $less3div.fadeOut("fast");
+
+      $inAnswerBox
+          .keydown(() => {
+            console.log(1);
+            toNextBoxFns[i - 1](this)
+          })
+          .keyup(() => atLeastOneFilledFns[i - 1]());
+
+      atLeastOneFilledFns.push(() => {
+        const answeredCount = $(`#instance${i} .out-box-answer`).filter($e => $e.val() !== "").length;
+        if (answeredCount < 2) {
+          $errormessage.text("Please fill in with at least two answers").fadeIn();
+          $less3div.fadeOut("fast");
+        } else {
+          $less3div.fadeOut("fast");
+          $errormessage.fadeOut("fast");
+        }
+      });
+
+      // Create new input answer.
+      toNextBoxFns.push($input => {
+        console.log($input);
+        if (event.keyCode === ENTER_KEY_CODE) {
+          event.preventDefault();
+
+          if (!event.ctrlKey || i < videoIds.length - 1) {
+            const inputCount = $input.parentNode.nextElementSibling.children.length / 2;
+            const width = ($input.value.length + 2) * 10.5;
+            const $newInput = $(`<input type="text" name="answer${i}-${inputCount + 1}" class="out-box-answer"
+                value="${$input.value}">`)
+                .css("width", width)
+                .bind("input propertychange", () => $(this).css("width", `${width}px`))
+                .keyup(() => atLeastOneFilledFns[i - 1]())
+                .keydown(e => {
+                  if (e.keyCode === ENTER_KEY_CODE) {
+                    e.preventDefault();
+                  }
+                });
+            const $newClick = $('<button class="removeClick">x</button>').click(() => {
+              this.parentNode.removeChild(this.nextSibling);
+              this.parentNode.removeChild(this.previousElementSibling);
+              this.parentNode.removeChild(this);
+              atLeastOneFilledFns[i - 1]();
+            });
+            const $newSpace = document.createTextNode(",\u00A0");
+            $input.value = "";
+            $input.parentNode.nextElementSibling.appendChild($newInput);
+            $input.parentNode.nextElementSibling.appendChild($newClick);
+            $input.parentNode.nextElementSibling.appendChild($newSpace);
+          }
+        }
+      });
+    });
+  }
+
+  function onDomContentLoaded() {
+    setUpVideos();
+    setUpInputListeners();
+  }
+
+  function main() {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", onDomContentLoaded);
+    } else {
+      onDomContentLoaded();
+    }
+  }
+
+  main();
+</script>
+<script src="https://www.youtube.com/iframe_api" async></script>
