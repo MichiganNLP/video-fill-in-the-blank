@@ -84,7 +84,7 @@
         display: inline-block;
         padding: 5px;
         font-size: 2rem;
-        width: 400px;
+        width: 420px;
         height: 40px;
     }
 
@@ -300,7 +300,7 @@
       .map(escapeHtml)
       .map((q, i) => q.replace("[MASK]",
           `<input type="text" class="form-control answer-input" id="answer-input-${i}" name="answer-input-${i}"
-          placeholder="type and hit Enter" ${i === 0 ? "disabled" : ""}>`));
+          placeholder="type an answer and hit Enter" ${i === 0 ? "disabled" : ""}>`));
   const startTimes = ["0", "${video1_start_time}", "${video2_start_time}", "${video3_start_time}",
     "${video4_start_time}", "${video5_start_time}"].map(parseFloat).map(Math.round);
   const endTimes = ["10", "${video1_end_time}", "${video2_end_time}", "${video3_end_time}",
