@@ -29,7 +29,7 @@
     const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = () => {
       if (xhr.readyState === XMLHttpRequest.DONE) {
-        const htmlContent = Object.entries(substitutions).reduce((content, [k, v]) => content.replace(k, v),
+        const htmlContent = Object.entries(substitutions).reduce((content, [k, v]) => content.replaceAll(k, v),
             xhr.responseText);
 
         const doc = document.getElementsByTagName("iframe")[0].contentWindow.document;
