@@ -292,6 +292,12 @@
   const videoIds = ["k7aPk5JcT-Q", "${video1_id}", "${video2_id}", "${video3_id}", "${video4_id}", "${video5_id}"];
   const questions = ["The person drinks [MASK] at the bar.", "${question1}", "${question2}", "${question3}",
     "${question4}", "${question5}"]
+      .map(q => {
+        const maskPosition = q.indexOf("[MASK]");
+        console.assert(maskPosition !== -1 && maskPosition === q.lastIndexOf("[MASK]"))
+        return q;
+      })
+      .map(escapeHtml)
       .map((q, i) => q.replace("[MASK]",
           `<input type="text" class="form-control answer-input" id="answer-input-${i}" name="answer-input-${i}"
           placeholder="type and hit Enter" ${i === 0 ? "disabled" : ""}>`));
@@ -303,12 +309,23 @@
   console.assert(videoIds.length === questions.length && videoIds.length === startTimes.length
       && videoIds.length === endTimes.length);
   console.assert(endTimes.every((endTime, i) => endTime >= startTimes[i]));
+  console.assert(questions.every(q => q))
 
   const exampleAnswers = ["beer", "a glass of beer", "the beverage", "a pint of beer", "alcohol", "booze"];
 
   const speeds = [0.25, 0.5, 1, 1.5, 2];
   const videoSpeedIndices = Array(videoIds.length).fill(speeds.findIndex(x => x === 1));
   let players = [];
+
+  // From https://stackoverflow.com/a/6234804/1165181
+  function escapeHtml(unsafe) {
+    return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+  }
 
   function createInstanceElement(i, isExample, title, duration, question, showNextButton) {
     return $(`
