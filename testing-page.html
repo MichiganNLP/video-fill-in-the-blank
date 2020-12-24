@@ -29,12 +29,28 @@
 <script type="text/javascript">
   const xhr = new XMLHttpRequest();
   xhr.onreadystatechange = () => {
-    if (xhr.readyState === 4) {
-      let htmlContent = xhr.responseText
-          .replace('${video_id}', 'Jcdm9Z7HUr0')
-          .replace('${video_start_time}', '18000')
-          .replace('${video_end_time}', '18005')
-          .replace('${question}', "The ground is full of _____.");
+    if (xhr.readyState === XMLHttpRequest.DONE) {
+      const htmlContent = xhr.responseText
+          .replace("${video1_id}", "fE0IMwcSGsU")
+          .replace("${video2_id}", "ptxp1eX-JF4")
+          .replace("${video3_id}", "HIt3PhUz32w")
+          .replace("${video4_id}", "tbdQK8Hox24")
+          .replace("${video5_id}", "O5LZv3B4ZPM")
+          .replace("${question1}", "A person is cleaning a window with [MASK].")
+          .replace("${question2}", "A person uses [MASK] to dig into an ice face and climb it.")
+          .replace("${question3}", "[MASK] in a gym holding a bar while doing squats.")
+          .replace("${question4}", "[MASK] is doing some cooking as he scrambles the eggs on the pan.")
+          .replace("${question5}", "A man attaches a washer to a large machine and describes [MASK].")
+          .replace("${video1_start_time}", "38")
+          .replace("${video2_start_time}", "171")
+          .replace("${video3_start_time}", "2")
+          .replace("${video4_start_time}", "272")
+          .replace("${video5_start_time}", "80")
+          .replace("${video1_end_time}", "48")
+          .replace("${video2_end_time}", "181")
+          .replace("${video3_end_time}", "12")
+          .replace("${video4_end_time}", "282")
+          .replace("${video5_end_time}", "90");
 
       const doc = document.getElementsByTagName('iframe')[0].contentWindow.document;
       doc.open();
@@ -42,7 +58,7 @@
       doc.close();
     }
   };
-  xhr.open('GET', 'video-change-page.html');
+  xhr.open('GET', 'multi-video-one-by-one.html');
   xhr.send();
 </script>
 
