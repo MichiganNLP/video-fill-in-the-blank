@@ -24,12 +24,16 @@
 
 <iframe src="about:blank">Your browser doesn't support iframes.</iframe>
 
+<!-- The same library AMT uses to parse CSV files. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"
+        integrity="sha512-rKFvwjvE4liWPlFnvH4ZhRDfNZ9FOpdkD/BU5gAIA3VS3vOQrQ5BjKgbO3kxebKhHdHcNUHLqxQYSoxee9UwgA=="
+        crossorigin="anonymous"></script>
 <script type="text/javascript">
-  function loadTemplatePage(path, substitutions) {
+  function loadTemplatePageFromSubstitutions(templatePagePath, substitutions) {
     const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = () => {
       if (xhr.readyState === XMLHttpRequest.DONE) {
-        const htmlContent = Object.entries(substitutions).reduce((content, [k, v]) => content.replaceAll(k, v),
+        const htmlContent = Object.entries(substitutions).reduce((content, [k, v]) => content.replaceAll(`\${${k}}`, v),
             xhr.responseText);
 
         const doc = document.getElementsByTagName("iframe")[0].contentWindow.document;
@@ -38,36 +42,36 @@
         doc.close();
       }
     };
-    xhr.open("GET", path);
+    xhr.open("GET", templatePagePath);
     xhr.send();
   }
 
-  loadTemplatePage("multi-video-one-by-one.html", {
-    "${video1_id}": "fE0IMwcSGsU",
-    "${question1}": "A person is cleaning a window with [MASK].",
-    "${video1_start_time}": "38",
-    "${video1_end_time}": "48",
+  function loadAndFillTemplatePage(templatePagePath, dataPath) {
+    Papa.parse(dataPath, {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      error: alert,
+      complete: result => loadTemplatePageFromSubstitutions(templatePagePath, result.data[0]),
+    });
+  }
 
-    "${video2_id}": "ptxp1eX-JF4",
-    "${question2}": "A person uses [MASK] to dig into an ice face and climb it.",
-    "${video2_start_time}": "171",
-    "${video2_end_time}": "181",
+  function onDomContentLoaded() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const templatePagePath = urlParams.get("templatePagePath") || "multi-video-one-by-one.html";
+    const dataPath = urlParams.get("dataPath") || "VATEX-first-batch-val-1-10.csv";
+    loadAndFillTemplatePage(templatePagePath, dataPath);
+  }
 
-    "${video3_id}": "HIt3PhUz32w",
-    "${question3}": "[MASK] in a gym holding a bar while doing squats.",
-    "${video3_end_time}": "12",
-    "${video3_start_time}": "2",
+  function main() {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", onDomContentLoaded);
+    } else {
+      onDomContentLoaded();
+    }
+  }
 
-    "${video4_id}": "tbdQK8Hox24",
-    "${video4_end_time}": "282",
-    "${question4}": "[MASK] is doing some cooking as he scrambles the eggs on the pan.",
-    "${video4_start_time}": "272",
-
-    "${video5_id}": "O5LZv3B4ZPM",
-    "${question5}": "A man attaches a washer to a large machine and describes [MASK].",
-    "${video5_start_time}": "80",
-    "${video5_end_time}": "90",
-  });
+  main();
 </script>
 
 </body>
