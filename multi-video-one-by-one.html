@@ -139,7 +139,7 @@
   <h1 id="top">Fill in the blanks according to video content</h1>
 
   <details id="instructions">
-    <summary>Instructions (including <b>bonus</b> information)</summary>
+    <summary>Instructions (including information on <b>2 types of bonuses</b>)</summary>
 
     <div id="instructions-inner">
       <p>We need help answering (&quot;filling&quot;) these blanks based on video content (including the audio).</p>
@@ -252,8 +252,48 @@
           But remember, every answer has to be <u>valid</u>, <u>natural</u>, <u>objective</u>, and <u>brief</u> for
           the given context.
         </li>
+      </ul>
+
+      <h2>Bonuses</h2>
+
+      <ul>
         <li>
-          The top workers will be awarded a <b>bonus</b>.
+          There are 2 types of bonuses:
+
+          <ol>
+            <li>
+              You will receive a 1st type of bonus for each correct answer, with the following rules. We will evaluate
+              each answer, and compute the number of correct answers (the ones that comply with the above rules).
+
+              For every HIT, 10 correct answers are considered to be covered by the regular HIT pay (2 for each
+              of the 5 blanks per HIT). For every extra correct answer you will receive this bonus, for up to 3 answers
+              per blank. In other words, if you have 5 correct answers per blank, you will receive the maximum amount
+              for this type of bonus (3 extra correct answers * 5 blanks = 15x the bonus value).
+
+              The value of the bonus for each correct answer is the HIT pay amount divided by 10 (2 * 5 blanks per HIT).
+              You could get up to 15 times this value for every HIT.
+
+              With this, we want to encourage people to answer as many different answers they can come up with,
+              up to a reasonable amount. Don't worry if you can't come up with 5, because if you spend a lot of time
+              in a blank then it's probably not worth it.
+
+              Remember the answers have to be correct, otherwise not only you risk not getting the bonus but also
+              getting your HITs rejected.
+            </li>
+            <li>
+              For each HIT, the worker with the largest amount of correct answers will receive a 2nd type of bonus.
+              This bonus value is the same as the HIT pay amount.
+
+              We want to encourage workers to answer as many as they can.
+            </li>
+          </ol>
+        </li>
+        <li>
+          With these 2 types of bonus, we encourage the following way of answering. Go to every blank, watch the
+          video, read the text with the blank, and try to answer the blank with as many different answers you can
+          come up to, even beyond 5 (because you could get the 2nd type of bonus). If many seconds pass and you can't
+          come up with more answers, then just move on to the next blank because it's probably not worth it
+          to spend a lot of time in each blank.
         </li>
       </ul>
 
@@ -289,9 +329,23 @@
 <script type="text/javascript">
   const ENTER_KEY_CODE = 13;
 
-  const videoIds = ["k7aPk5JcT-Q", "${video1_id}", "${video2_id}", "${video3_id}", "${video4_id}", "${video5_id}"];
+  const videoIds = ["k7aPk5JcT-Q", "${video1_id}", "${video2_id}", "${video3_id}", "${video4_id}", "${video5_id}"]
+      .map(v => {
+        if (templateWasNotSubstituted(v)) {
+          return "k7aPk5JcT-Q";
+        } else {
+          return v;
+        }
+      });
   const questions = ["The person drinks [MASK] at the bar.", "${question1}", "${question2}", "${question3}",
     "${question4}", "${question5}"]
+      .map((q, i) => {
+        if (templateWasNotSubstituted(q)) {
+          return "This is the preview of [MASK] " + i + ".";
+        } else {
+          return q;
+        }
+      })
       .map(q => {
         const maskPosition = q.indexOf("[MASK]");
         console.assert(maskPosition !== -1 && maskPosition === q.lastIndexOf("[MASK]"))
@@ -302,9 +356,23 @@
           `<input type="text" class="form-control answer-input" id="answer-input-${i}" name="answer-input-${i}"
           placeholder="type an answer and hit Enter" ${i === 0 ? "disabled" : ""}>`));
   const startTimes = ["0", "${video1_start_time}", "${video2_start_time}", "${video3_start_time}",
-    "${video4_start_time}", "${video5_start_time}"].map(parseFloat).map(Math.round);
+    "${video4_start_time}", "${video5_start_time}"]
+      .map(q => {
+        if (templateWasNotSubstituted(q)) {
+          return "0";
+        } else {
+          return q;
+        }
+      }).map(parseFloat).map(Math.round);
   const endTimes = ["10", "${video1_end_time}", "${video2_end_time}", "${video3_end_time}",
-    "${video4_end_time}", "${video5_end_time}"].map(parseFloat).map(Math.round);
+    "${video4_end_time}", "${video5_end_time}"]
+      .map(q => {
+        if (templateWasNotSubstituted(q)) {
+          return "10";
+        } else {
+          return q;
+        }
+      }).map(parseFloat).map(Math.round);
 
   console.assert(videoIds.length === questions.length && videoIds.length === startTimes.length
       && videoIds.length === endTimes.length);
@@ -317,13 +385,18 @@
   const videoSpeedIndices = Array(videoIds.length).fill(speeds.findIndex(x => x === 1));
   let players = [];
 
+  function templateWasNotSubstituted(s) {
+    return s.startsWith("${") && s.endsWith("}");
+  }
+
   // From https://stackoverflow.com/a/6234804/1165181
   function escapeHtml(unsafe) {
     return unsafe
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
+        // Use single quotes as AMT expands the double quote escaping and gives a syntax error otherwise:
+        .replace(/"/g, '&quot;')
         .replace(/'/g, "&#039;");
   }
 
@@ -574,6 +647,7 @@
       createAnswerElement(i, answerCount + 1, answer, isEnabled).appendTo(`#answers-${i}`);
       $input.val("");
       checkValidationAlerts(i);
+      showInputValidity($input, true);  // In case it's entering an answer after having pressed Submit.
     } else {
       showInputValidity($input, false);
     }
