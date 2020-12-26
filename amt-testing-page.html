@@ -51,19 +51,25 @@
     xhr.send();
   }
 
-  function loadAndFillTemplatePage(templatePagePath, dataPath) {
-    getFileContent(templatePagePath, content => {
+  function loadAndFillTemplatePage(templatePagePath, dataPath, dataRow) {
+    getFileContent(templatePagePath, templatePageString => {
       Papa.parse(dataPath, {
         download: true,
         header: true,
         skipEmptyLines: true,
         error: alert,
-        complete: result => loadPageStringInIframe(fillTemplate(content, result.data[0])),
+        complete: result => {
+          if (0 <= dataRow && dataRow < result.data.length) {
+            loadPageStringInIframe(fillTemplate(templatePageString, result.data[dataRow]));
+          } else {
+            loadFormPage(dataRow, "Invalid row number to load.");
+          }
+        },
       });
     });
   }
 
-  function loadFormPage(dataPath) {
+  function loadFormPage(dataRow, errorMessage = "") {
     document.body.innerHTML = `
         <h1>Task Preview like in Amazon Mechanical Turk (AMT)</h1>
         <p>Preview your AMT task web page like the workers do.</p>
@@ -74,9 +80,14 @@
           </div>
           <div>
             <label for="dataPath">CSV input file (optional):</label>
-            <input type="file" id="dataPath" name="dataPath" value="${dataPath}">
+            <input type="file" id="dataPath" name="dataPath">
+          </div>
+          <div>
+            <label for="dataPath">CSV input file row to load (0-based; w/o including the header; optional):</label>
+            <input type="number" id="dataRow" name="dataRow" value="${dataRow}" min="0">
           </div>
           <input type="submit">
+          <p style="color: red">${errorMessage}</p>
         </form>`;
   }
 
@@ -84,11 +95,12 @@
     const urlParams = new URLSearchParams(window.location.search);
     const templatePagePath = urlParams.get("templatePagePath");
     const dataPath = urlParams.get("dataPath");
+    const dataRow = urlParams.get("dataRow") || 0;
 
     if (templatePagePath) {
-      loadAndFillTemplatePage(templatePagePath, dataPath);
+      loadAndFillTemplatePage(templatePagePath, dataPath, dataRow);
     } else {
-      loadFormPage(dataPath);
+      loadFormPage(dataRow);
     }
   }
 
