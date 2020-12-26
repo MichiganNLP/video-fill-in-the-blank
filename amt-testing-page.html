@@ -51,6 +51,11 @@
     xhr.send();
   }
 
+  function getFields(templatePageString) {
+    // RegEx based on what I'm sure that matches. It may be more general.
+    return Array.from(templatePageString.matchAll(/\${([\w ?+]+)}/g), m => m[1]);
+  }
+
   function loadAndFillTemplatePage(templatePagePath, dataPath, dataRow) {
     getFileContent(templatePagePath, templatePageString => {
       Papa.parse(dataPath, {
@@ -60,7 +65,27 @@
         error: alert,
         complete: result => {
           if (0 <= dataRow && dataRow < result.data.length) {
-            loadPageStringInIframe(fillTemplate(templatePageString, result.data[dataRow]));
+            const substitutions = result.data[dataRow];
+
+            const fields = getFields(templatePageString);
+            const fieldSet = new Set(fields);
+            const providedFields = Object.keys(substitutions);
+            const providedFieldSet = new Set(providedFields);
+
+            const extraFields = providedFields.filter(f => !fieldSet.has(f));
+            if (extraFields.length) {
+              console.warn(
+                  `The following headers are present in the CSV file but not in the template page: ${extraFields}`);
+            }
+
+            const missingFields = fields.filter(f => !providedFieldSet.has(f));
+            if (missingFields.length) {
+              loadFormPage(dataRow,
+                  "The following fields are present in the template page but are missing from the CSV file: "
+                  + missingFields);
+            } else {
+              loadPageStringInIframe(fillTemplate(templatePageString, substitutions));
+            }
           } else {
             loadFormPage(dataRow, "Invalid row number to load.");
           }
