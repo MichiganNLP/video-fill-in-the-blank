@@ -30,43 +30,66 @@
         crossorigin="anonymous"></script>
 <script type="text/javascript">
   function fillTemplate(templatePageString, substitutions) {
-    return Object.entries(substitutions).reduce((content, [k, v]) => content.replaceAll(`\${${k}}`, v),
-        templatePageString);
+    return Object.entries(substitutions).reduce((t, [k, v]) => t.replaceAll(`\${${k}}`, v), templatePageString);
   }
 
-  function loadPageString(pageString) {
+  function loadPageStringInIframe(pageString) {
     const doc = document.getElementsByTagName("iframe")[0].contentWindow.document;
     doc.open();
     doc.write(pageString);
     doc.close();
   }
 
-  function loadAndFillTemplatePageFromSubstitutions(templatePagePath, substitutions) {
+  function getFileContent(path, onSuccess) {
     const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = () => {
       if (xhr.readyState === XMLHttpRequest.DONE) {
-        loadPageString(fillTemplate(xhr.responseText, substitutions));
+        onSuccess(xhr.responseText);
       }
     };
-    xhr.open("GET", templatePagePath);
+    xhr.open("GET", path);
     xhr.send();
   }
 
   function loadAndFillTemplatePage(templatePagePath, dataPath) {
-    Papa.parse(dataPath, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      error: alert,
-      complete: result => loadAndFillTemplatePageFromSubstitutions(templatePagePath, result.data[0]),
+    getFileContent(templatePagePath, content => {
+      Papa.parse(dataPath, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        error: alert,
+        complete: result => loadPageStringInIframe(fillTemplate(content, result.data[0])),
+      });
     });
+  }
+
+  function loadFormPage(dataPath) {
+    document.body.innerHTML = `
+        <h1>Task Preview like in Amazon Mechanical Turk (AMT)</h1>
+        <p>Preview your AMT task web page like the workers do.</p>
+        <form>
+          <div>
+            <label for="templatePagePath">Template page file:</label>
+            <input type="file" id="templatePagePath" name="templatePagePath" required>
+          </div>
+          <div>
+            <label for="dataPath">CSV input file (optional):</label>
+            <input type="file" id="dataPath" name="dataPath" value="${dataPath}">
+          </div>
+          <input type="submit">
+        </form>`;
   }
 
   function onDomContentLoaded() {
     const urlParams = new URLSearchParams(window.location.search);
-    const templatePagePath = urlParams.get("templatePagePath") || "multi-video-one-by-one.html";
-    const dataPath = urlParams.get("dataPath") || "VATEX-first-batch-val-1-10.csv";
-    loadAndFillTemplatePage(templatePagePath, dataPath);
+    const templatePagePath = urlParams.get("templatePagePath");
+    const dataPath = urlParams.get("dataPath");
+
+    if (templatePagePath) {
+      loadAndFillTemplatePage(templatePagePath, dataPath);
+    } else {
+      loadFormPage(dataPath);
+    }
   }
 
   function main() {
