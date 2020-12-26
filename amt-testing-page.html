@@ -29,17 +29,23 @@
         integrity="sha512-rKFvwjvE4liWPlFnvH4ZhRDfNZ9FOpdkD/BU5gAIA3VS3vOQrQ5BjKgbO3kxebKhHdHcNUHLqxQYSoxee9UwgA=="
         crossorigin="anonymous"></script>
 <script type="text/javascript">
-  function loadTemplatePageFromSubstitutions(templatePagePath, substitutions) {
+  function fillTemplate(templatePageString, substitutions) {
+    return Object.entries(substitutions).reduce((content, [k, v]) => content.replaceAll(`\${${k}}`, v),
+        templatePageString);
+  }
+
+  function loadPageString(pageString) {
+    const doc = document.getElementsByTagName("iframe")[0].contentWindow.document;
+    doc.open();
+    doc.write(pageString);
+    doc.close();
+  }
+
+  function loadAndFillTemplatePageFromSubstitutions(templatePagePath, substitutions) {
     const xhr = new XMLHttpRequest();
     xhr.onreadystatechange = () => {
       if (xhr.readyState === XMLHttpRequest.DONE) {
-        const htmlContent = Object.entries(substitutions).reduce((content, [k, v]) => content.replaceAll(`\${${k}}`, v),
-            xhr.responseText);
-
-        const doc = document.getElementsByTagName("iframe")[0].contentWindow.document;
-        doc.open();
-        doc.write(htmlContent);
-        doc.close();
+        loadPageString(fillTemplate(xhr.responseText, substitutions));
       }
     };
     xhr.open("GET", templatePagePath);
@@ -52,7 +58,7 @@
       header: true,
       skipEmptyLines: true,
       error: alert,
-      complete: result => loadTemplatePageFromSubstitutions(templatePagePath, result.data[0]),
+      complete: result => loadAndFillTemplatePageFromSubstitutions(templatePagePath, result.data[0]),
     });
   }
 
