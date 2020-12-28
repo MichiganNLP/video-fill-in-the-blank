@@ -16,7 +16,7 @@ RE_ANSWER_INPUT_KEY = re.compile(r"^(?:in-answer-box|answer-input-)(?P<question_
 
 
 def format_answer(answer: str) -> str:
-    return answer.strip().lower().replace(r"  ", " ")
+    return answer.strip().lower().replace("  ", " ")
 
 
 def order_worker_answers_by_question(answers: Mapping[str, str]) -> Sequence[Sequence[str]]:
