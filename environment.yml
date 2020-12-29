@@ -9,6 +9,7 @@ dependencies:
     # There are some non-popular glibc packages available in Anaconda, but Python needs to be linked to it as well.
     # This is cumbersome, so we just use pip:
     - transformers==4.1.1
+    - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.2.0/en_core_web_sm-2.2.0.tar.gz#egg=en_core_web_sm
   - boto3=1.16.29
   - botocore=1.19.29
   - cudatoolkit=11.0.221
