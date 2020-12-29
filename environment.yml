@@ -25,4 +25,3 @@ dependencies:
   - conda-forge::tensorboard=2.4.0
   - torchvision=0.8.2
   - tqdm=4.54.0
-  - spacy=2.3.5
