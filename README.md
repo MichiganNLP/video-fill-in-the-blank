@@ -11,13 +11,11 @@ dependencies:
   - cudnn==...
 ```
 
-With Conda:
+With Conda installed:
 
 ```bash
 conda env create
 conda activate lqam
-# FIXME: are we still using the following?
-python -c "import nltk; nltk.download('averaged_perceptron_tagger')"
 ```
 
 Put the data under `data/`. For example, in Great Lakes:
