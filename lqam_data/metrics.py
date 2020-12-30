@@ -1,5 +1,6 @@
-from collections import defaultdict
 from typing import Iterable, Iterator, Optional, Sequence, Set, Tuple
+
+import numpy as np
 
 from lqam_data import normalize_answer
 
@@ -27,7 +28,7 @@ def compute_token_level_f1_many(answer: Iterator[str], ground_truths: Iterator[I
 
 def _compute_metrics_once(
         answers: Sequence[Iterable[str]], std_answer: str, ignored_workers: Optional[Sequence[bool]] = None
-) -> Tuple[Sequence[float], Sequence[float], Sequence[float], Sequence[float], Tuple[float, float, float, float]]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float]]:
     ignored_workers = ignored_workers or [False for _ in answers]
 
     ff1s = []
@@ -75,12 +76,13 @@ def _compute_metrics_once(
     std_recall = sum(answer == std_answer for answer in answers_flat) / len(answers_flat)
     std_decision_score = compute_decision_score(std_precision, std_recall)
 
-    return ff1s, precisions, recalls, decision_scores, (std_ff1, std_precision, std_recall, std_decision_score)
+    return np.stack(ff1s), np.stack(precisions), np.stack(recalls), np.stack(decision_scores), (
+        std_ff1, std_precision, std_recall, std_decision_score)
 
 
 def compute_metrics(
         answers: Iterator[Iterable[str]], std_answer: str, ignore_zero_scores: bool = False
-) -> Tuple[Sequence[float], Sequence[float], Sequence[float], Sequence[float], Tuple[float, float, float, float]]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float]]:
     """Computes the metrics for an instance.
 
     If `ignore_zero_scores`, then it computes the scores again but ignores the workers whose decision score is 0.
