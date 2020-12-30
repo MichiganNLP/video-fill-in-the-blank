@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+import argparse
 import sys
 
 import pandas as pd
@@ -7,8 +8,16 @@ import pandas as pd
 from lqam_data import format_answer, hits_to_instances, parse_hits
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("mturk_results_path", metavar="MTURK_RESULTS_FILE", default="-")
+    return parser.parse_args()
+
+
 def main() -> None:
-    input_ = sys.argv[1] if len(sys.argv) > 1 else sys.stdin
+    args = parse_args()
+
+    input_ = sys.stdin if args.mturk_results_path == "-" else args.mturk_results_path
     hits = parse_hits(input_)
     instances = hits_to_instances(hits)
 
@@ -25,7 +34,6 @@ def main() -> None:
         with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0):
             formatted_question_answers = df.to_string(index=False)
 
-        # This YouTube URL format (embed) supports specifying an end time.
         print(f"""\
 ID: {id_}
 Question: {instance["question"].replace("[MASK]", "_____")}

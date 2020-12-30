@@ -1,4 +1,3 @@
-import itertools
 import json
 import operator
 import re
@@ -78,6 +77,7 @@ def hits_to_instances(hits: Mapping[str, Mapping[str, Any]]) -> Mapping[str, Mut
             "video_id": hit[f"Input.video{i}_id"],
             "start_time": hit[f"Input.video{i}_start_time"],
             "end_time": hit[f"Input.video{i}_end_time"],
+            # This YouTube URL format (embed) supports specifying an end time.
             "video_url": f"https://www.youtube.com/embed/{hit[f'Input.video{i}_id']}?start="
                          f"{hit[f'Input.video{i}_start_time']}&end={hit[f'Input.video{i}_end_time']}",
             "label": hit[f"Input.label{i}"],
