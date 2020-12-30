@@ -36,6 +36,8 @@ jobs:
         key: ${{ runner.os }}-huggingface-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-huggingface-
+    - name: Download en_core_web_sm from spacy
+      run: python -m spacy download en_core_web_sm
     - name: Run tests
       run: python -m unittest discover .
     - name: Evaluate text-only T5 baseline
