@@ -11,5 +11,5 @@ See [LifeQA-methodology's setup](https://github.com/MichiganNLP/LifeQA-methodolo
 Run:
 
 ```bash
-./scripts/visualize_mturk_results.py < INPUT_CSV_FILE > OUTPUT_TXT_FILE
+./scripts/visualize_annotation_results.py < INPUT_CSV_FILE > OUTPUT_TXT_FILE
 ```
