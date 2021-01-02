@@ -44,7 +44,7 @@ def compute_noun_phrase_indices(nlp, generated_answers: List[str], batch_size: i
         noun_chunks_mask[start_index] = True
         for seq_idx in range(num_return_sequences):
             curr_index = start_index + seq_idx
-            if generated_answers[curr_index] in set(nlp(generated_answers[curr_index]).noun_chunks):
+            if generated_answers[curr_index] in set([x.text for x in nlp(generated_answers[curr_index]).noun_chunks]):
                 noun_chunks_mask[start_index] = False
                 noun_chunks_mask[curr_index] = True
                 break
