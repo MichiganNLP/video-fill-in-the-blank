@@ -24,7 +24,7 @@ def compute_label_prob(logits: torch.Tensor, label_ids: torch.Tensor,
     return probs_label_ids.prod(dim=-1)
 
 
-def compute_noun_phrase_mask(nlp, generated_answers: List[str], batch_size: int, num_return_sequences: int, device):
+def compute_noun_phrase_indices(nlp, generated_answers: List[str], batch_size: int, num_return_sequences: int, device):
     """Computes the boolean mask for returned sequences for each question.
     
     :param nlp: Language object from spacy
@@ -33,17 +33,19 @@ def compute_noun_phrase_mask(nlp, generated_answers: List[str], batch_size: int,
     :param num_return_sequences: type int
     :param device: device of tensor
     
-    :return: boolean mask with shape (batch_size, num_return_sequences)
+    :return: noun phrase indices with shape (batch_size, )
     """
     noun_chunks_mask = torch.zeros(batch_size * num_return_sequences, dtype=torch.bool, device=device)
     # each instance, if all sequences are not noun phrases,
     # then we mark the first sequence as the only answer
     for batch_idx in range(batch_size):
-        flag = False
+        start_index = batch_idx * num_return_sequences
+        # mark the first answer as the chosen one
+        noun_chunks_mask[start_index] = True
         for seq_idx in range(num_return_sequences):
-            if next(nlp(generated_answers[batch_idx * num_return_sequences + seq_idx]).noun_chunks, None):
-                noun_chunks_mask[batch_idx * num_return_sequences + seq_idx] = True
-                flag = True
-        if not flag:
-            noun_chunks_mask[batch_idx * num_return_sequences] = True
-    return noun_chunks_mask
+            curr_index = start_index + seq_idx
+            if generated_answers[curr_index] in set(nlp(generated_answers[curr_index]).noun_chunks):
+                noun_chunks_mask[start_index] = False
+                noun_chunks_mask[curr_index] = True
+                break
+    return noun_chunks_mask.nonzero(as_tuple=False).squeeze()
