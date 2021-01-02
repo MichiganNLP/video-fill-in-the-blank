@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import Any, Mapping, MutableMapping, Sequence
 
 import pandas as pd
+import spacy.tokens
 from pandas._typing import FilePathOrBuffer  # noqa
 
 QUESTIONS_PER_HIT = 5
@@ -14,22 +15,10 @@ QUESTIONS_PER_HIT = 5
 RE_ANSWER_KEY = re.compile(r"^answer-?(?P<question_index>\d+)-(?P<answer_index>\d+)$")
 RE_ANSWER_INPUT_KEY = re.compile(r"^(?:in-answer-box|answer-input-)(?P<question_index>\d+)$")
 
-RE_A_AN_THE = re.compile(r"\b(?:an?|the)\b")
-RE_PUNCTUATION = re.compile(r"[.,/#!$%^&*;:{}=\-_`~()]")  # TODO: change for something more native? but also update js
-RE_MULTIPLE_SPACES = re.compile(r"\s{2,}")
-
 
 def format_answer(answer: str) -> str:
     """Useful when wanting to print the raw worker answers, but disregarding casing and spacing."""
     return answer.strip().lower().replace("  ", " ")
-
-
-def normalize_answer(answer: str) -> str:
-    """Should correspond to the JavaScript function `normalizeAnswerToLookForRepetitions`.
-
-    Useful when looking for repetitions or computing measures.
-    """
-    return RE_MULTIPLE_SPACES.sub(" ", RE_A_AN_THE.sub("", RE_PUNCTUATION.sub("", answer.lower()))).strip()
 
 
 def order_worker_answers_by_question(worker_answers: Mapping[str, str]) -> Sequence[Sequence[str]]:
@@ -86,3 +75,14 @@ def hits_to_instances(hits: Mapping[str, Mapping[str, Any]]) -> Mapping[str, Mut
         for hit_id, hit in hits.items()
         for i in range(1, hit["question_count"] + 1)
     }
+
+
+def is_noun_phrase_like(spacy_doc: spacy.tokens.Doc) -> bool:
+    """Checks that there's exactly one sentence, and that it's a Noun Phrase or one without a specifier."""
+    sentences_iter = iter(spacy_doc.sents)
+    sent = next(sentences_iter, None)
+    return sent and not next(sentences_iter, None) and (
+            (root := sent.root).pos_ in {"NOUN", "PRON", "PROPN"}
+            or root.tag_ in {"VBG", "VBN"}  # VBN, e.g.: "the objects being applied".
+            or sent[0].tag_.startswith("W"))  # We also admit phrases that start with a wh-word.
+    # E.g., "They explain [how to make a cake]."

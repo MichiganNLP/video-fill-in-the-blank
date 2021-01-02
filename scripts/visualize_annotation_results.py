@@ -6,7 +6,7 @@ import sys
 import pandas as pd
 
 from lqam_data import format_answer, hits_to_instances, parse_hits
-from lqam_data.metrics import compute_metrics
+from lqam_data.metrics import compute_answer_level_metrics, compute_metrics
 
 
 def parse_args() -> argparse.Namespace:
@@ -38,25 +38,36 @@ def main() -> None:
         df.columns = [f"Ans. {j + 1}" for j in range(len(df.columns))]
         df[df.isna()] = ""
 
+        pd.options.display.float_format = lambda x: f"{x: >3.0f}"
+
         if args.compute_metrics:
             ff1s, precisions, recalls, decision_scores, (
-                std_ff1, std_precision, std_recall, std_decision_score) = compute_metrics(instance["answers"].values(),
-                                                                                          instance["label"],
-                                                                                          args.ignore_zero_scores)
+                std_ff1, std_precision, std_recall, std_decision_score), ignored_workers = compute_metrics(
+                instance["answers"].values(), instance["label"], args.ignore_zero_scores)
             df.insert(0, "FF1", ff1s * 100)
             df.insert(1, "Pre", precisions * 100)
             df.insert(2, "Rec", recalls * 100)
             df.insert(3, "Dec", decision_scores * 100)
-            pd.options.display.float_format = lambda x: f"{x: >3.0f}"
 
             aggregated_metrics_str = (f"\nAvg.: FF1 {ff1s.mean() * 100:.0f}, Pre {precisions.mean() * 100:.0f}, Rec"
                                       f" {recalls.mean() * 100:.0f}, Dec {decision_scores.mean() * 100:.0f}")
 
             std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f}, Pre {std_precision * 100:.0f}, Rec"
                                       f" {std_recall * 100:.0f}, Dec {std_decision_score * 100:.0f})")
+
+            answer_level_metrics = compute_answer_level_metrics(instance["answers"], instance["label"], ignored_workers)
+
+            answer_df = pd.DataFrame(((w, a, m["f1"] * 100, m["em"], m["np"])
+                                      for w, aa in answer_level_metrics.items()
+                                      for a, m in aa.items()),
+                                     columns=["Worker ID", "Answer", "F1", "EM", "NP?"])
+
+            with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0):
+                answer_level_metrics_str = f"\nAnswer-level metrics:\n{answer_df.to_string(index=False)}"
         else:
-            aggregated_metrics_str = ""
             std_answer_metrics_str = ""
+            aggregated_metrics_str = ""
+            answer_level_metrics_str = ""
 
         # Convert the index into a column. Otherwise, the index name and column names are output in different lines.
         df = df.reset_index()
@@ -70,7 +81,7 @@ Question: {instance["question"].replace("[MASK]", "_____")}
 Video URL: {instance["video_url"]}
 Std. answer: {instance[f"label"]}{std_answer_metrics_str}
 Worker answers:
-{formatted_question_answers}{aggregated_metrics_str}
+{formatted_question_answers}{aggregated_metrics_str}{answer_level_metrics_str}
 """)
 
     print()
@@ -88,6 +99,8 @@ Worker answers:
             print(f"{worker_id:>14}: {comment}")
 
         print()
+
+    # TODO: add worker-level stats
 
 
 if __name__ == "__main__":
