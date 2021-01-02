@@ -7,7 +7,7 @@ from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
 from lqam.data_module import TYPE_BATCH
-from lqam.decoder_utils import compute_label_prob, compute_noun_phrase_mask
+from lqam.decoder_utils import compute_label_prob, compute_noun_phrase_indices
 from lqam.metrics import AlmostExactMatchAccuracy
 from lqam.t5_format_processing import compute_first_blank
 
@@ -107,34 +107,19 @@ class T5FillerModel(pl.LightningModule):
         if self.only_noun_phrases:
             num_return_sequences = self.generate_kwargs.get("num_return_sequences", 1)
             batch_size = len(generated) // num_return_sequences
+            assert len(generated) % num_return_sequences == 0
             
-            noun_chunks_mask = compute_noun_phrase_mask(self.nlp, generated, batch_size, num_return_sequences,
-                                                        generated_ids.device)
-            pred_prob = torch.empty(batch_size * num_return_sequences,
-                                    dtype=torch.float32,
-                                    device=generated_ids.device)
-
-            for batch_idx in range(num_return_sequences):
-                start, end = batch_idx * batch_size, batch_idx * batch_size + batch_size
-                noun_generated_output = self(masked_caption_ids,
-                                             clean_generated_ids[start:end],
-                                             **model_kwargs)
-                pred_prob[start:end] = compute_label_prob(noun_generated_output["logits"],
-                                                          clean_generated_ids[start:end],
-                                                          pad_token_id=self.t5_pretrained_model.config.pad_token_id,
-                                                          eos_token_id=self.t5_pretrained_model.config.eos_token_id)
-
-            masked_prob = noun_chunks_mask * pred_prob
-            max_prob_indices = masked_prob.view(batch_size, num_return_sequences).argmax(dim=1)
-            final_indices = max_prob_indices + torch.arange(batch_size, device=generated_ids.device) * num_return_sequences
+            noun_chunks_indices = compute_noun_phrase_indices(self.nlp, generated, batch_size, num_return_sequences,
+                                                              generated_ids.device)
+            # filter out unqualified sequences, and leave one answer for each instance
+            clean_generated_ids = clean_generated_ids[noun_chunks_indices]
             # extract the answers that are either noun phrases with the highest prob or the first answer
-            generated = [generated[i.item()] for i in final_indices]
-            generated_prob = pred_prob[final_indices]
-        else:
-            generated_output = self(masked_caption_ids, clean_generated_ids, **model_kwargs)
-            generated_prob = compute_label_prob(generated_output["logits"], clean_generated_ids,
-                                                pad_token_id=self.t5_pretrained_model.config.pad_token_id,
-                                                eos_token_id=self.t5_pretrained_model.config.eos_token_id)
+            generated = [generated[i.item()] for i in noun_chunks_indices]
+            
+        generated_output = self(masked_caption_ids, clean_generated_ids, **model_kwargs)
+        generated_prob = compute_label_prob(generated_output["logits"], clean_generated_ids,
+                                            pad_token_id=self.t5_pretrained_model.config.pad_token_id,
+                                            eos_token_id=self.t5_pretrained_model.config.eos_token_id)
 
         self.write_prediction("generated", generated)
         self.write_prediction("generated_prob", generated_prob)
