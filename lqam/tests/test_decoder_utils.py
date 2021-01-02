@@ -12,6 +12,6 @@ class TestComputeNounPhraseMask(TestCase):
                    'sad', 'happy',
                    'a cat and', 'a dog']
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        mask = compute_noun_phrase_indices(nlp, phrases, batch_size=2, num_return_sequences=2, device=device)
-        answer = [2, 5]
+        mask = compute_noun_phrase_indices(nlp, phrases, batch_size=3, num_return_sequences=2, device=device)
+        answer = [0, 2, 5]
         self.assertListEqual(mask.tolist(), answer)
