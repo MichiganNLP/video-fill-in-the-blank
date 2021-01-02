@@ -11,5 +11,5 @@ See [LifeQA-methodology's setup](https://github.com/MichiganNLP/LifeQA-methodolo
 Run:
 
 ```bash
-PYTHONPATH=. ./scripts/visualize_annotation_results.py --show-metrics < INPUT_CSV_FILE > OUTPUT_TXT_FILE
+PYTHONPATH=. ./scripts/analyze_annotation_results.py --show-metrics < INPUT_CSV_FILE > OUTPUT_TXT_FILE
 ```

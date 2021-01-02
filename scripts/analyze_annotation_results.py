@@ -2,6 +2,7 @@
 # coding: utf-8
 import argparse
 import sys
+from collections import defaultdict
 
 import pandas as pd
 
@@ -28,6 +29,8 @@ def main() -> None:
     input_ = sys.stdin if args.annotation_results_path == "-" else args.annotation_results_path
     hits = parse_hits(input_)
     instances = hits_to_instances(hits)
+
+    worker_stats = defaultdict(lambda: defaultdict(int))
 
     for id_, instance in instances.items():
         instance["answers"] = {worker_id: [format_answer(answer) for answer in answers]
@@ -56,6 +59,13 @@ def main() -> None:
                                       f" {std_recall * 100:.0f}, Dec {std_decision_score * 100:.0f})")
 
             answer_level_metrics = compute_answer_level_metrics(instance["answers"], instance["label"], ignored_workers)
+
+            for worker_id, answer_stats in answer_level_metrics.items():
+                worker_stats[worker_id]["questions"] += 1
+                worker_stats[worker_id]["answers"] += len(answer_stats)
+                worker_stats[worker_id]["total_f1"] += sum(m["f1"] for m in answer_stats.values())
+                worker_stats[worker_id]["total_em"] += sum(m["em"] for m in answer_stats.values())
+                worker_stats[worker_id]["total_np"] += sum(m["np"] for m in answer_stats.values())
 
             answer_df = pd.DataFrame(((w, a, m["f1"] * 100, m["em"], m["np"])
                                       for w, aa in answer_level_metrics.items()
@@ -100,7 +110,30 @@ Worker answers:
 
         print()
 
-    # TODO: add worker-level stats
+    if worker_stats:
+        print()
+        print("*** Worker-level metrics ***")
+        print()
+
+        summary_worker_stats = {}
+        for worker_id in worker_stats:
+            summary_worker_stats[worker_id] = {
+                "Q": worker_stats[worker_id]["questions"],
+                "A/Q": worker_stats[worker_id]["answers"] / worker_stats[worker_id]["questions"],
+                "F1": 100 * worker_stats[worker_id]["total_f1"] / worker_stats[worker_id]["answers"],
+                "EM": 100 * worker_stats[worker_id]["total_em"] / worker_stats[worker_id]["answers"],
+                "NP?": 100 * worker_stats[worker_id]["total_np"] / worker_stats[worker_id]["answers"],
+            }
+
+        worker_df = pd.DataFrame.from_dict(summary_worker_stats, orient="index").sort_values(["NP?", "EM", "F1"],
+                                                                                             ascending=False)
+        worker_df.index.name = "Worker ID"
+        worker_df = worker_df.reset_index()
+
+        with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0):
+            print(worker_df.to_string(index=False))
+
+    # TODO: worker info per question.
 
 
 if __name__ == "__main__":
