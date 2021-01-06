@@ -18,8 +18,8 @@ class NewEncoder(nn.Module):
 class T5AndI3D(T5ForConditionalGeneration):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.encoder = NewEncoder(self.encoder)
         self.text_embedding = self.encoder.get_input_embeddings()
+        self.encoder = NewEncoder(self.encoder)
         self.video_embedding = nn.Linear(self.hparams.visual_size, self.text_embedding.embedding_dim)
 
     @overrides
