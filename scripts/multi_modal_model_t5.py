@@ -15,15 +15,12 @@ from pytorch_lightning.core import LightningModule
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
-<<<<<<< HEAD:multi_modal_model_t5.py
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
-=======
 from transformers import AdamW, T5ForConditionalGeneration, T5Tokenizer, get_linear_schedule_with_warmup
 
 from lqam.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.vatex import VatexDataset
->>>>>>> origin/text-only-reorg:scripts/multi_modal_model_t5.py
 
 FRAMEWORK = "pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -45,7 +42,6 @@ class VATEXLightningModel(LightningModule):
         self.encoder = T5ForConditionalGeneration.from_pretrained(hparams.transformer_model_name)
         self.text_embedding = self.encoder.get_input_embeddings()
         self.video_embedding = nn.Linear(self.hparams.visual_size, self.text_embedding.embedding_dim)
-<<<<<<< HEAD:multi_modal_model_t5.py
     
     def compute_mask_values(self, generated_ids: torch.Tensor, tokenizer: T5Tokenizer) -> Iterable[str]:
         pattern = r"<extra_id_0>(.*)<extra_id_1>"
@@ -58,21 +54,6 @@ class VATEXLightningModel(LightningModule):
             else:
                 print(tokens)
                 out.append("[NO VALID GENERATION]")
-=======
-        self.RE_EXTRA_ID = re.compile(r"<extra_id_\d+>")
-
-    # From https://stackoverflow.com/a/5434936/1165181
-    def pairwise(self, iterable: Iterable[T]) -> Iterable[Tuple[T, T]]:
-        "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-        a, b = itertools.tee(iterable)
-        next(b, None)
-        return zip(a, b)
-
-    def compute_mask_values(self, generated_ids: torch.Tensor, tokenizer: T5Tokenizer) -> Mapping[str, Iterable[str]]:
-        tokens = self.tokenizer.convert_ids_to_tokens(generated_ids)
-        extra_id_indices = {token: i for i, token in enumerate(tokens) if self.RE_EXTRA_ID.match(token)}
-        extra_id_indices["</s>"] = len(tokens)
->>>>>>> origin/text-only-reorg:scripts/multi_modal_model_t5.py
 
         return out
 
@@ -94,11 +75,7 @@ class VATEXLightningModel(LightningModule):
             embedding = torch.cat([text_embedding, visual_embedding], dim=1)
         
         if self.training:
-<<<<<<< HEAD:multi_modal_model_t5.py
             return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels, return_dict = True)
-=======
-            return self.encoder(inputs_embeds=embedding, attention_mask=attention_mask, labels=labels)
->>>>>>> origin/text-only-reorg:scripts/multi_modal_model_t5.py
         else:
             generated_ids = self.greedy_search(embedding, attention_mask)
             return self.compute_mask_values(generated_ids, self.tokenizer)
@@ -170,13 +147,8 @@ class VATEXLightningModel(LightningModule):
 
     def _average_metrics(self, step_outputs: Sequence[TYPE_STEP_OUTPUT], key_prefix: str = "") -> TYPE_STEP_OUTPUT:
         metrics: TYPE_STEP_OUTPUT = {}
-<<<<<<< HEAD:multi_modal_model_t5.py
         loss_key = "loss"
         if  key_prefix == "":
-=======
-
-        if key_prefix == 'train_':
->>>>>>> origin/text-only-reorg:scripts/multi_modal_model_t5.py
             metric_names = {loss_key}
         else:
             metric_names = {"correct", "batch_size"}
@@ -244,14 +216,8 @@ class VATEXLightningModel(LightningModule):
                 total_video_len = 0
             if total_video_len > max_video_len:
                 max_video_len = total_video_len
-<<<<<<< HEAD:multi_modal_model_t5.py
         
         text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=label_list, padding=True, return_tensors="pt")
-=======
-
-        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features, tgt_texts=labels, padding=True,
-                                                          return_tensors="pt")
->>>>>>> origin/text-only-reorg:scripts/multi_modal_model_t5.py
         text_tensor = text_batch.input_ids
         text_attention_mask = text_batch.attention_mask
         labels = text_batch.labels
@@ -330,7 +296,6 @@ class VATEXLightningModel(LightningModule):
         parser.add_argument("--max-length", default=512, type=int, help="maxium input length")
         return parser
 
-<<<<<<< HEAD:multi_modal_model_t5.py
     def greedy_search(
         self,
         input_embeds: torch.LongTensor, # N * T * V
@@ -393,8 +358,6 @@ class VATEXLightningModel(LightningModule):
             cur_len = cur_len + 1
 
         return generated_ids
-=======
->>>>>>> origin/text-only-reorg:scripts/multi_modal_model_t5.py
 
 def _set_seed(seed: int) -> None:
     random.seed(seed)
