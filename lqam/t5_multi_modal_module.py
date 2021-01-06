@@ -9,7 +9,7 @@ class NewEncoder:
     def __init__(self, t5_stack: T5Stack) -> None:
         self.t5_stack = t5_stack
 
-​    def forward(self, inputs_embeds, *args, **kwargs):
+    def forward(self, inputs_embeds, *args, **kwargs):
         return self.t5_stack.forward(inputs_embeds=inputs_embeds, *args, **kwargs)
 
 
