@@ -1,5 +1,5 @@
 from transformers import T5ForConditionalGeneration
-from transformers.models.t5.modeling_t5 import T5Stack​
+from transformers.models.t5.modeling_t5 import T5Stack
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
