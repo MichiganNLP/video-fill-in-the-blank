@@ -2,10 +2,11 @@ from transformers import T5ForConditionalGeneration
 from transformers.models.t5.modeling_t5 import T5Stack
 import pytorch_lightning as pl
 import torch
+import torch.nn as nn
 from overrides import overrides
 from lqam.t5_module import T5FillerModel
 
-class NewEncoder:
+class NewEncoder(nn.Module):
     def __init__(self, t5_stack: T5Stack) -> None:
         self.t5_stack = t5_stack
 
