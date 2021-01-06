@@ -8,6 +8,7 @@ from lqam.t5_module import T5FillerModel
 
 class NewEncoder(nn.Module):
     def __init__(self, t5_stack: T5Stack) -> None:
+        super().__init__()
         self.t5_stack = t5_stack
 
     def forward(self, inputs_embeds, *args, **kwargs):
