@@ -3,7 +3,7 @@ from transformers.models.t5.modeling_t5 import T5Stack
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
-from t5_module import T5FillerModel
+from lqam.t5_module import T5FillerModel
 
 class NewEncoder:
     def __init__(self, t5_stack: T5Stack) -> None:
