@@ -34,7 +34,7 @@ class T5FillerModel(pl.LightningModule):
         self.only_noun_phrases = only_noun_phrases
         if only_noun_phrases:
             # Note `num_beams` is needed, otherwise the flag doesn't make sense.
-            self.nlp = spacy.load("en_core_web_sm")
+            self.SPACY_MODEL = spacy.load("en_core_web_lg")
             self.generate_kwargs.setdefault("num_return_sequences", self.generate_kwargs["num_beams"])
 
         self.all_token_ids = torch.arange(self.tokenizer.vocab_size)
@@ -109,8 +109,8 @@ class T5FillerModel(pl.LightningModule):
             batch_size = len(generated) // num_return_sequences
             assert len(generated) % num_return_sequences == 0
             
-            noun_chunks_indices = compute_noun_phrase_indices(self.nlp, generated, batch_size, num_return_sequences,
-                                                              generated_ids.device)
+            noun_chunks_indices = compute_noun_phrase_indices(self.SPACY_MODEL, generated, batch_size,
+                                                              num_return_sequences, generated_ids.device)
             # filter out unqualified sequences, and leave one answer for each instance
             clean_generated_ids = clean_generated_ids[noun_chunks_indices]
             # extract the answers that are either noun phrases with the highest prob or the first answer
