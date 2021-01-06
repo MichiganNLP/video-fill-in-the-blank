@@ -1,4 +1,4 @@
-from typing import Any, Iterable, Mapping, Optional
+from typing import Any, Iterable, Mapping, Optional, Sequence
 
 import pandas as pd
 import pytorch_lightning as pl
