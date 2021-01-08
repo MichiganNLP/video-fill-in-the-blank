@@ -18,17 +18,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--compute-metrics", action="store_true")
     parser.add_argument("--ignore-zero-scores", action="store_true")
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    assert not args.ignore_zero_scores or args.compute_metrics, "The flag --ignore-zero-scores needs the flag " \
+                                                                "--compute-metrics to be specified as well."
+
+    args.input = sys.stdin if args.annotation_results_path == "-" else args.annotation_results_path
+
+    return args
 
 
 def main() -> None:
     args = parse_args()
 
-    assert not args.ignore_zero_scores or args.compute_metrics, "The flag --ignore-zero-scores needs the flag " \
-                                                                "--compute-metrics to be specified as well."
-
-    input_ = sys.stdin if args.annotation_results_path == "-" else args.annotation_results_path
-    hits = parse_hits(input_)
+    hits = parse_hits(args.input)
     instances = hits_to_instances(hits)
 
     worker_stats = defaultdict(lambda: defaultdict(int))

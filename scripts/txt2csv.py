@@ -3,20 +3,9 @@
 """Usage: ./txt2csv.py INPUT_FILE > OUTPUT_FILE."""
 import csv
 import fileinput
-import itertools
 import sys
-from typing import Iterable, Iterator, Tuple, TypeVar
 
-T = TypeVar("T")
-
-
-def grouper(n: int, iterable: Iterable[T]) -> Iterator[Tuple[T, ...]]:
-    it = iter(iterable)
-    while True:
-        chunk = tuple(itertools.islice(it, n))
-        if not chunk:
-            return
-        yield chunk
+from lqam.util import grouper
 
 
 def main() -> None:
@@ -30,5 +19,5 @@ def main() -> None:
             csv_writer.writerow(meta)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
