@@ -619,7 +619,7 @@
         answer
             .toLowerCase()
             .replace(/[.,\/#!$%^&*;:{}=\-_`~()]/g, "")
-            .replace(/\ban?|the\b/g, "")
+            .replace(/\b(?:an?|the)\b/g, "")
     );
   }
 
