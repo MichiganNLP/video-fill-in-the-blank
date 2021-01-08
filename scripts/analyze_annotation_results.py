@@ -63,6 +63,7 @@ def main() -> None:
             for worker_id, answer_stats in answer_level_metrics.items():
                 worker_stats[worker_id]["questions"] += 1
                 worker_stats[worker_id]["answers"] += len(answer_stats)
+                worker_stats[worker_id]["total_ff1"] += next(iter(answer_stats.values()))["f1"]
                 worker_stats[worker_id]["total_f1"] += sum(m["f1"] for m in answer_stats.values())
                 worker_stats[worker_id]["total_em"] += sum(m["em"] for m in answer_stats.values())
                 worker_stats[worker_id]["total_np"] += sum(m["np"] for m in answer_stats.values())
@@ -120,6 +121,7 @@ Worker answers:
             summary_worker_stats[worker_id] = {
                 "Q": worker_stats[worker_id]["questions"],
                 "A/Q": worker_stats[worker_id]["answers"] / worker_stats[worker_id]["questions"],
+                "FF1": 100 * worker_stats[worker_id]["total_ff1"] / worker_stats[worker_id]["questions"],
                 "F1": 100 * worker_stats[worker_id]["total_f1"] / worker_stats[worker_id]["answers"],
                 "EM": 100 * worker_stats[worker_id]["total_em"] / worker_stats[worker_id]["answers"],
                 "NP?": 100 * worker_stats[worker_id]["total_np"] / worker_stats[worker_id]["answers"],
@@ -134,6 +136,7 @@ Worker answers:
             print(worker_df.to_string(index=False))
 
     # TODO: worker info per question.
+    # TODO: aggregated total stats
 
 
 if __name__ == "__main__":

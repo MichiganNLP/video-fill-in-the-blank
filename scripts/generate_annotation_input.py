@@ -34,7 +34,7 @@ def main():
             output_dict[f"video{i + 1}_end_time"].append(int(df.iloc[hit_indices[i]]["videoID"][-6:]))
             output_dict[f"question{i + 1}"].append(df.iloc[hit_indices[i]]["masked caption"].replace("<extra_id_0>",
                                                                                                      "[MASK]"))
-            output_dict[f"label{i + 1}"].append(df.iloc[hit_indices[i]]["label"])  # TODO: is it necessary?
+            output_dict[f"label{i + 1}"].append(df.iloc[hit_indices[i]]["label"])
 
     print(pd.DataFrame(output_dict).to_csv(index=False))
 
