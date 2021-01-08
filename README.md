@@ -6,6 +6,9 @@ This repository includes codes related to the LifeQA-MTurk tasks.
 
 See [LifeQA-methodology's setup](https://github.com/MichiganNLP/LifeQA-methodology/#setup).
 
+To execute any Python script under [`scripts/`](scripts), run it from the project root directory (where this file is)
+and prepend `PYTHONPATH=.` to the command execution (or do `export PYTHONPATH=$PWD` once per Bash session).
+
 ## Visualize the annotation results
 
 Run:
