@@ -4,6 +4,7 @@ import argparse
 import sys
 from collections import defaultdict
 
+import numpy as np
 import pandas as pd
 
 from lqam_data import format_answer, hits_to_instances, parse_hits
@@ -31,6 +32,8 @@ def main() -> None:
     instances = hits_to_instances(hits)
 
     worker_stats = defaultdict(lambda: defaultdict(int))
+
+    ff1s_list = []
 
     for id_, instance in instances.items():
         instance["answers"] = {worker_id: [format_answer(answer) for answer in answers]
@@ -75,6 +78,8 @@ def main() -> None:
 
             with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0):
                 answer_level_metrics_str = f"\nAnswer-level metrics:\n{answer_df.to_string(index=False)}"
+
+            ff1s_list.append(ff1s)
         else:
             std_answer_metrics_str = ""
             aggregated_metrics_str = ""
@@ -135,8 +140,23 @@ Worker answers:
         with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0):
             print(worker_df.to_string(index=False))
 
-    # TODO: worker info per question.
-    # TODO: aggregated total stats
+    if args.compute_metrics:
+        print()
+        print("*** Aggregated metrics ***")
+        print()
+
+        ff1s_matrix = np.stack(ff1s_list)
+
+        print(f"Question-level workers' first answer avg. F1 (FF1): {100 * ff1s_matrix.mean():.0f}%")
+
+        if worker_stats:
+            total_stats = {k: sum(w_stats[k] for w_stats in worker_stats.values())
+                           for k in next(iter(worker_stats.values()))}
+
+            print(f"Avg. answers per question: {total_stats['answers'] / total_stats['questions']:.2f}")
+            print(f"Answer-level avg. F1 Score: {100 * total_stats['total_f1'] / total_stats['answers']:.0f}%")
+            print(f"Answer-level avg. Exact Match (EM): {100 * total_stats['total_em'] / total_stats['answers']:.0f}%")
+            print(f"Answer-level avg. Noun Phrases (NP): {100 * total_stats['total_np'] / total_stats['answers']:.0f}%")
 
 
 if __name__ == "__main__":
