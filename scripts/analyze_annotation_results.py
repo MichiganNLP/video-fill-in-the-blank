@@ -7,8 +7,8 @@ from collections import defaultdict
 import numpy as np
 import pandas as pd
 
-from lqam_data import format_answer, hits_to_instances, parse_hits
-from lqam_data.metrics import compute_answer_level_metrics, compute_metrics
+from lqam.annotations import format_answer, hits_to_instances, parse_hits
+from lqam.metrics import compute_answer_level_metrics, compute_metrics
 
 
 def parse_args() -> argparse.Namespace:

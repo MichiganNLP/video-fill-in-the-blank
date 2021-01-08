@@ -5,7 +5,7 @@ from collections import defaultdict
 
 import pandas as pd
 
-from lqam_data import QUESTIONS_PER_HIT
+from lqam.annotations import QUESTIONS_PER_HIT
 
 NEEDED_COUNT = 10
 assert NEEDED_COUNT % QUESTIONS_PER_HIT == 0

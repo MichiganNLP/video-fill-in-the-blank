@@ -5,7 +5,7 @@ from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Set, Tu
 import numpy as np
 import spacy.tokens
 
-from lqam_data import is_noun_phrase_like
+from lqam import is_noun_phrase_like
 
 RE_A_AN_THE = re.compile(r"\b(?:an?|the)\b")
 RE_PUNCTUATION = re.compile(r"[.,/#!$%^&*;:{}=\-_`~()]")  # TODO: change for something more native? but also update js
