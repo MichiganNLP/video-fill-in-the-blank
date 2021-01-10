@@ -43,7 +43,7 @@ class QGenDataset(Dataset):
         return len(self.data)
 
     def preprocess_visual(self, data:Sequence[str, str, str, str, torch.Tensor]) -> Sequence[TYPE_BATCH]:
-        out = [{"masked_caption": d[2], "visual": d[4], "label", d[3]} for d in data]
+        out = [{"masked_caption": d[2], "visual": d[4], "label": d[3]} for d in data]
         return out
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
