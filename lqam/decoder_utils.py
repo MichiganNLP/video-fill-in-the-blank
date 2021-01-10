@@ -1,6 +1,8 @@
-from typing import Optional, List
-import spacy.tokens
+from typing import List, Optional, Union
+
 import torch
+
+from lqam.noun_phrases import is_noun_phrase_like
 
 
 def compute_label_prob(logits: torch.Tensor, label_ids: torch.Tensor,
@@ -25,17 +27,17 @@ def compute_label_prob(logits: torch.Tensor, label_ids: torch.Tensor,
     return probs_label_ids.prod(dim=-1)
 
 
-def compute_noun_phrase_indices(nlp, generated_answers: List[str], batch_size: int, num_return_sequences: int, device):
+def compute_noun_phrase_indices(spacy_model, generated_answers: List[str], batch_size: int, num_return_sequences: int,
+                                device: Optional[Union[torch.device, str]]) -> torch.Tensor:
     """
     Computes index of the first noun phrase for each num_return_sequences answers if exists
     otherwise return the index of the first answer.
-    
-    :param nlp: spacy model
-    :param generated_answers: has shape (batch_size * num_return_sequences, )
-    
-    :return: noun phrase indices with shape (batch_size, )
+
+    `generated_answers` has shape (batch_size * num_return_sequences,)
+
+    The returned tensor shape (batch_size,)
     """
-    generated_docs = nlp.pipe(generated_answers)
+    generated_docs = spacy_model.pipe(generated_answers)
     noun_chunks_mask = torch.zeros(batch_size * num_return_sequences, dtype=torch.bool, device=device)
     # each instance, if all sequences are not noun phrases,
     # then we mark the first sequence as the only answer
@@ -50,14 +52,3 @@ def compute_noun_phrase_indices(nlp, generated_answers: List[str], batch_size: i
                 noun_chunks_mask[curr_index] = True
                 break
     return noun_chunks_mask.nonzero(as_tuple=False).squeeze()
-
-
-def is_noun_phrase_like(spacy_doc: spacy.tokens.Doc) -> bool:
-    """Checks that there's exactly one sentence, and that it's a Noun Phrase or one without a specifier."""
-    sentences_iter = iter(spacy_doc.sents)
-    sent = next(sentences_iter, None)
-    return sent and not next(sentences_iter, None) and (
-            (root := sent.root).pos_ in {"NOUN", "PRON", "PROPN"}
-            or root.tag_ in {"VBG", "VBN"}  # VBN, e.g.: "the objects being applied".
-            or sent[0].tag_.startswith("W"))  # We also admit phrases that start with a wh-word.
-    # E.g., "They explain [how to make a cake]."
