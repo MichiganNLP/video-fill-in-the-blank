@@ -20,8 +20,8 @@ def exact_match(label1: str, label2: str) -> bool:
 class AlmostExactMatchAccuracy(pl.metrics.Metric):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.add_state("correct", default=torch.tensor(0, dtype=torch.float32), dist_reduce_fx="sum")
-        self.add_state("total", default=torch.tensor(0, dtype=torch.float32), dist_reduce_fx="sum")
+        self.add_state("correct", default=torch.tensor(0), dist_reduce_fx="sum")
+        self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
     @overrides
     def update(self, preds: Sequence[str], targets: Sequence[str]) -> None:  # noqa
