@@ -20,13 +20,13 @@ class T5AndI3D(T5ForConditionalGeneration):
         super().__init__(*args, **kwargs)
         self.text_embedding = self.encoder.get_input_embeddings()
         self.encoder = NewEncoder(self.encoder)
-        self.video_embedding = nn.Linear(visual_size, self.text_embedding.embedding_dim)
+        self.video_embedding = nn.Linear(args.visual_size, self.text_embedding.embedding_dim)
 
     @overrides
-    def forward(self, inputs, labels, attention_mask, *args, **kwargs):
+    def forward(self, masked_caption_ids, label_ids, *args, **kwargs):
         text_token_ids, visual = inputs
         text_embedding = self.text_embedding(text_token_ids)
         visual_embedding = self.video_embedding(visual)
         embedding = torch.cat([text_embedding, visual_embedding], dim=1)
         
-        return super().forward(inputs_embeds=embedding, attention_mask=attention_mask, labels = labels, return_dict = True)
+        return super().forward(inputs_embeds=embedding, labels = labels, return_dict = True)
