@@ -43,7 +43,7 @@ class QGenDataset(Dataset):
     def __len__(self) -> int:
         return len(self.data)
 
-    def preprocess_visual(self, data:Sequence[Sequence[str, str, str, str, torch.Tensor]]) -> Sequence[TYPE_BATCH]:
+    def preprocess_visual(self, data:Iterable[Sequence[str, str, str, str, torch.Tensor]]) -> Sequence[TYPE_BATCH]:
         out = [{"masked_caption": d[2], "visual": d[4], "label": d[3]} for d in data]
         return out
 
