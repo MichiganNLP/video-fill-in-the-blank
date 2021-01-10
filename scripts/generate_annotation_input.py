@@ -18,7 +18,7 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("--questions-per-hit", type=int, default=QUESTIONS_PER_HIT)
 
-    parser.add_argument("--already-used-indices-path", default="already_used_indices.json")
+    parser.add_argument("--already-used-indices-path", default="already_used_annotation_indices.json")
     parser.add_argument("--already-used-indices-split", choices=["train", "val", "test"], default="val")
 
     args = parser.parse_args()

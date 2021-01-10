@@ -6,3 +6,6 @@
 __pycache__/
 *.tsv
 .vscode
+
+*.csv
+*.txt

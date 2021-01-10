@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from lqam.annotations import format_answer, hits_to_instances, parse_hits
-from lqam.metrics import compute_answer_level_metrics, compute_metrics
+from lqam.metrics import compute_answer_level_annotation_metrics, compute_annotation_metrics
 
 
 def parse_args() -> argparse.Namespace:
@@ -51,7 +51,7 @@ def main() -> None:
 
         if args.compute_metrics:
             ff1s, precisions, recalls, decision_scores, (
-                std_ff1, std_precision, std_recall, std_decision_score), ignored_workers = compute_metrics(
+                std_ff1, std_precision, std_recall, std_decision_score), ignored_workers = compute_annotation_metrics(
                 instance["answers"].values(), instance["label"], args.ignore_zero_scores)
             df.insert(0, "FF1", ff1s * 100)
             df.insert(1, "Pre", precisions * 100)
@@ -64,7 +64,7 @@ def main() -> None:
             std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f}, Pre {std_precision * 100:.0f}, Rec"
                                       f" {std_recall * 100:.0f}, Dec {std_decision_score * 100:.0f})")
 
-            answer_level_metrics = compute_answer_level_metrics(instance["answers"], instance["label"], ignored_workers)
+            answer_level_metrics = compute_answer_level_annotation_metrics(instance["answers"], instance["label"], ignored_workers)
 
             for worker_id, answer_stats in answer_level_metrics.items():
                 worker_stats[worker_id]["questions"] += 1

@@ -13,7 +13,7 @@ def main():
 
     video_dict = defaultdict(list)  # {vid:[[start_time,end_time],[start_time,end_time],[]...], vid:[]}
     for index, row in origin_data.iterrows():
-        cid = row['video_id']
+        cid = row["video_id"]
         video_dict[cid].append([int(row["video_start_time"]), int(row["video_end_time"])])
 
     videos_left = list(video_dict.keys())
