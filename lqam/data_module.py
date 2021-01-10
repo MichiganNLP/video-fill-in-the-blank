@@ -6,6 +6,8 @@ from overrides import overrides
 from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizerBase
 
+import pickle
+
 from lqam.file_utils import cached_path
 
 TYPE_BATCH = Mapping[str, Any]
@@ -15,24 +17,34 @@ class QGenDataset(Dataset):
     def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, return_visual: bool = False,
                  t5_format: bool = True) -> None:
         super().__init__()
-        self.df = pd.read_csv(cached_path(data_path))
+        if not return_visual:
+            self.data = pd.read_csv(cached_path(data_path))
+        else:
+            with open(cached_path(data_path), 'rb') as f:
+                self.data = self.preprocess_visual(pickle.load(f))
         self.tokenizer = tokenizer
         self.return_visual = return_visual
         self.t5_format = t5_format
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
-        row = self.df.iloc[i]
-        # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
-        masked_caption = row["masked caption"]
-        label = row["label"]
-        # TODO: return the visual features if `self.return_visual`.
-        return {
-            "masked_caption": masked_caption,
-            "label": label,
-        }
+        if not self.return_visual:
+            row = self.data.iloc[i]
+            # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
+            masked_caption = row["masked caption"]
+            label = row["label"]
+            return {
+                "masked_caption": masked_caption,
+                "label": label,
+            }
+        else:
+            return self.data[i]
 
     def __len__(self) -> int:
-        return len(self.df)
+        return len(self.data)
+
+    def preprocess_visual(self, data:Sequence[str, str, str, str, torch.Tensor]) -> Sequence[TYPE_BATCH]:
+        out = [{"masked_caption": d[2], "visual": d[4], "label", d[3]} for d in data]
+        return out
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
         batch = {}
@@ -65,29 +77,24 @@ class QGenDataset(Dataset):
 
         for i in range(batch_size):
             data = batch[i]
-            text_features.append(data[0])
-            video_features.append(data[1])
-            label_list.append(data[2])
+            text_features.append(data["masked_caption"])
+            video_features.append(data["visual"])
+            label_list.append(data["label"])
 
-            if data[1] != None:
-                total_video_len = data[1].shape[0]
-            else:
-                total_video_len = 0
+            total_video_len = data["visual"].shape[0]
+
             if total_video_len > max_video_len:
                 max_video_len = total_video_len
         
+        label_list = [f"<extra_id_0> {label} <extra_id_1>" for label in label_list]
         text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=label_list, padding=True, return_tensors="pt")
         text_tensor = text_batch.input_ids
         text_attention_mask = text_batch.attention_mask
         labels = text_batch.labels
 
-        if self.hparams.enable_visual_features:
-            video_tensor = torch.zeros(batch_size, max_video_len, self.hparams.visual_size, dtype=torch.float)
-        else:
-            video_tensor = None
+        video_tensor = torch.zeros(batch_size, max_video_len, self.hparams.visual_size, dtype=torch.float)
 
-        if self.hparams.enable_visual_features:
-            video_attention_mask = torch.zeros(batch_size, max_video_len, dtype=torch.long)
+        video_attention_mask = torch.zeros(batch_size, max_video_len, dtype=torch.long)
 
         for i in range(batch_size):
             video = video_features[i]
@@ -96,16 +103,15 @@ class QGenDataset(Dataset):
             # The input to the transformer is gonna be:
             # t_1 ... t_n pad ... pad </s> v_1 ... v_m pad ... pad
 
-            if self.hparams.enable_visual_features and video != None:
-                video_len = video.shape[0]
-                video_tensor[i, :video_len] = video
-                video_attention_mask[i, :video_len] = True
+            video_len = video.shape[0]
+            video_tensor[i, :video_len] = video
+            video_attention_mask[i, :video_len] = True
 
         attention_mask = torch.cat([text_attention_mask, video_attention_mask], 1)
 
-        return (text_tensor, video_tensor, attention_mask, labels, label_list)
+        return {"masked_caption_ids": [text_tensor, video_tensor], "label_ids": labels}
 
-class QGenDataModule(pl.LightningDataModule):  # noqa
+class QGenDataModule(pl.LightningDataModule): 
     def __init__(self, tokenizer: PreTrainedTokenizerBase, batch_size: int = 32, eval_batch_size: Optional[int] = None,
                  num_workers: int = 0, hasVisual=False, **kwargs):
         super().__init__(**kwargs)
@@ -116,7 +122,7 @@ class QGenDataModule(pl.LightningDataModule):  # noqa
         self.hasVisual = hasVisual
 
     def _dataloader(self, data_path: str, batch_size: int, train: bool) -> DataLoader:
-        dataset = QGenDataset(data_path, tokenizer=self.tokenizer)
+        dataset = QGenDataset(data_path, tokenizer=self.tokenizer, return_visual=self.hasVisual)
         # TODO: bucket-batching could make training faster, and consume less memory.
         if self.hasVisual:
             return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,

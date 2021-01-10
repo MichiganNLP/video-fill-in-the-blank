@@ -24,6 +24,7 @@ def _parse_args() -> argparse.Namespace:
                              "natural number.")
 
     parser.add_argument("--gpus", type=int)
+    parser.add_argument("--visual-size", type=int, default=1024)
 
     # The only models that work with the used pipelines are the ones from `MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING`.
     # The model config names can't be obtained easily. You can obtain all the officially supported ones, of all types,
