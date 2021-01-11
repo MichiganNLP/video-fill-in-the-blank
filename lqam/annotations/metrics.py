@@ -4,9 +4,8 @@ from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Tuple
 import numpy as np
 import spacy
 
-from lqam.core.metrics import tokenize_answer_to_compute_metrics, compute_token_level_f1_many, normalize_answer
+from lqam.core.metrics import compute_token_level_f1_many, normalize_answer, tokenize_answer_to_compute_metrics
 from lqam.core.noun_phrases import is_noun_phrase_like
-
 
 SPACY_MODEL = spacy.load("en_core_web_lg")  # I detected fewer errors with it than with "en_core_web_sm".
 

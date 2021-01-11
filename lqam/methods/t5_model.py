@@ -1,6 +1,7 @@
 from typing import Any, Mapping, Optional, Sequence
 
 import pytorch_lightning as pl
+import spacy
 import torch
 from overrides import overrides
 from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase
@@ -10,8 +11,6 @@ from lqam.methods.dataset import TYPE_BATCH
 from lqam.methods.decoding import compute_label_prob, compute_noun_phrase_indices
 from lqam.methods.metrics import AlmostExactMatchAccuracy
 from lqam.methods.t5_format_processing import compute_first_blank
-
-import spacy
 
 
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
