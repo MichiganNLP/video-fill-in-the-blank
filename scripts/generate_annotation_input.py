@@ -19,8 +19,8 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("--questions-per-hit", type=int, default=QUESTIONS_PER_HIT)
 
-    parser.add_argument("--already-used-indices-path", default="already_used_annotation_indices.json")
-    parser.add_argument("--already-used-indices-split", choices=["train", "val", "test"], default="val")
+    parser.add_argument("--already-used-indices-path")
+    parser.add_argument("--already-used-indices-split", choices=["train", "val", "test"])
 
     args = parser.parse_args()
 
@@ -37,8 +37,13 @@ def main() -> None:
     df = pd.read_csv(args.input)
     assert args.question_count is None or len(df) >= args.question_count
 
-    with open(args.already_used_indices_path) as file:
-        already_used_indices = set(json.load(file)[args.already_used_indices_split])
+    if args.already_used_indices_path:
+        assert args.already_used_indices_split
+
+        with open(args.already_used_indices_path) as file:
+            already_used_indices = set(json.load(file)[args.already_used_indices_split])
+    else:
+        already_used_indices = frozenset()
 
     selected_indices = [i for i in range(args.question_count) if i not in already_used_indices]
     assert (args.question_count is None and len(selected_indices) % args.questions_per_hit) \
