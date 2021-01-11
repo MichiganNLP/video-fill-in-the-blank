@@ -6,8 +6,7 @@ import pandas as pd
 import torch
 from tqdm.auto import tqdm
 
-DATA_FOLDER_PATH = Path("/scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions/latest_data"
-                        "/multimodal_model/VATEX")
+DATA_FOLDER_PATH = Path("/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/latest_data/multimodal_model/VATEX")
 SPLIT_NAME = "val"
 
 

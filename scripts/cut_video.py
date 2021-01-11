@@ -11,7 +11,7 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 def main():
     origin_data = pd.read_csv("input.csv")
 
-    video_dict = defaultdict(list)  # {vid:[[start_time,end_time],[start_time,end_time],[]...], vid:[]}
+    video_dict = defaultdict(list)  # {vid: [[start_time, end_time], [start_time,end_time], [], ...], vid: []}
     for index, row in origin_data.iterrows():
         cid = row["video_id"]
         video_dict[cid].append([int(row["video_start_time"]), int(row["video_end_time"])])
@@ -51,7 +51,7 @@ def main():
         if total_left_count - len(videos_left) > cut_count:
             cut_count = total_left_count - len(videos_left)
             print(f"{cut_count}/{total_left_count}")
-        if len(videos_left) == 0:  # all videos cut
+        if not videos_left:
             break
 
 
