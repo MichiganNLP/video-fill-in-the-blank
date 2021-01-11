@@ -17,8 +17,8 @@ from torch.optim.lr_scheduler import _LRScheduler
 from torch.utils.data import DataLoader
 from transformers import AdamW, T5ForConditionalGeneration, T5Tokenizer, get_linear_schedule_with_warmup
 
-from lqam.argparse_with_defaults import ArgumentParserWithDefaults
-from lqam.vatex import VatexDataset
+from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.methods.vatex import VatexDataset
 
 FRAMEWORK = "pt"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

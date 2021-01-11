@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from transformers import AutoTokenizer
 
-from lqam.data_module import QGenDataset
+from lqam.methods.data_module import QGenDataset
 
 
 class TestQGenDataset(TestCase):

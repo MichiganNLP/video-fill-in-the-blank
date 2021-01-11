@@ -2,7 +2,7 @@ from typing import List, Optional, Union
 
 import torch
 
-from lqam.noun_phrases import is_noun_phrase_like
+from lqam.core.noun_phrases import is_noun_phrase_like
 
 
 def compute_label_prob(logits: torch.Tensor, label_ids: torch.Tensor,

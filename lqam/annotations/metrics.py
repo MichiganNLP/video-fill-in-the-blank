@@ -1,50 +1,18 @@
-import re
-import string
 from collections import defaultdict
-from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
-import pytorch_lightning as pl
-import spacy.tokens
-import torch
-from overrides import overrides
+import spacy
 
-from lqam.noun_phrases import is_noun_phrase_like
+from lqam.core.metrics import tokenize_answer_to_compute_metrics, compute_token_level_f1_many, normalize_answer
+from lqam.core.noun_phrases import is_noun_phrase_like
 
-# TODO: change the JavaScript code to match this exact punctuation:
-RE_A_AN_THE_OR_PUNCTUATION = re.compile(rf"\b(?:an?|the)\b|[{re.escape(string.punctuation)}]")
-RE_MULTIPLE_SPACES = re.compile(r"\s{2,}")
 
 SPACY_MODEL = spacy.load("en_core_web_lg")  # I detected fewer errors with it than with "en_core_web_sm".
 
 
-def normalize_answer(answer: str) -> str:
-    """Should correspond to the JavaScript function `normalizeAnswerToLookForRepetitions`.
-
-    Useful when looking for repetitions or computing measures.
-    """
-    return RE_MULTIPLE_SPACES.sub(" ", RE_A_AN_THE_OR_PUNCTUATION.sub("", answer.lower())).strip()
-
-
 def compute_decision_score(precision: float, recall: float) -> float:
     return recall + 0.67 * precision
-
-
-# TODO: how to deal with repeated words?
-def compute_token_level_f1(a: Set[str], b: Set[str]) -> float:
-    true_positives = len(a & b)
-    false_count_in_a = len(a - b)
-    false_count_in_b = len(b - a)
-    return true_positives / (true_positives + (false_count_in_a + false_count_in_b) / 2)
-
-
-def _tokenize(s: str) -> Iterator[str]:
-    return s.split()
-
-
-def compute_token_level_f1_many(answer: Iterator[str], ground_truths: Iterable[Iterable[str]]) -> float:
-    answer = set(answer)
-    return max(compute_token_level_f1(answer, set(g)) for g in ground_truths)
 
 
 def _compute_annotation_metrics_once(
@@ -70,8 +38,9 @@ def _compute_annotation_metrics_once(
                              for other_worker_answers in other_workers_answers
                              for answer in other_worker_answers} | {std_answer}
 
-            first_answer_tokens = _tokenize(next(iter(worker_question_answers)))
-            ff1 = compute_token_level_f1_many(first_answer_tokens, (_tokenize(answer) for answer in other_answers))
+            first_answer_tokens = tokenize_answer_to_compute_metrics(next(iter(worker_question_answers)))
+            ff1 = compute_token_level_f1_many(first_answer_tokens, (tokenize_answer_to_compute_metrics(answer)
+                                                                    for answer in other_answers))
 
             worker_question_answers_set = set(worker_question_answers)
 
@@ -90,8 +59,9 @@ def _compute_annotation_metrics_once(
                     if not is_worker_ignored
                     for answer in worker_answers]
 
-    std_answer_tokens = _tokenize(std_answer)
-    std_ff1 = compute_token_level_f1_many(std_answer_tokens, (_tokenize(answer) for answer in answers_flat))
+    std_answer_tokens = tokenize_answer_to_compute_metrics(std_answer)
+    std_ff1 = compute_token_level_f1_many(std_answer_tokens, (tokenize_answer_to_compute_metrics(answer)
+                                                              for answer in answers_flat))
 
     std_precision = float(std_answer in answers_flat)
     std_recall = sum(answer == std_answer for answer in answers_flat) / len(answers_flat)
@@ -135,12 +105,13 @@ def compute_answer_level_annotation_metrics(answers_map: Mapping[str, Sequence[s
     ignored_workers = ignored_workers or [False for _ in answers_map]
 
     # `frozenset` so it's immutable thus hashable.
-    answer_processed_map = {worker_id: [(answer, n := normalize_answer(answer), frozenset(_tokenize(n)))
+    answer_processed_map = {worker_id: [(answer, normalized_answer := normalize_answer(answer),
+                                         frozenset(tokenize_answer_to_compute_metrics(normalized_answer)))
                                         for answer in worker_answers]
                             for worker_id, worker_answers in answers_map.items()}
 
     std_answer_normalized = normalize_answer(std_answer_tokens)
-    std_answer_tokens = frozenset(_tokenize(std_answer_normalized))
+    std_answer_tokens = frozenset(tokenize_answer_to_compute_metrics(std_answer_normalized))
 
     results = defaultdict(lambda: defaultdict(dict))
 
@@ -176,24 +147,3 @@ def compute_answer_level_annotation_metrics(answers_map: Mapping[str, Sequence[s
             results[worker_id][answer]["np"] = np_map[answer] or np_map[f"the {answer}"]
 
     return results
-
-
-def exact_match(label1: str, label2: str) -> bool:
-    return normalize_answer(label1) == normalize_answer(label2)
-
-
-class AlmostExactMatchAccuracy(pl.metrics.Metric):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.add_state("correct", default=torch.tensor(0), dist_reduce_fx="sum")
-        self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
-
-    @overrides
-    def update(self, preds: Sequence[str], targets: Sequence[str]) -> None:  # noqa
-        assert len(preds) == len(targets)
-        self.correct += sum(exact_match(pred, target) for pred, target in zip(preds, targets))
-        self.total += len(targets)
-
-    @overrides
-    def compute(self) -> float:
-        return self.correct / self.total

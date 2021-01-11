@@ -618,7 +618,7 @@
     return $.trim(
         answer
             .toLowerCase()
-            .replace(/[.,\/#!$%^&*;:{}=\-_`~()]/g, "")
+            .replace(/[!"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~]/g, "")  // Same as in Python's `string.punctuation`.
             .replace(/\b(?:an?|the)\b/g, "")
     );
   }

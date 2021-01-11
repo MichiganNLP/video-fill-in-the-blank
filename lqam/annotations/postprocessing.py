@@ -8,7 +8,7 @@ from typing import Any, Mapping, MutableMapping, Sequence
 import pandas as pd
 from pandas._typing import FilePathOrBuffer  # noqa
 
-QUESTIONS_PER_HIT = 5
+from lqam.core.metrics import RE_MULTIPLE_SPACES
 
 # TODO: remove the old format.
 RE_ANSWER_KEY = re.compile(r"^answer-?(?P<question_index>\d+)-(?P<answer_index>\d+)$")
@@ -16,8 +16,11 @@ RE_ANSWER_INPUT_KEY = re.compile(r"^(?:in-answer-box|answer-input-)(?P<question_
 
 
 def format_answer(answer: str) -> str:
-    """Useful when wanting to print the raw worker answers, but disregarding casing and spacing."""
-    return answer.strip().lower().replace("  ", " ")
+    """Useful when wanting to print the raw worker answers, but disregarding casing and spacing.
+
+    Like `lqam.core.metrics.normalize_answer` but changing no token.
+    """
+    return RE_MULTIPLE_SPACES.sub("", answer.lower()).strip()
 
 
 def order_worker_answers_by_question(worker_answers: Mapping[str, str]) -> Sequence[Sequence[str]]:

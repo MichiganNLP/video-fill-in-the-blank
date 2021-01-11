@@ -7,9 +7,9 @@ import pytorch_lightning as pl
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from lqam.argparse_with_defaults import ArgumentParserWithDefaults
-from lqam.data_module import QGenDataModule
-from lqam.t5_module import T5FillerModel
+from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.methods.data_module import QGenDataModule
+from lqam.methods.t5_module import T5FillerModel
 
 
 def _parse_args() -> argparse.Namespace:

@@ -1,5 +1,5 @@
 from unittest import TestCase
-from lqam.decoder_utils import compute_noun_phrase_indices
+from lqam.methods.decoding import compute_noun_phrase_indices
 
 import torch
 import spacy

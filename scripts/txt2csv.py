@@ -5,7 +5,7 @@ import csv
 import fileinput
 import sys
 
-from lqam.iterable_utils import chunks
+from lqam.util.iterable_utils import chunks
 
 
 def main() -> None:

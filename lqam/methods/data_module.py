@@ -6,7 +6,7 @@ from overrides import overrides
 from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizerBase
 
-from lqam.file_utils import cached_path
+from lqam.util.file_utils import cached_path
 
 TYPE_BATCH = Mapping[str, Any]
 

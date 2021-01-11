@@ -6,11 +6,12 @@ import sys
 import pandas as pd
 
 from lqam.annotations import QUESTIONS_PER_HIT
-from lqam.util import grouper
+from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.util.iterable_utils import chunks
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = ArgumentParserWithDefaults()
 
     parser.add_argument("questions_path", metavar="QUESTIONS_CSV_FILE", nargs="?", default="-")
 
@@ -51,7 +52,7 @@ def main() -> None:
             f"question{i}": df.iloc[instance_i]["masked caption"].replace("<extra_id_0>", "[MASK]"),
             f"label{i}": df.iloc[instance_i]["label"],
         }
-        for hit_instance_indices in grouper(args.questions_per_hit, selected_indices)
+        for hit_instance_indices in chunks(selected_indices, args.questions_per_hit)
         for i, instance_i in enumerate(hit_instance_indices, start=1)
     ]
 

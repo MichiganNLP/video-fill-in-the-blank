@@ -5,7 +5,7 @@ from unittest import TestCase
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from lqam.t5_format_processing import compute_blank_map, compute_first_blank, is_extra_token
+from lqam.methods.t5_format_processing import compute_blank_map, compute_first_blank, is_extra_token
 
 
 class T5FormatProcessingTest(TestCase):
