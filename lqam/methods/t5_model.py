@@ -103,19 +103,19 @@ class T5FillerModel(pl.LightningModule):
             clean_generated_ids = self.tokenizer(
                 ["<extra_id_0> " + generated_instance + " <extra_id_1>" for generated_instance in generated],
                 return_tensors="pt", truncation=True, padding="longest")["input_ids"].to(generated_ids.device)
-            
+
         if self.only_noun_phrases:
             num_return_sequences = self.generate_kwargs.get("num_return_sequences", 1)
             batch_size = len(generated) // num_return_sequences
             assert len(generated) % num_return_sequences == 0
-            
+
             noun_chunks_indices = compute_noun_phrase_indices(self.spacy_model, generated, batch_size,
                                                               num_return_sequences, generated_ids.device)
             # filter out unqualified sequences, and leave one answer for each instance
             clean_generated_ids = clean_generated_ids[noun_chunks_indices]
             # extract the answers that are either noun phrases with the highest prob or the first answer
             generated = [generated[i.item()] for i in noun_chunks_indices]
-            
+
         generated_output = self(masked_caption_ids, clean_generated_ids, **model_kwargs)
         generated_prob = compute_label_prob(generated_output["logits"], clean_generated_ids,
                                             pad_token_id=self.t5_pretrained_model.config.pad_token_id,
