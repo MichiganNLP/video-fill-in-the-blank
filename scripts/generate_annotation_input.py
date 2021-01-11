@@ -7,13 +7,14 @@ import pandas as pd
 
 from lqam.annotations import QUESTIONS_PER_HIT
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.util.file_utils import cached_path
 from lqam.util.iterable_utils import chunks
 
 
 def parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults()
 
-    parser.add_argument("questions_path", metavar="QUESTIONS_CSV_FILE", nargs="?", default="-")
+    parser.add_argument("questions_path_or_url", metavar="QUESTIONS_CSV_FILE_OR_URL", nargs="?", default="-")
 
     parser.add_argument("--hit-count", type=int)
 
@@ -24,7 +25,7 @@ def parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    args.input = sys.stdin if args.questions_path == "-" else args.questions_path
+    args.input = sys.stdin if args.questions_path == "-" else cached_path(args.questions_path_or_url)
 
     args.question_count = args.hit_count * args.questions_per_hit if args.hit_count else None
 

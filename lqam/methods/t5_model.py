@@ -6,7 +6,7 @@ from overrides import overrides
 from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
-from lqam.methods.data_module import TYPE_BATCH
+from lqam.methods.dataset import TYPE_BATCH
 from lqam.methods.decoding import compute_label_prob, compute_noun_phrase_indices
 from lqam.methods.metrics import AlmostExactMatchAccuracy
 from lqam.methods.t5_format_processing import compute_first_blank

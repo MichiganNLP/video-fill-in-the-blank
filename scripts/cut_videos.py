@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
+import fileinput
 import os
 import time
 from collections import defaultdict
@@ -9,7 +10,7 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
 
 def main():
-    origin_data = pd.read_csv("input.csv")
+    origin_data = pd.read_csv(fileinput.input())
 
     video_dict = defaultdict(list)  # {vid: [[start_time, end_time], [start_time,end_time], [], ...], vid: []}
     for index, row in origin_data.iterrows():

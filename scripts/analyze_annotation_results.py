@@ -10,11 +10,13 @@ import pandas as pd
 from lqam.annotations.metrics import compute_annotation_metrics, compute_answer_level_annotation_metrics
 from lqam.annotations.postprocessing import format_answer, hits_to_instances, parse_hits
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.util.file_utils import cached_path
 
 
 def parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults()
-    parser.add_argument("annotation_results_path", metavar="ANNOTATION_RESULTS_FILE", nargs="?", default="-")
+    parser.add_argument("annotation_results_path_or_url", metavar="ANNOTATION_RESULTS_FILE_OR_URL", nargs="?",
+                        default="-")
 
     parser.add_argument("--compute-metrics", action="store_true")
     parser.add_argument("--ignore-zero-scores", action="store_true")
@@ -24,7 +26,7 @@ def parse_args() -> argparse.Namespace:
     assert not args.ignore_zero_scores or args.compute_metrics, "The flag --ignore-zero-scores needs the flag " \
                                                                 "--compute-metrics to be specified as well."
 
-    args.input = sys.stdin if args.annotation_results_path == "-" else args.annotation_results_path
+    args.input = sys.stdin if args.annotation_results_path == "-" else cached_path(args.annotation_results_path_or_url)
 
     return args
 
