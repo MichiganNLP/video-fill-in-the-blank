@@ -25,7 +25,7 @@ def parse_args() -> argparse.Namespace:
 
     args = parser.parse_args()
 
-    args.input = sys.stdin if args.questions_path == "-" else cached_path(args.questions_path_or_url)
+    args.input = sys.stdin if args.questions_path_or_url == "-" else cached_path(args.questions_path_or_url)
 
     args.question_count = args.hit_count * args.questions_per_hit if args.hit_count else None
 
