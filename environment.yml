@@ -4,11 +4,11 @@ channels:
   - defaults
 dependencies:
   - pip:
+    - moviepy==1.0.3
     # We could use the Anaconda channel "HuggingFace".
     # However, `tokenizers` was compiled with glibc 2.18, while Great Lakes has 2.17.
     # There are some non-popular glibc packages available in Anaconda, but Python needs to be linked to it as well.
     # This is cumbersome, so we just use pip:
-    - moviepy==1.0.3
     - transformers==4.1.1
   - boto3=1.16.29
   - botocore=1.19.29
