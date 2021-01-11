@@ -320,9 +320,8 @@ def _http_etag(url: str) -> Optional[str]:
     with _session_with_backoff() as session:
         response = session.head(url, allow_redirects=True, timeout=TIMEOUT)
     if response.status_code != 200:
-        raise IOError(
-            "HEAD request failed for url {} with status code {}".format(url, response.status_code)
-        )
+        logger.warning("HEAD request failed for URL %s with status code %d.", url, response.status_code)
+        return None
     return response.headers.get("ETag")
 
 
