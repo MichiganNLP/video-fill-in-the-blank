@@ -2,12 +2,11 @@ from collections import defaultdict
 from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
-import spacy
 
 from lqam.core.metrics import compute_token_level_f1_many, normalize_answer, tokenize_answer_to_compute_metrics
-from lqam.core.noun_phrases import is_noun_phrase_like
+from lqam.core.noun_phrases import create_spacy_model_for_noun_phrase_check, is_noun_phrase_like
 
-SPACY_MODEL = spacy.load("en_core_web_lg")  # I detected fewer errors with it than with "en_core_web_sm".
+SPACY_MODEL = create_spacy_model_for_noun_phrase_check()
 
 
 def compute_decision_score(precision: float, recall: float) -> float:

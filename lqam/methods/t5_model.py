@@ -1,12 +1,12 @@
 from typing import Any, Mapping, Optional, Sequence
 
 import pytorch_lightning as pl
-import spacy
 import torch
 from overrides import overrides
 from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
+from lqam.core.noun_phrases import create_spacy_model_for_noun_phrase_check
 from lqam.methods.dataset import TYPE_BATCH
 from lqam.methods.decoding import compute_label_prob, compute_noun_phrase_indices
 from lqam.methods.metrics import AlmostExactMatchAccuracy
@@ -33,7 +33,7 @@ class T5FillerModel(pl.LightningModule):
         self.only_noun_phrases = only_noun_phrases
         if only_noun_phrases:
             # Note `num_beams` is needed, otherwise the flag doesn't make sense.
-            self.spacy_model = spacy.load("en_core_web_lg")
+            self.spacy_model = create_spacy_model_for_noun_phrase_check()
             self.generate_kwargs.setdefault("num_return_sequences", self.generate_kwargs["num_beams"])
 
         self.all_token_ids = torch.arange(self.tokenizer.vocab_size)
@@ -96,7 +96,7 @@ class T5FillerModel(pl.LightningModule):
         if "prefix_allowed_tokens_fn" in self.generate_kwargs:
             # The generation was constrained, so it's already clean. But we need to remove the BoS token used to
             # start the generation. I noticed later that there's some `view(...)` in T5 code that fails due to the
-            # inside  stride after doing this. So I added a `clone()`.
+            # inside stride after doing this. So I added a `clone()`.
             clean_generated_ids = generated_ids[:, 1:].clone()
         else:
             clean_generated_ids = self.tokenizer(

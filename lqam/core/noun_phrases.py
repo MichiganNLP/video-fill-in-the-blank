@@ -1,4 +1,9 @@
+import spacy
 import spacy.tokens
+
+
+def create_spacy_model_for_noun_phrase_check() -> spacy.language.Language:
+    return spacy.load("en_core_web_lg")  # We detected fewer errors with it than with "en_core_web_sm".
 
 
 def is_noun_phrase_like(spacy_doc: spacy.tokens.Doc) -> bool:
