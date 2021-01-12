@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import itertools
 import json
 import sys
 
@@ -46,7 +47,13 @@ def main() -> None:
     else:
         already_used_indices = frozenset()
 
-    selected_indices = [i for i in range(args.question_count) if i not in already_used_indices]
+    selected_indices = []
+    for i in itertools.count():
+        if len(selected_indices) == (args.question_count or len(df)):
+            break
+        if i not in already_used_indices:
+            selected_indices.append(i)
+
     assert (args.question_count is None and len(selected_indices) % args.questions_per_hit) \
            or len(selected_indices) == args.question_count
 
