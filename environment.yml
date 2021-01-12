@@ -6,6 +6,7 @@ dependencies:
   - pip:
     - cupy-cuda110==8.3.0  # For spaCy.
     - moviepy==1.0.3
+    - pyyoutube==0.6.4
     - spacy-nightly[cuda110]==3.0.0rc2  # Use this version of spaCy because we want to use the model `en_core_web_trf`.
     # This version of spacy-transformers supports transformers v4.2, and it's needed for the spaCy model we want.
     - git+https://github.com/explosion/spacy-transformers@refs/pull/247/head

@@ -1,12 +1,11 @@
-import random
-import math
-from typing import Sequence
-from tqdm.auto import tqdm
-
-import torch
-import spacy
-import pandas as pd
+#!/usr/bin/env python
 import json
+import random
+
+import pandas as pd
+import spacy
+import torch
+from tqdm.auto import tqdm
 
 folder = "/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/VATEX/"
 
@@ -24,8 +23,10 @@ nlp_spacy = spacy.load("en_core_web_sm")
 # make sure we generate the same data
 random.seed(2)
 
+
 def instance_to_caption_list(instance):
     return instance["enCap"]  # Just pick the first one.
+
 
 def preprocess_caption(caption: str) -> str:
     caption = caption.strip()
@@ -35,6 +36,7 @@ def preprocess_caption(caption: str) -> str:
         caption += "."
 
     return caption
+
 
 def generate_data(instances):
     random_choice = []
@@ -52,13 +54,11 @@ def generate_data(instances):
                 chunk_end_in_caption = spacy_doc[chunk.end - 1].idx + len(spacy_doc[chunk.end - 1])
 
                 masked_caption = caption[:chunk_start_in_caption] + "<extra_id_0>" + caption[chunk_end_in_caption:]
-                
+
                 random_choice.append((instance["videoID"], caption, masked_caption, chunk.text))
                 break
 
-
     random.shuffle(random_choice)
-
 
     random_df = pd.DataFrame(random_choice, columns=["videoID", "caption", "masked caption", "label"])
     return random_df
@@ -68,6 +68,6 @@ random_df_train = generate_data(instances_train)
 random_df_test = generate_data(instances_test)
 random_df_val = generate_data(instances_val)
 
-random_df_train.to_csv(f'{folder}train.csv',index=False)
-random_df_val.to_csv(f'{folder}val.csv',index=False)
-random_df_test.to_csv(f'{folder}test.csv',index=False)
+random_df_train.to_csv(f'{folder}train.csv', index=False)
+random_df_val.to_csv(f'{folder}val.csv', index=False)
+random_df_test.to_csv(f'{folder}test.csv', index=False)
