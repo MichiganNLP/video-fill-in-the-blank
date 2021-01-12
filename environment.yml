@@ -10,7 +10,7 @@ dependencies:
     # There are some non-popular glibc packages available in Anaconda, but Python needs to be linked to it as well.
     # This is cumbersome, so we just use pip.
     #
-    # Also, we use an unreleased version to use a version in which `generate` returns the logits.
+    # Also, we use an unreleased version in which `generate` returns the logits.
     - git+https://github.com/huggingface/transformers@0ecbb69
   - boto3=1.16.29
   - botocore=1.19.29
