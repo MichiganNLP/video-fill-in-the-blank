@@ -19,7 +19,7 @@ def are_videos_available(api: pyyoutube.Api, video_ids: Iterable[str]) -> Iterat
             yield video_id in available_videos
 
 
-def main():
+def main() -> None:
     api = pyyoutube.Api(api_key=os.environ["GOOGLE_API_KEY"])
 
     video_id_generator1, video_id_generator2 = itertools.tee(stripped_line
