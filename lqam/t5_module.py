@@ -57,10 +57,6 @@ class T5FillerModel(pl.LightningModule):
     def _step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, **kwargs) -> torch.Tensor:
         return self(masked_caption_ids, label_ids, **kwargs)["loss"]
 
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        return optimizer
-    
     def training_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> torch.Tensor:
         return self._step(**batch)
 
