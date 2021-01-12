@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from lqam.methods.dataset import QGenDataModule
+from lqam.methods.dataset import QGenDataModule, URL_DATA_VAL
 from lqam.methods.t5_model import T5FillerModel
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 
@@ -15,8 +15,7 @@ from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 def _parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults(description="Evaluate the T5 text-only baseline.")
 
-    parser.add_argument("--data-path", default="https://drive.google.com/uc?id=1-JRsjFzP3Qmjti_w8ILV06msXjw4OXoB"
-                                               "&export=download")
+    parser.add_argument("--data-path", default=URL_DATA_VAL)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", "-j", type=int, default=0,
                         help="data loader workers. Each worker batch-tokenizes in parallel, "
