@@ -36,7 +36,7 @@ jobs:
         key: ${{ runner.os }}-huggingface-${{ hashFiles('**/*') }}
         restore-keys: |
           ${{ runner.os }}-huggingface-
-    - name: Download en_core_web_lg from spacy
+    - name: Download SpaCy model
       run: python -m spacy download en_core_web_lg
     - name: Run tests
       run: python -m unittest discover .

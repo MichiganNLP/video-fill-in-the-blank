@@ -55,8 +55,9 @@ class QGenDataset(Dataset):
             # anymore, so we shouldn't use as many workers as CPU cores but just a small number so the compute
             # devices aren't starving but not large so they never compete a lot with each other (esp. at the
             # beginning, where the pipeline of workers is starting).
-            batch[f"{k}_ids"] = self.tokenizer(to_tokenize, padding="longest", truncation=True,
-                                               return_tensors="pt")["input_ids"]
+            tokenization_output = self.tokenizer(to_tokenize, padding="longest", truncation=True, return_tensors="pt")
+            batch[f"{k}_ids"] = tokenization_output["input_ids"]
+            batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
         return batch
 
 

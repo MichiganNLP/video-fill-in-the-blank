@@ -8,7 +8,7 @@ import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from lqam.methods.dataset import QGenDataModule, URL_DATA_VAL
-from lqam.methods.t5_model import T5FillerModel
+from lqam.methods.t5_filler_model import T5FillerModel
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 
 
