@@ -8,6 +8,10 @@ from transformers import PreTrainedTokenizerBase
 
 from lqam.util.file_utils import cached_path
 
+URL_DATA_TEST = "https://drive.google.com/uc?id=1h-8ADZJDr32QgZMClQ6J1mvMWQY0Ahzx&export=download"
+URL_DATA_VAL = "https://drive.google.com/uc?id=1Fv5Yf79guD-95yNNGpFr-GHUMrNc-gSv&export=download"
+URL_DATA_TRAIN = "https://drive.google.com/uc?id=1hFnEFGLMurexpz9c3QOKAHZtMl0utzIJ&export=download"
+
 TYPE_BATCH = Mapping[str, Any]
 
 
@@ -72,16 +76,13 @@ class QGenDataModule(pl.LightningDataModule):  # noqa
                           pin_memory=True, collate_fn=dataset.collate_fn)
 
     @overrides
-    def train_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1hFnEFGLMurexpz9c3QOKAHZtMl0utzIJ"
-                                                "&export=download") -> DataLoader:
+    def train_dataloader(self, data_path: str = URL_DATA_TRAIN) -> DataLoader:
         return self._dataloader(data_path, batch_size=self.batch_size, train=True)
 
     @overrides
-    def val_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1Fv5Yf79guD-95yNNGpFr-GHUMrNc-gSv"
-                                              "&export=download") -> DataLoader:
+    def val_dataloader(self, data_path: str = URL_DATA_VAL) -> DataLoader:
         return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
 
     @overrides
-    def test_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1h-8ADZJDr32QgZMClQ6J1mvMWQY0Ahzx"
-                                               "&export=download") -> DataLoader:
+    def test_dataloader(self, data_path: str = URL_DATA_TEST) -> DataLoader:
         return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
