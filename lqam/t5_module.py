@@ -67,8 +67,8 @@ class T5FillerModel(pl.LightningModule):
     def _prefix_allowed_ids(self, _batch_id: int, input_ids: torch.Tensor) -> Sequence[int]:
         return [self.tokenizer.eos_token_id] if input_ids[-1] == self.extra_id_1 else self.all_token_ids
 
-    def _generative_step(self, mode: str, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor,
-                         masked_caption: str, label: str, **_kwargs) -> None:
+    def _generative_step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, masked_caption: str,
+                         label: str, **_kwargs) -> None:
         self.write_prediction("masked_caption", masked_caption)
         self.write_prediction("ground_truth", label)
 
@@ -82,7 +82,7 @@ class T5FillerModel(pl.LightningModule):
             model_kwargs["encoder_outputs"] = encoder(masked_caption_ids)
 
         label_output = self(masked_caption_ids, label_ids, **model_kwargs)
-        self.log(f"{mode}", label_output["loss"], prog_bar=True)
+        self.log("loss", label_output["loss"], prog_bar=True)
 
         # We ignore the EOS token as it's about the EOS of the generation stream, not the end of the blank.
         # The end of the blank is marked by the next extra token.
@@ -133,11 +133,11 @@ class T5FillerModel(pl.LightningModule):
 
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
-        self._generative_step(mode='validation', **batch)
+        self._generative_step(**batch)
 
     @overrides
     def test_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
-        self._generative_step(mode='test', **batch)
+        self._generative_step(**batch)
 
     def _on_epoch_end(self) -> None:
         self.log("accuracy", self.accuracy.compute(), prog_bar=True)
