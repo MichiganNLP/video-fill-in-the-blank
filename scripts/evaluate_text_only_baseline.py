@@ -43,6 +43,15 @@ def _parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _pandas_float_format(x: float) -> str:
+    if x == 0:
+        return "0"
+    elif abs(x) < 0.005:
+        return np.format_float_scientific(x, exp_digits=1, precision=0, trim="-")
+    else:
+        return f"{x:.2f}"
+
+
 def main() -> None:
     args = _parse_args()
 
@@ -66,9 +75,10 @@ def main() -> None:
     df.to_csv(args.predictions_output_path, index=False)
     print(f"Predictions saved in {args.predictions_output_path}. First rows:")
     print()
-    pd.options.display.float_format = \
-        lambda x: np.format_float_scientific(x, exp_digits=1, precision=0, trim="-") if abs(x) < 0.005 else f"{x:.2f}"
-    print(df.head(10))
+    pd.options.display.float_format = _pandas_float_format
+    with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0,
+                           "display.max_colwidth", None):
+        print(df.head(10))
 
 
 if __name__ == "__main__":
