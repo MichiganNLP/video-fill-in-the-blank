@@ -18,7 +18,7 @@ This repo contains the annotation scheme, results and methods for the LifeQA pro
     ```bash
     conda env create
     conda activate lqam
-    python -m spacy download en_core_web_lg
+    python -m spacy download en_core_web_trf
     ```
 
 3. To execute any Python script under [`scripts/`](scripts), run it from the project root directory (where this file is)
