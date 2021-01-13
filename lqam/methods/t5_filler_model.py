@@ -6,7 +6,7 @@ from overrides import overrides
 from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase
 from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
 
-from lqam.core.noun_phrases import create_spacy_model_for_noun_phrase_check
+from lqam.core.noun_phrases import SPACY_MODEL
 from lqam.methods.dataset import TYPE_BATCH
 from lqam.methods.decoding import arg_noun_phrase, compute_answer_prob
 from lqam.methods.metrics import AlmostExactMatchAccuracy
@@ -49,10 +49,7 @@ class T5FillerModel(pl.LightningModule):
         self.only_noun_phrases = only_noun_phrases
         if only_noun_phrases:
             # Note `num_beams` is needed, otherwise the flag doesn't make sense.
-            self.spacy_model = create_spacy_model_for_noun_phrase_check()
             self.generate_kwargs.setdefault("num_return_sequences", self.generate_kwargs["num_beams"])
-        else:
-            self.spacy_model = None
 
         self.all_token_ids = torch.arange(self.t5_pretrained_model.config.vocab_size)
 
@@ -95,7 +92,7 @@ class T5FillerModel(pl.LightningModule):
         if self.only_noun_phrases:
             assert len(generated) % num_return_sequences == 0
 
-            noun_phrase_indices = arg_noun_phrase(self.spacy_model, generated, num_return_sequences)
+            noun_phrase_indices = arg_noun_phrase(SPACY_MODEL, generated, num_return_sequences)
 
             batch_size = masked_caption_ids.shape[0]
             selected_indices = torch.arange(batch_size), torch.tensor(noun_phrase_indices)

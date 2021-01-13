@@ -4,9 +4,7 @@ from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from lqam.core.metrics import compute_token_level_f1_many, normalize_answer, tokenize_answer_to_compute_metrics
-from lqam.core.noun_phrases import create_spacy_model_for_noun_phrase_check, is_noun_phrase_like
-
-SPACY_MODEL = create_spacy_model_for_noun_phrase_check()
+from lqam.core.noun_phrases import SPACY_MODEL, is_noun_phrase_like
 
 
 def compute_decision_score(precision: float, recall: float) -> float:
