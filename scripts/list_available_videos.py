@@ -27,7 +27,7 @@ def main() -> None:
                                                              if (stripped_line := line.strip()))
 
     for video_id, is_available in tqdm(zip(video_id_generator1, are_videos_available(api, video_id_generator2))):
-        if not is_available:
+        if is_available:
             print(video_id)
 
 

@@ -62,7 +62,7 @@ def main() -> None:
             f"video{i}_id": df.iloc[instance_i]["videoID"][:-14],
             f"video{i}_start_time": int(df.iloc[instance_i]["videoID"][-13:-7]),
             f"video{i}_end_time": int(df.iloc[instance_i]["videoID"][-6:]),
-            f"question{i}": df.iloc[instance_i]["masked caption"].replace("<extra_id_0>", "[MASK]"),
+            f"question{i}": df.iloc[instance_i]["masked caption"],
             f"label{i}": df.iloc[instance_i]["label"],
         }
         for hit_instance_indices in chunks(selected_indices, args.questions_per_hit)

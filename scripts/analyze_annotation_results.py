@@ -101,7 +101,7 @@ def main() -> None:
 
         print(f"""\
 ID: {id_}
-Question: {instance["question"].replace("[MASK]", "_____")}
+Question: {instance["question"]}
 Video URL: {instance["video_url"]}
 Std. answer: {instance[f"label"]}{std_answer_metrics_str}
 Worker answers:

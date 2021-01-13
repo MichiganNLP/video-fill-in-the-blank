@@ -340,50 +340,26 @@
   const ENTER_KEY_CODE = 13;
 
   const videoIds = ["k7aPk5JcT-Q", "${video1_id}", "${video2_id}", "${video3_id}", "${video4_id}", "${video5_id}"]
-      .map(v => {
-        if (templateWasNotSubstituted(v)) {
-          return "k7aPk5JcT-Q";
-        } else {
-          return v;
-        }
-      });
-  const questions = ["The person drinks [MASK] at the bar.", "${question1}", "${question2}", "${question3}",
+      .map(v => templateWasSubstituted(v) ? v : "k7aPk5JcT-Q");
+  const questions = ["The person drinks _____ at the bar.", "${question1}", "${question2}", "${question3}",
     "${question4}", "${question5}"]
-      .map((q, i) => {
-        if (templateWasNotSubstituted(q)) {
-          return "This is the preview of [MASK] " + i + ".";
-        } else {
-          return q;
-        }
-      })
+      .map((q, i) => templateWasSubstituted(q) ? q : "This is the preview of _____ " + i + ".")
       .map(q => {
-        const maskPosition = q.indexOf("[MASK]");
-        console.assert(maskPosition !== -1 && maskPosition === q.lastIndexOf("[MASK]"))
+        const maskPosition = q.indexOf("_____");
+        console.assert(maskPosition !== -1 && maskPosition === q.lastIndexOf("_____"))
         return q;
       })
       .map(escapeHtml)
-      .map((q, i) => q.replace("[MASK]",
+      .map((q, i) => q.replace("_____",
           `<input type="text" class="form-control answer-input" id="answer-input-${(0, i)}"
                   name="answer-input-${(0, i)}"
                   placeholder="type an answer and hit Enter" ${i === 0 ? "disabled" : ""}>`));
   const startTimes = ["0", "${video1_start_time}", "${video2_start_time}", "${video3_start_time}",
     "${video4_start_time}", "${video5_start_time}"]
-      .map(q => {
-        if (templateWasNotSubstituted(q)) {
-          return "0";
-        } else {
-          return q;
-        }
-      }).map(parseFloat).map(Math.round);
+      .map(q => templateWasSubstituted(q) ? q : "0").map(parseFloat).map(Math.round);
   const endTimes = ["10", "${video1_end_time}", "${video2_end_time}", "${video3_end_time}",
     "${video4_end_time}", "${video5_end_time}"]
-      .map(q => {
-        if (templateWasNotSubstituted(q)) {
-          return "10";
-        } else {
-          return q;
-        }
-      }).map(parseFloat).map(Math.round);
+      .map(q => templateWasSubstituted(q) ? q : "10").map(parseFloat).map(Math.round);
 
   console.assert(videoIds.length === questions.length && videoIds.length === startTimes.length
       && videoIds.length === endTimes.length);
@@ -396,8 +372,8 @@
   const videoSpeedIndices = Array(videoIds.length).fill(speeds.findIndex(x => x === 1));
   let players = [];
 
-  function templateWasNotSubstituted(s) {
-    return s.startsWith("${") && s.endsWith("}");
+  function templateWasSubstituted(s) {
+    return !s.startsWith("${") || !s.endsWith("}");
   }
 
   // From https://stackoverflow.com/a/6234804/1165181

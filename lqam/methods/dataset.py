@@ -26,8 +26,9 @@ class QGenDataset(Dataset):
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
         row = self.df.iloc[i]
-        # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
         masked_caption = row["masked caption"]
+        if self.t5_format:
+            masked_caption = masked_caption.replace("_____", "<extra_id_0>")
         label = row["label"]
         # TODO: return the visual features if `self.return_visual`.
         return {
