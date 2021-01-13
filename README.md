@@ -19,36 +19,81 @@ This repo contains the annotation scheme, results and methods for the LifeQA pro
     conda env create
     conda activate lqam
     python -m spacy download en_core_web_trf
+    export PYTHONPATH=$PWD
     ```
 
-3. To execute any Python script under [`scripts/`](scripts), run it from the project root directory (where this file is)
-and prepend `PYTHONPATH=.` to the command execution (or do `export PYTHONPATH=$PWD` once per Bash session).
-
-4. Put the data under `data/`. For example, in Great Lakes:
+3. Put the data under `data/`. For example, in Great Lakes it can be a symlink:
 
     ```bash
     ln -s /scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX data
     ```
 
+NB: the scripts mentioned in the rest of this README generally accept many options. Try using the `--help` (or `-h`) 
+option or looking at their code for more information.
+
+## Dataset
+
+You can skip these steps if the data is already generated.
+
+1. Generate the blanked captions, for each
+[VATEX split JSON file](https://eric-xw.github.io/vatex-website/download.html) (replacing the variables with values):
+
+    ```bash
+    ./scripts/generate_dataset.py $VATEX_JSON_FILE_OR_URL > $GENERATED_CSV_FILE
+    ```
+
+2. Create a list of the available videos:
+
+    ```bash
+    csvcut -c "video_id" $GENERATED_CSV_FILE |
+      sed 1d |
+      sort |
+      uniq |
+      ./scripts/list_available_videos.py > $AVAILABLE_VIDEO_IDS_FILE
+    ```
+
+3. Filter the CSV file based on the available videos:
+
+    ```bash
+    csvjoin $GENERATED_CSV_FILE $(echo "video_id" && cat $AVAILABLE_VIDEO_IDS_FILE) > $GENERATED_CSV_FILE
+    ```
+
 ## Annotation
 
-### Visualize the annotation results
+In case you need to have data annotated through Amazon Mechanical Turk.
 
-Run:
+### Preparing the annotation
+
+Create the annotation input CSV file:
 
 ```bash
-./scripts/analyze_annotation_results.py --show-metrics < INPUT_CSV_FILE > OUTPUT_TXT_FILE
+./script/generate_annotation_input.py $GENERATED_CSV_FILE > $MTURK_INPUT_CSV_FILE
 ```
 
-## Download the YouTube videos
+### Using the annotation results
 
-Given a file with the YouTube video IDs, one per line:
+Visualize the annotation results:
+
+```bash
+./scripts/analyze_annotation_results.py --show-metrics INPUT_CSV_FILE_OR_URL > OUTPUT_TXT_FILE
+```
+
+## Download the videos
+
+In case you want to download the video, given a file with one YouTube video ID per line (such as 
+`$AVAILABLE_VIDEO_IDS_FILE`):
 
 ```bash
 youtube-dl -f "best[ext=mp4]/best" -o "videos/%(id)s.%(ext)s" --batch-file FILE
 ```
 
+## Training
+
+TODO
+
 ## Evaluation
+
+T5 text-only baseline:
 
 ```bash
 ./scripts/evaluate_text_only_baseline.py
