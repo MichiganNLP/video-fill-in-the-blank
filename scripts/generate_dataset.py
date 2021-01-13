@@ -7,9 +7,10 @@ from typing import Any, Iterable, Mapping
 import pandas as pd
 from tqdm.auto import tqdm
 
-from lqam.core.noun_phrases import create_spacy_model_for_noun_phrase_check
+from lqam.core.noun_phrases import SPACY_MODEL
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
+from lqam.util.iterable_utils import chunks
 from lqam.util.open_utils import smart_open
 
 
@@ -24,24 +25,19 @@ def _preprocess_caption(caption: str) -> str:
 
 
 def generate_data(instances: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
-    spacy_model = create_spacy_model_for_noun_phrase_check()
+    instances = list(instances)
+
+    docs = SPACY_MODEL.pipe(_preprocess_caption(caption) for instance in instances for caption in instance["enCap"])
+    caption_counts_per_instance = [len(instance["enCap"]) for instance in instances]
 
     selected_data = []
 
-    for instance in tqdm(instances):
-        # Just get the first acceptable one, if any.
-        for caption in instance["enCap"]:
-            caption = _preprocess_caption(caption)
-
-            spacy_doc = spacy_model(caption)
-
-            if not (noun_chunks := list(spacy_doc.noun_chunks)):
-                continue
-
+    for instance, instance_caption_docs in zip(tqdm(instances), chunks(docs, caption_counts_per_instance)):
+        if doc := next((doc for doc in docs if (noun_chunks := list(doc.noun_chunks))), None):
             noun_chunk = random.choice(noun_chunks)
 
-            chunk_start_in_caption = spacy_doc[noun_chunk.start].idx
-            chunk_end_in_caption = spacy_doc[noun_chunk.end - 1].idx + len(spacy_doc[noun_chunk.end - 1])
+            chunk_start_in_caption = doc[noun_chunk.start].idx
+            chunk_end_in_caption = doc[noun_chunk.end - 1].idx + len(doc[noun_chunk.end - 1])
 
             video_id, video_start_time, video_end_time = instance["videoID"].rsplit("_", maxsplit=2)
 
@@ -49,12 +45,12 @@ def generate_data(instances: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
                 "video_id": video_id,
                 "video_start_time": int(video_start_time),
                 "video_end_time": int(video_end_time),
-                "caption": caption,
-                "masked_caption": caption[:chunk_start_in_caption] + "_____" + caption[chunk_end_in_caption:],
+                "caption": doc.text,
+                "masked_caption": doc.text[:chunk_start_in_caption] + "_____" + doc.text[chunk_end_in_caption:],
                 "label": noun_chunk.text,
             })
 
-            break
+    assert next(docs, None) is None
 
     return pd.DataFrame(selected_data)
 

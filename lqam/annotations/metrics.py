@@ -6,12 +6,11 @@ import numpy as np
 from lqam.core.metrics import compute_token_level_f1_many, normalize_answer, tokenize_answer_to_compute_metrics
 from lqam.core.noun_phrases import create_spacy_model, is_noun_phrase_like
 
+SPACY_MODEL = create_spacy_model(prefer_gpu=True)
+
 
 def compute_decision_score(precision: float, recall: float) -> float:
     return recall + 0.67 * precision
-
-
-SPACY_MODEL = create_spacy_model(prefer_gpu=True)
 
 
 def _compute_annotation_metrics_once(
