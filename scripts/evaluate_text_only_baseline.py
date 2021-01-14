@@ -60,10 +60,10 @@ def _pandas_float_format(x: float) -> str:
 def main() -> None:
     args = _parse_args()
 
+    pl.seed_everything(args.seed)
+    
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers)
-
-    pl.seed_everything(args.seed)
     
     t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
