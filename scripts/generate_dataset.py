@@ -7,7 +7,7 @@ from typing import Any, Iterable, Mapping
 import pandas as pd
 from tqdm.auto import tqdm
 
-from lqam.core.noun_phrases import SPACY_MODEL
+from lqam.core.noun_phrases import create_spacy_model
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
 from lqam.util.iterable_utils import chunks
@@ -25,9 +25,11 @@ def _preprocess_caption(caption: str) -> str:
 
 
 def generate_data(instances: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
+    spacy_model = create_spacy_model(prefer_gpu=True)
+
     instances = list(instances)
 
-    docs = SPACY_MODEL.pipe(_preprocess_caption(caption) for instance in instances for caption in instance["enCap"])
+    docs = spacy_model.pipe(_preprocess_caption(caption) for instance in instances for caption in instance["enCap"])
     caption_counts_per_instance = (len(instance["enCap"]) for instance in instances)
 
     selected_data = []
