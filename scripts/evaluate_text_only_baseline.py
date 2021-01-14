@@ -40,8 +40,8 @@ def _parse_args() -> argparse.Namespace:
 
     # enable reproducibility
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--benchmark", action="store_false")
-    parser.add_argument("--deterministic", action="store_false")
+    parser.add_argument("--no-benchmark", dest="benchmark", action="store_false")
+    parser.add_argument("--no-deterministic", dest="deterministic" action="store_false")
     
     parser.add_argument("--predictions-output-path", default="predictions.csv")
 
