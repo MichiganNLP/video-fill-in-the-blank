@@ -40,8 +40,8 @@ def _parse_args() -> argparse.Namespace:
 
     # enable reproducibility
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--benchmark", action="store_true")
-    parser.add_argument("--deterministic", action="store_true")
+    parser.add_argument("--benchmark", action="store_false")
+    parser.add_argument("--deterministic", action="store_false")
     
     parser.add_argument("--predictions-output-path", default="predictions.csv")
 
@@ -77,7 +77,7 @@ def main() -> None:
     trainer.test(filler, test_dataloaders=data_module.val_dataloader(args.data_path))
 
     predictions = {k: v.tolist() if isinstance(v, torch.Tensor) else v
-                   for k, v in next(iter(trainer.evalexuation_loop.predictions.predictions.values())).items()}
+                   for k, v in next(iter(trainer.evaluation_loop.predictions.predictions.values())).items()}
     df = pd.DataFrame.from_dict(predictions)
     df.to_csv(args.predictions_output_path, index=False)
     print(f"Predictions saved in {args.predictions_output_path}. First rows:")
