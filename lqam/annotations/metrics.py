@@ -4,11 +4,14 @@ from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from lqam.core.metrics import compute_token_level_f1_many, normalize_answer, tokenize_answer_to_compute_metrics
-from lqam.core.noun_phrases import SPACY_MODEL, is_noun_phrase_like
+from lqam.core.noun_phrases import create_spacy_model, is_noun_phrase_like
 
 
 def compute_decision_score(precision: float, recall: float) -> float:
     return recall + 0.67 * precision
+
+
+SPACY_MODEL = create_spacy_model(prefer_gpu=True)
 
 
 def _compute_annotation_metrics_once(
@@ -136,7 +139,7 @@ def compute_answer_level_annotation_metrics(answers_map: Mapping[str, Sequence[s
                     for prefix in ["", "the "]}
 
     np_map = {answer: is_noun_phrase_like(doc)
-              for answer, doc in zip(answers_flat, SPACY_MODEL.pipe(answers_flat, batch_size=64, n_process=2))}
+              for answer, doc in zip(answers_flat, SPACY_MODEL.pipe(answers_flat, batch_size=64))}
 
     for worker_id, worker_answers in answers_map.items():
         for answer in worker_answers:
