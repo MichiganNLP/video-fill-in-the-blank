@@ -2,8 +2,12 @@ import spacy
 import spacy.tokens
 
 
-spacy.prefer_gpu()
-SPACY_MODEL = spacy.load("en_core_web_trf")  # This model works pretty well.
+def create_spacy_model(prefer_gpu: bool = False) -> spacy.language.Language:
+    if prefer_gpu:
+        spacy.prefer_gpu()
+    # This model works pretty well.  Caveat: there's a bug with multiprocessing with this model. So don't use
+    # `n_process` with the model's function `pipe`. See https://github.com/explosion/spaCy/issues/6672
+    return spacy.load("en_core_web_trf")
 
 
 def is_noun_phrase_like(spacy_doc: spacy.tokens.Doc) -> bool:
