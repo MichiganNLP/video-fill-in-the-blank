@@ -81,7 +81,7 @@ def main() -> None:
 
     df = generate_data(instances)
 
-    print(df.to_csv(index=False))
+    print(df.to_csv(index=False), end="")
 
 
 if __name__ == "__main__":
