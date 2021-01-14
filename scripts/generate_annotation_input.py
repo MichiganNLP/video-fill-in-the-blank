@@ -69,7 +69,7 @@ def main() -> None:
         for i, instance_i in enumerate(hit_instance_indices, start=1)
     ]
 
-    print(pd.DataFrame(hits).to_csv(index=False))
+    print(pd.DataFrame(hits).to_csv(index=False), end="")
 
 
 if __name__ == "__main__":
