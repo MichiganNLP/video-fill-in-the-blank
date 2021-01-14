@@ -38,6 +38,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--no-repeat-ngram-size", type=int)
     parser.add_argument("--only-noun-phrases", action="store_true")
 
+    # enable reproducibility
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--benchmark", action="store_true")
+    parser.add_argument("--deterministic", action="store_true")
+    
     parser.add_argument("--predictions-output-path", default="predictions.csv")
 
     return parser.parse_args()
@@ -58,6 +63,8 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers)
 
+    pl.seed_everything(args.seed)
+    
     t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                            only_noun_phrases=args.only_noun_phrases,
@@ -66,11 +73,11 @@ def main() -> None:
                                             "early_stopping": args.generation_early_stopping,
                                             "no_repeat_ngram_size": args.no_repeat_ngram_size})
 
-    trainer = pl.Trainer(gpus=args.gpus)
+    trainer = pl.Trainer(gpus=args.gpus, benchmark=args.benchmark, deterministic=args.deterministic)
     trainer.test(filler, test_dataloaders=data_module.val_dataloader(args.data_path))
 
     predictions = {k: v.tolist() if isinstance(v, torch.Tensor) else v
-                   for k, v in next(iter(trainer.evaluation_loop.predictions.predictions.values())).items()}
+                   for k, v in next(iter(trainer.evalexuation_loop.predictions.predictions.values())).items()}
     df = pd.DataFrame.from_dict(predictions)
     df.to_csv(args.predictions_output_path, index=False)
     print(f"Predictions saved in {args.predictions_output_path}. First rows:")
