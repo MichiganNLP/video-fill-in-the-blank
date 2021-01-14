@@ -45,17 +45,21 @@ You can skip these steps if the data is already generated.
 2. Create a list of the available videos:
 
     ```bash
-    csvcut -c "video_id" $GENERATED_CSV_FILE |
-      sed 1d |
-      sort |
-      uniq |
-      ./scripts/list_available_videos.py > $AVAILABLE_VIDEO_IDS_FILE
+    csvcut -c video_id $GENERATED_CSV_FILE \
+      | sed 1d \
+      | sort \
+      | uniq \
+      | ./scripts/list_available_videos.py > $AVAILABLE_VIDEO_IDS_FILE
     ```
 
 3. Filter the CSV file based on the available videos:
 
     ```bash
-    csvjoin $GENERATED_CSV_FILE $(echo "video_id" && cat $AVAILABLE_VIDEO_IDS_FILE) > $GENERATED_CSV_FILE
+    csvjoin \
+      -c video_id \
+      $GENERATED_CSV_FILE \
+      <(echo video_id && cat $AVAILABLE_VIDEO_IDS_FILE) \
+      > $GENERATED_CSV_FILTERED_FILE
     ```
 
 ## Annotation
@@ -64,10 +68,19 @@ In case you need to have data annotated through Amazon Mechanical Turk.
 
 ### Preparing the annotation
 
-Create the annotation input CSV file:
+### Create the annotation input CSV file
 
 ```bash
-./script/generate_annotation_input.py $GENERATED_CSV_FILE > $MTURK_INPUT_CSV_FILE
+./scripts/generate_annotation_input.py $GENERATED_CSV_FILTERED_FILE > $MTURK_INPUT_CSV_FILE
+```
+
+If you just want to take a random portion, do:
+
+```bash
+./scripts/generate_annotation_input.py \
+    --hit-count $HIT_COUNT \
+    $GENERATED_CSV_FILTERED_FILE \
+    > $MTURK_INPUT_CSV_FILE
 ```
 
 ### Using the annotation results
