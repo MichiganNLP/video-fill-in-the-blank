@@ -28,7 +28,7 @@ def generate_data(instances: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
     instances = list(instances)
 
     docs = SPACY_MODEL.pipe(_preprocess_caption(caption) for instance in instances for caption in instance["enCap"])
-    caption_counts_per_instance = [len(instance["enCap"]) for instance in instances]
+    caption_counts_per_instance = (len(instance["enCap"]) for instance in instances)
 
     selected_data = []
 
