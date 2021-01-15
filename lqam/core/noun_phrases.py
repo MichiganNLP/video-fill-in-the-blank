@@ -15,6 +15,12 @@ def is_noun_phrase_like(doc: spacy.tokens.Doc, start: int, end: int) -> bool:
     # Checking for a phrase in a dependency graph is the same as checking if the nodes (tokens) form a tree.
     # As there are as many edges (heads) as vertices, and because a tree has as many edges as the vertex count minus 1,
     # then all the phrase neighbors should be inside the phrase except for one (the root).
+    # TODO: use span
     phrase_token_gen = (t for t in doc if start <= t.idx < end)
-    root = next((t for t in phrase_token_gen if t.head.idx < start or end <= t.head.idx or t.head is t), False)
-    return root and all(start <= t.head.idx < end for t in phrase_token_gen) and root.pos_ in {"NOUN", "PRON", "PROPN"}
+    root = next((t for t in phrase_token_gen if t.head.idx < start or end <= t.head.idx or t.head == t), False)
+    return (root
+            and all(start <= t.head.idx < end for t in phrase_token_gen)
+            and (root.pos_ in {"NOUN", "PRON", "PROPN"}
+                 or root.tag_ == "VBG"  # Gerund. Example: "*Eating in the morning* is a great way to stay healthy."
+                 or (root.tag_ == "VB" and root.i > 0 and root.nbor(-1).tag_ == "TO")))  # Infinitive.
+    # Example with infinitive: "*To eat in the morning* is a great way to stay healthy."
