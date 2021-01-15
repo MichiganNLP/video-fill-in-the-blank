@@ -275,7 +275,8 @@ class TestNounPhrases(TestCase):
         docs = spacy_model.pipe(text for text, _, _, _ in texts_starts_ends_and_nps)
 
         for doc, (_, start, end, expected_np) in zip(docs, texts_starts_ends_and_nps):
-            actual_np = is_noun_phrase_like(doc, start, end)
+            span = doc.char_span(start, end)
+            actual_np = is_noun_phrase_like(span)
             self.assertEqual(expected_np, actual_np,
                              f"\"{doc}\" noun phrase value was expected to be {expected_np} but the actual value is"
                              f" {actual_np}.")
