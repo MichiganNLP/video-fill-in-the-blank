@@ -19,5 +19,6 @@ def is_noun_phrase_like(span: spacy.tokens.Span) -> bool:
     return (all(t.head in span or t == root for t in span)
             and (root.pos_ in {"NOUN", "PRON", "PROPN"}
                  or root.tag_ == "VBG"  # Gerund. Example: "*Eating in the morning* is a great way to stay healthy."
-                 or (root.tag_ == "VB" and root.i > 0 and root.nbor(-1).tag_ == "TO")))  # Infinitive.
+                 or (root.tag_ == "VB" and root.i > 0 and root.nbor(-1).tag_ == "TO")  # Infinitive.
+                 or span[0].tag_.startswith("W")))  # Wh-word. Example: "They describe *how it works*."
     # Example with infinitive: "*To eat in the morning* is a great way to stay healthy."
