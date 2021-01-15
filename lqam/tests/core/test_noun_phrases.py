@@ -265,6 +265,9 @@ class TestNounPhrases(TestCase):
 
             # ("_____ a dog.", "A cat and", False), FIXME: there shouldn't be more dependents below the phrase.
             ("_____ how he puts together a small finished wood shelf.", "A man video tapes", False),
+
+            ("_____ is a great way to stay healthy.", "Eating in the morning", True),
+            ("_____ is a great way to stay healthy.", "To eat in the morning", True),
         ]
 
         texts_starts_ends_and_nps = [(question.replace("_____", answer), (start := question.index("_____")),
