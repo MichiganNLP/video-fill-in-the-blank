@@ -107,7 +107,8 @@ class TestNounPhrases(TestCase):
             ("A person uses _____ to dig into an ice face and climb it.", "boots with spikes", True),
             ("Two strong men are fighting with each other in _____.", "boxing match", True),
             ("Two strong men are fighting with each other in _____.", "boxing", True),
-            # ("A person is cleaning a window with _____.", "broom with cloth at the end", True),  # FIXME
+            # The parsing fails:
+            # ("A person is cleaning a window with _____.", "broom with cloth at the end", True),
             ("A person is cleaning a window with _____.", "brush", True),
             ("A person uses _____ to dig into an ice face and climb it.", "brute strength", True),
             ("A man attaches a washer to a large machine and describes _____.", "car parts", True),
@@ -169,8 +170,8 @@ class TestNounPhrases(TestCase):
             ("A man attaches a washer to a large machine and describes _____.", "nuts", True),
             ("_____ of a professional skier.", "olympic run", True),
             ("_____ of a professional skier.", "olympic skiing event", True),
-            # ("Two strong men are fighting with each other in _____.", "order to see which one will be the victor",
-            #  False),  # FIXME
+            ("Two strong men are fighting with each other in _____.", "order to see which one will be the victor",
+             False),
             ("A man puts _____ around a product in a cardboard box.", "package stuffing", True),
             ("A man puts _____ around a product in a cardboard box.", "packaging cushion", True),
             ("A man puts _____ around a product in a cardboard box.", "packaging foam", True),
@@ -214,7 +215,8 @@ class TestNounPhrases(TestCase):
             ("A person uses _____ to dig into an ice face and climb it.", "spikes", True),
             ("A person is cleaning a window with _____.", "squeegee on a pole", True),
             ("A person is cleaning a window with _____.", "squeegee", True),
-            # ("A man puts _____ around a product in a cardboard box.", "styrofoam packing", True),  # FIXME: ambiguous
+            # For this one the parsing fails:
+            # ("A man puts _____ around a product in a cardboard box.", "styrofoam packing", True),
             ("A man puts _____ around a product in a cardboard box.", "styrofoam to act as a safeguard",
              False),  # The PP is attached to the verb.
             ("A man puts _____ around a product in a cardboard box.", "styrofoam", True),
