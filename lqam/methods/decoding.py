@@ -4,7 +4,7 @@ import spacy
 import torch
 from transformers import PretrainedConfig
 
-from lqam.core.noun_phrases import is_noun_phrase_like
+from lqam.core.noun_phrases import is_noun_phrase_or_n_bar
 from lqam.util.iterable_utils import chunks
 
 
@@ -42,6 +42,6 @@ def arg_noun_phrase(spacy_model: spacy.language.Language, generated_answers: Ite
     `generated_answers`. If a chunk has no noun phrase then it returns 0 for it (the first position).
     """
     return [
-        next((i for i, generated_doc in enumerate(generated_docs_instance) if is_noun_phrase_like(generated_doc)), 0)
+        next((i for i, generated_doc in enumerate(generated_docs_instance) if is_noun_phrase_or_n_bar(generated_doc)), 0)
         for generated_docs_instance in chunks(spacy_model.pipe(generated_answers), num_return_sequences)
     ]
