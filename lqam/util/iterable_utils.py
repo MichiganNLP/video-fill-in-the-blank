@@ -22,5 +22,10 @@ def chunks(iterable: Iterable[T], n: Union[int, Iterable[int]]) -> Iterator[Tupl
     # We could return an iterator instead of a tuple, but maybe it's consumed later and the next chunk is yield.
     # In that scenario, there would be a bug because the main iterator wasn't consumed, so the chunks would be wrong.
     # So we force the consumption of the iterator here.
-    while chunk := tuple(itertools.islice(iterator, next(sizes_iterator))):
+    #
+    # The default value for `next` here is incredibly necessary, as it may otherwise raise a StopIteration.
+    # StopIteration behavior inside generators and coroutines has changed since Python 3.7, and they're converted
+    # into runtime errors, so they aren't interpreted as the iteration end anymore.
+    # See https://stackoverflow.com/a/51701040/1165181
+    while chunk := tuple(itertools.islice(iterator, next(sizes_iterator, 0))):
         yield chunk
