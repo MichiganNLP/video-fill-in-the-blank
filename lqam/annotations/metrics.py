@@ -4,7 +4,7 @@ from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Tuple
 import numpy as np
 
 from lqam.core.metrics import compute_token_level_f1_many, normalize_answer, tokenize_answer_to_compute_metrics
-from lqam.core.noun_phrases import create_spacy_model, is_noun_phrase_like
+from lqam.core.noun_phrases import create_spacy_model, is_noun_phrase_or_n_bar
 
 SPACY_MODEL = create_spacy_model(prefer_gpu=True)
 
@@ -137,7 +137,7 @@ def compute_answer_level_annotation_metrics(answers_map: Mapping[str, Sequence[s
                     for answer in worker_answers
                     for prefix in ["", "the "]}
 
-    np_map = {answer: is_noun_phrase_like(doc)
+    np_map = {answer: is_noun_phrase_or_n_bar(doc)
               for answer, doc in zip(answers_flat, SPACY_MODEL.pipe(answers_flat, batch_size=64))}
 
     for worker_id, worker_answers in answers_map.items():

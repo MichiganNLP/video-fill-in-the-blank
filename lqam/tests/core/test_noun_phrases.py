@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from lqam.core.noun_phrases import create_spacy_model, is_noun_phrase_like
+from lqam.core.noun_phrases import create_spacy_model, is_noun_phrase_or_n_bar
 
 
 class TestNounPhrases(TestCase):
@@ -283,7 +283,7 @@ class TestNounPhrases(TestCase):
 
         for doc, (_, start, end, expected_np) in zip(docs, texts_starts_ends_and_nps):
             span = doc.char_span(start, end)
-            actual_np = is_noun_phrase_like(span)
+            actual_np = is_noun_phrase_or_n_bar(span)
             self.assertEqual(expected_np, actual_np,
                              f"The value of the noun phrase \"{span}\" in \"{doc}\" was expected to be"
                              f" {expected_np} but the actual value is {actual_np}.")
