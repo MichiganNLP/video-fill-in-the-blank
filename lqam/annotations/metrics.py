@@ -1,3 +1,4 @@
+import string
 from collections import defaultdict
 from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Tuple
 
@@ -7,6 +8,11 @@ from lqam.core.metrics import compute_token_level_f1_many, normalize_answer, tok
 from lqam.core.noun_phrases import create_spacy_model, is_noun_phrase_or_n_bar
 
 SPACY_MODEL = create_spacy_model(prefer_gpu=True)
+
+
+def strip_punctuation(s: str) -> str:
+    # See https://stackoverflow.com/a/266162/1165181
+    return s.translate(str.maketrans("", "", string.punctuation))
 
 
 def compute_decision_score(precision: float, recall: float) -> float:
@@ -97,8 +103,8 @@ def compute_annotation_metrics(
     return ff1s, precisions, recalls, decision_scores, std_answer_metrics, ignored_workers
 
 
-def compute_answer_level_annotation_metrics(answers_map: Mapping[str, Sequence[str]], std_answer_tokens: str,
-                                            ignored_workers: Optional[Sequence[bool]] = None
+def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[str, Sequence[str]],
+                                            std_answer_tokens: str, ignored_workers: Optional[Sequence[bool]] = None
                                             ) -> Mapping[str, Mapping[str, Mapping[str, Any]]]:
     ignored_workers = ignored_workers or [False for _ in answers_map]
 
@@ -132,16 +138,20 @@ def compute_answer_level_annotation_metrics(answers_map: Mapping[str, Sequence[s
 
     # Check if they are noun phrases:
 
-    answers_flat = {f"{prefix}{answer}"
+    # Workers can add extra punctuation, and this messes up with the parsing. So we remove it.
+    answers_flat = {(answer, strip_punctuation(answer))
                     for worker_answers in answers_map.values()
-                    for answer in worker_answers
-                    for prefix in ["", "the "]}
+                    for answer in worker_answers}
 
-    np_map = {answer: is_noun_phrase_or_n_bar(doc)
-              for answer, doc in zip(answers_flat, SPACY_MODEL.pipe(answers_flat, batch_size=64))}
+    question_with_answers = (question.replace("_____", clean_answer) for _, clean_answer in answers_flat)
+
+    np_map = {answer: is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
+                                                            start + len(clean_answer)))
+              for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers,
+                                                                                    batch_size=64))}
 
     for worker_id, worker_answers in answers_map.items():
         for answer in worker_answers:
-            results[worker_id][answer]["np"] = np_map[answer] or np_map[f"the {answer}"]
+            results[worker_id][answer]["np"] = np_map[answer]
 
     return results
