@@ -267,7 +267,7 @@ class TestNounPhrases(TestCase):
             ("_____ gives a demonstration of a song on piano.", "you can see that the pianist", False),
             ("_____ of a professional skier.", "you can see this can hurt the legs and knees", False),
 
-            # ("_____ a dog.", "A cat and", False), FIXME: there shouldn't be more dependents below the phrase.
+            ("_____ a dog.", "A cat and", False),
             ("_____ how he puts together a small finished wood shelf.", "A man video tapes", False),
 
             ("_____ is a great way to stay healthy.", "Eating in the morning", True),

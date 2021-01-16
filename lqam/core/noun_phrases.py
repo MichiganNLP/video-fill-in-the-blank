@@ -21,6 +21,7 @@ def is_noun_phrase_like(span: spacy.tokens.Span) -> bool:
                  or root.tag_ == "VBG"  # Gerund. Example: "*Eating in the morning* is a great way to stay healthy."
                  or (root.tag_ == "VB" and root.i > 0 and root.nbor(-1).tag_ == "TO")  # Infinitive.
                  or span[0].tag_.startswith("W"))  # Wh-word. Example: "They describe *how it works*."
+            and not (span[-1].dep_ == "cc")  # Don't finish with a coordination.
             and not (len(span) > 2
                      and span[0].lower_ == "order"
                      and span[1].lower_ == "to"
@@ -28,4 +29,3 @@ def is_noun_phrase_like(span: spacy.tokens.Span) -> bool:
                      and span[0].nbor(-1).lower_ == "in"
                      and span[1] in span[0].subtree))  # Avoid NP-like "in order to" usage.
     # Example with infinitive: "*To eat in the morning* is a great way to stay healthy."
-    # TODO: exceptions: coordination, "in order to"
