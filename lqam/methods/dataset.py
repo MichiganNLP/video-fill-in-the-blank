@@ -26,14 +26,11 @@ class QGenDataset(Dataset):
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
         row = self.df.iloc[i]
-        masked_caption = row["masked caption"]
-        if self.t5_format:
-            masked_caption = masked_caption.replace("_____", "<extra_id_0>")
-        label = row["label"]
         # TODO: return the visual features if `self.return_visual`.
         return {
-            "masked_caption": masked_caption,
-            "label": label,
+            # FIXME: this `replace` should be removed when the dataset files are fixes.
+            "masked_caption": row["masked caption"].replace("<extra_id_0>", "_____"),
+            "label": row["label"],
         }
 
     def __len__(self) -> int:
@@ -45,8 +42,13 @@ class QGenDataset(Dataset):
             stack = [instance[k] for instance in instances]
             batch[k] = stack
 
-            if self.t5_format and k == "label":
-                to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
+            if self.t5_format:
+                if k == "label":
+                    to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
+                elif k == "masked_caption":
+                    to_tokenize = [s.replace("_____", "<extra_id_0>") for s in stack]
+                else:
+                    to_tokenize = stack
             else:
                 to_tokenize = stack
 

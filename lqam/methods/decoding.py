@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterator, Literal, Sequence
 
 import spacy
 import torch
@@ -36,12 +36,25 @@ def compute_answer_prob(logits: torch.Tensor, answer_ids: torch.Tensor, model_co
     return probs_answer_ids.prod(dim=-1)
 
 
-def arg_noun_phrase(spacy_model: spacy.language.Language, generated_answers: Iterable[str],
-                    num_return_sequences: int) -> Iterable[int]:
-    """Computes the positions of the first noun phrase for every chunk of `num_return_sequences` in
-    `generated_answers`. If a chunk has no noun phrase then it returns 0 for it (the first position).
+def arg_noun_phrase(spacy_model: spacy.language.Language, questions: Sequence[str],
+                    answers: Sequence[Sequence[str]],
+                    span_alignment_mode: Literal["strict", "contract", "expand"] = "strict") -> Iterator[int]:
+    """Yields the position of the first noun phrase for every chunk of answers in `answers`. If a chunk has no noun
+    phrase then it returns 0 for it (the first position).
     """
-    return [
-        next((i for i, generated_doc in enumerate(generated_docs_instance) if is_noun_phrase_or_n_bar(generated_doc)), 0)
-        for generated_docs_instance in chunks(spacy_model.pipe(generated_answers), num_return_sequences)
-    ]
+    docs_flatten = spacy_model.pipe(question.replace("_____", answer)
+                                    for question, answers_instance in zip(questions, answers)
+                                    for answer in answers_instance)
+
+    answers_per_instance = (sum(1 for _ in answers_instance) for answers_instance in answers)
+    docs = chunks(docs_flatten, answers_per_instance)
+
+    for docs_instance, question, answers_instance in zip(docs, questions, answers):
+        for i, (doc, answer) in enumerate(zip(docs_instance, answers_instance)):
+            start = question.index("_____")
+            end = start + len(answer)
+            if is_noun_phrase_or_n_bar(doc.char_span(start, end, alignment_mode=span_alignment_mode)):
+                yield i
+                break
+        else:
+            yield 0
