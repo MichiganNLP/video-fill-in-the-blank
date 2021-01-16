@@ -68,8 +68,8 @@ def main() -> None:
             std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f}, Pre {std_precision * 100:.0f}, Rec"
                                       f" {std_recall * 100:.0f}, Dec {std_decision_score * 100:.0f})")
 
-            answer_level_metrics = compute_answer_level_annotation_metrics(instance["answers"], instance["label"],
-                                                                           ignored_workers)
+            answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"], instance["answers"],
+                                                                           instance["label"], ignored_workers)
 
             for worker_id, answer_stats in answer_level_metrics.items():
                 worker_stats[worker_id]["questions"] += 1
