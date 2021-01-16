@@ -139,6 +139,8 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
     # Check if they are noun phrases:
 
     # Workers can add extra punctuation, and this messes up with the parsing. So we remove it.
+    # We could use `alignment_mode="contract"` if there's extra punctuation, however this doesn't prevent the parsing
+    # from failing. So we remove the punctuation altogether.
     answers_flat = {(answer, strip_punctuation(answer))
                     for worker_answers in answers_map.values()
                     for answer in worker_answers}
@@ -147,8 +149,7 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
 
     np_map = {answer: is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
                                                             start + len(clean_answer)))
-              for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers,
-                                                                                    batch_size=64))}
+              for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers))}
 
     for worker_id, worker_answers in answers_map.items():
         for answer in worker_answers:

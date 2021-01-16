@@ -75,7 +75,8 @@ class T5FillerModel(pl.LightningModule):
         return [self.tokenizer.eos_token_id] if input_ids[-1] == self.extra_id_1 else self.all_token_ids
 
     def _generative_step(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: torch.Tensor,
-                         label_ids: torch.Tensor, masked_caption: str, label: str, **_kwargs) -> None:
+                         label_ids: torch.Tensor, masked_caption: Sequence[str], label: Sequence[str],
+                         **_kwargs) -> None:
         self.write_prediction("masked_caption", masked_caption)
 
         # Generate an answer from scratch:
@@ -95,14 +96,19 @@ class T5FillerModel(pl.LightningModule):
         if self.only_noun_phrases:
             assert len(generated) % num_return_sequences == 0
 
-            noun_phrase_indices = arg_noun_phrase(self.spacy_model, generated, num_return_sequences)
+            generated_in_chunks = list(chunks(generated, num_return_sequences))
+
+            # We use "expand" to include the punctuation or spacing even when it gets mixed with the next token.
+            # So we penalize the model for generating this extra unnecessary stuff.
+            noun_phrase_indices = list(arg_noun_phrase(self.spacy_model, masked_caption, generated_in_chunks,
+                                                       span_alignment_mode="expand"))
 
             batch_size = masked_caption_ids.shape[0]
             selected_indices = torch.arange(batch_size), torch.tensor(noun_phrase_indices)
 
             generated_ids = generated_ids.view(batch_size, num_return_sequences, -1)[selected_indices]
             generated = [generated_instance[i]
-                         for generated_instance, i in zip(chunks(generated, num_return_sequences), noun_phrase_indices)]
+                         for generated_instance, i in zip(generated_in_chunks, noun_phrase_indices)]
 
             generated_logits = generated_logits.view(batch_size, num_return_sequences, generated_logits.shape[1],
                                                      -1)[selected_indices]
