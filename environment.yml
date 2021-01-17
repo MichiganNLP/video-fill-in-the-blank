@@ -1,7 +1,6 @@
 name: lqam
 channels:
   - pytorch
-  - defaults
 dependencies:
   - pip:
     - cupy-cuda110==8.3.0  # For spaCy.
