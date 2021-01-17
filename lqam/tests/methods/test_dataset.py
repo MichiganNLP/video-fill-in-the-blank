@@ -9,14 +9,14 @@ class TestQGenDataset(TestCase):
     def test_dataset_format(self):
         train_dataset = QGenDataset(URL_DATA_TRAIN, tokenizer=AutoTokenizer.from_pretrained("t5-base"))
         train_expected_first_item = {
-            "masked_caption": "<extra_id_0> and one man are riding on the back of an elephant.",
+            "masked_caption": "_____ and one man are riding on the back of an elephant.",
             "label": "Two Kids",
         }
         train_actual_first_item = train_dataset[0]
 
         val_dataset = QGenDataset(URL_DATA_VAL, tokenizer=AutoTokenizer.from_pretrained("t5-base"))
         val_expected_first_item = {
-            "masked_caption": "A man is laying on the floor with a ball underneath <extra_id_0> and beginning to roll "
+            "masked_caption": "A man is laying on the floor with a ball underneath _____ and beginning to roll "
                               "back and forth.",
             "label": "his neck",
         }
@@ -25,7 +25,7 @@ class TestQGenDataset(TestCase):
         test_train_dataset = QGenDataset(URL_DATA_TEST, tokenizer=AutoTokenizer.from_pretrained("t5-base"))
         test_expected_first_item = {
             "masked_caption": "A person carrying something on their hand is walking outside of the room while another "
-                              "person is reaching for <extra_id_0>.",
+                              "person is reaching for _____.",
             "label": "the hallway",
         }
         test_actual_first_item = test_train_dataset[0]
