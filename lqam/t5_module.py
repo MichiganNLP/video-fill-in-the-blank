@@ -60,7 +60,7 @@ class T5FillerModel(pl.LightningModule):
     def _prefix_allowed_ids(self, _batch_id: int, input_ids: torch.Tensor) -> Sequence[int]:
         return [self.tokenizer.eos_token_id] if input_ids[-1] == self.extra_id_1 else self.all_token_ids
 
-    def _generative_step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, masked_caption: str,
+    def _generative_step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, visual: torch.Tensor = None, masked_caption: str,
                          label: str, **_kwargs) -> None:
         self.write_prediction("masked_caption", masked_caption)
         self.write_prediction("ground_truth", label)
@@ -72,7 +72,7 @@ class T5FillerModel(pl.LightningModule):
             # For the `generate` method it doesn't apply because it always computes it. We can't do much w/o
             # implementing our own version.
             encoder = self.t5_pretrained_model.get_encoder()
-            model_kwargs["encoder_outputs"] = encoder(masked_caption_ids)
+            model_kwargs["encoder_outputs"] = encoder(masked_caption_ids, visual=visual)
 
         label_output = self(masked_caption_ids, label_ids, **model_kwargs)
         self.log("loss", label_output["loss"], prog_bar=True)
@@ -86,7 +86,7 @@ class T5FillerModel(pl.LightningModule):
                                         eos_token_id=self.t5_pretrained_model.config.eos_token_id)
         self.write_prediction("ground_truth_prob", label_prob)
 
-        generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, **self.generate_kwargs)
+        generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, visual = visual **self.generate_kwargs)
         generated = self.tokenizer.batch_decode(
             compute_first_blank(generated_ids, self.t5_pretrained_model.config.decoder_start_token_id,
                                 self.extra_id_0, self.extra_id_1))
