@@ -8,7 +8,7 @@ dependencies:
     - python-youtube==0.6.4
     - spacy-nightly[cuda110]==3.0.0rc2  # Use this version of spaCy because we want to use the model `en_core_web_trf`.
     # This version of spacy-transformers supports transformers v4.2, and it's needed for the spaCy model we want.
-    - git+https://github.com/explosion/spacy-transformers@refs/pull/247/head
+    - git+https://github.com/explosion/spacy-transformers@f8140ac
     # We could use the Anaconda channel "HuggingFace".
     # However, `tokenizers` was compiled with glibc 2.18, while Great Lakes has 2.17.
     # There are some non-popular glibc packages available in Anaconda, but Python needs to be linked to it as well.
