@@ -61,7 +61,7 @@ def main() -> None:
                                             "no_repeat_ngram_size": args.no_repeat_ngram_size})
 
     trainer = pl.Trainer(gpus=args.gpus)
-    trainer.test(filler, test_dataloaders=data_module.val_dataloader(args.data_path))
+    trainer.test(filler, test_dataloaders=data_module.test_dataloader(os.path.join(args.data_path, 'test.pkl')))
 
     predictions = {k: v.tolist() if isinstance(v, torch.Tensor) else v
                    for k, v in next(iter(trainer.evaluation_loop.predictions.predictions.values())).items()}
