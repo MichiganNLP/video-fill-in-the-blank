@@ -52,7 +52,7 @@ def main() -> None:
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers, hasVisual=True)
 
     t5_like_pretrained_model = T5AndI3D.from_pretrained(args.model, visual_size=args.visual_size)
-    t5_like_pretrained_model.setEncoder()
+    t5_like_pretrained_model.set_encoder()
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                            only_noun_phrases=args.only_noun_phrases,
                            generate_kwargs={"max_length": args.max_length,
