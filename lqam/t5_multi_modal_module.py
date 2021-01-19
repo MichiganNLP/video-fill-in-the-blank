@@ -38,4 +38,4 @@ class T5AndI3D(T5ForConditionalGeneration):
         else:
             encoder_out = self.encoder(masked_caption_ids, visual = visual)
         
-        return super().forward(encoder_outputs=encoder_out, labels = labels, return_dict = True)
+        return super().forward(encoder_outputs=encoder_out, labels = label_ids, return_dict = True)
