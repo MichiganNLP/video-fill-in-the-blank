@@ -75,7 +75,7 @@ class QGenDataset(Dataset):
         label_list = []
 
         max_video_len = 0
-        visual_size = batch[i]["visual"].shape[1]
+        visual_size = batch[0]["visual"].shape[1]
         for i in range(batch_size):
             data = batch[i]
             text_features.append(data["masked_caption"])
