@@ -3,10 +3,9 @@ channels:
   - pytorch
 dependencies:
   - pip:
-    - cupy-cuda110==8.3.0  # For spaCy.
     - moviepy==1.0.3
     - python-youtube==0.6.4
-    - spacy-nightly[cuda110]==3.0.0rc2  # Use this version of spaCy because we want to use the model `en_core_web_trf`.
+    - spacy-nightly[cuda110]==3.0.0rc3  # Use this version of spaCy because we want to use the model `en_core_web_trf`.
     - spacy-transformers==1.0.0rc2  # Necessary for the spaCy model we want.
     # We could use the Anaconda channel "HuggingFace".
     # However, `tokenizers` was compiled with glibc 2.18, while Great Lakes has 2.17.
