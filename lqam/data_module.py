@@ -75,7 +75,7 @@ class QGenDataset(Dataset):
         label_list = []
 
         max_video_len = 0
-
+        visual_size = batch[i]["visual"].shape[1]
         for i in range(batch_size):
             data = batch[i]
             text_features.append(data["masked_caption"])
@@ -93,7 +93,7 @@ class QGenDataset(Dataset):
         text_attention_mask = text_batch.attention_mask
         labels = text_batch.labels
 
-        video_tensor = torch.zeros(batch_size, max_video_len, self.hparams.visual_size, dtype=torch.float)
+        video_tensor = torch.zeros(batch_size, max_video_len, visual_size, dtype=torch.float)
 
         video_attention_mask = torch.zeros(batch_size, max_video_len, dtype=torch.long)
 
