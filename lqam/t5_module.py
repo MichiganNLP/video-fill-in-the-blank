@@ -60,8 +60,8 @@ class T5FillerModel(pl.LightningModule):
     def _prefix_allowed_ids(self, _batch_id: int, input_ids: torch.Tensor) -> Sequence[int]:
         return [self.tokenizer.eos_token_id] if input_ids[-1] == self.extra_id_1 else self.all_token_ids
 
-    def _generative_step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, visual: torch.Tensor = None, masked_caption: str,
-                         label: str, **_kwargs) -> None:
+    def _generative_step(self, masked_caption_ids: torch.Tensor, label_ids: torch.Tensor, masked_caption: str,
+                         label: str, visual: torch.Tensor = None, **_kwargs) -> None:
         self.write_prediction("masked_caption", masked_caption)
         self.write_prediction("ground_truth", label)
 
