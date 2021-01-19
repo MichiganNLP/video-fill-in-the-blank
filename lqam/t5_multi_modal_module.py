@@ -32,7 +32,7 @@ class T5AndI3D(T5ForConditionalGeneration):
         self.encoder = NewEncoder(self.encoder, self.text_embedding, self.visual_size)
     
     @overrides
-    def forward(self, masked_caption_ids, visual = None, labels = None, *args, **kwargs):
+    def forward(self, masked_caption_ids=None, visual = None, labels = None, *args, **kwargs):
         if "encoder_outputs" in kwargs:
             encoder_output = kwargs["encoder_outputs"]
         else:
