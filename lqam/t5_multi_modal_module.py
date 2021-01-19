@@ -33,5 +33,5 @@ class T5AndI3D(T5ForConditionalGeneration):
     
     @overrides
     def forward(self, masked_caption_ids, visual = None, labels = None, *args, **kwargs):
-        
-        return super().forward(input_ids=masked_caption_ids, visual=visual, labels = labels, return_dict = True, *args, **kwargs)
+        encoder_output = self.encoder(masked_caption_ids, visual=visual)
+        return super().forward(encoder_outputs=encoder_output, labels = labels, return_dict = True, *args, **kwargs)
