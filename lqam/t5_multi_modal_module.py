@@ -17,7 +17,7 @@ class NewEncoder(nn.Module):
         text_embedding = self.text_embedding(text_token_ids)
         visual_embedding = self.video_embedding(kwargs['visual'])
         embedding = torch.cat([text_embedding, visual_embedding], dim=1)
-        return self.t5_stack.forward(inputs_embeds=embedding, *args, **kwargs)
+        return self.t5_stack.forward(inputs_embeds=embedding)
 
 
 class T5AndI3D(T5ForConditionalGeneration):
