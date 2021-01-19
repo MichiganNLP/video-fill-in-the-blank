@@ -82,7 +82,7 @@ class QGenDataset(Dataset):
             masked_captions.append(data["masked_caption"])
             text_features.append(data["masked_caption_ids"])
             video_features.append(data["visual"])
-            label_list.append(data["label_ids"])
+            label_list.append(data["label"])
 
             total_video_len = data["visual"].shape[0]
 
