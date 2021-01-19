@@ -44,7 +44,7 @@ class QGenDataset(Dataset):
         return len(self.data)
 
     def preprocess_visual(self, data):
-        out = [{"masked_caption": d[2], "visual": d[4], "label": d[3]} for d in data]
+        out = [{"masked_caption": d[1], "masked_caption_ids": d[2], "visual": d[4], "label": d[3]} for d in data]
         return out
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
@@ -70,6 +70,7 @@ class QGenDataset(Dataset):
     
     def collate_fn_multi_modal(self, batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
         batch_size = len(batch)
+        masked_captions = []
         text_features = []
         video_features = []
         label_list = []
@@ -78,9 +79,10 @@ class QGenDataset(Dataset):
         visual_size = batch[0]["visual"].shape[1]
         for i in range(batch_size):
             data = batch[i]
-            text_features.append(data["masked_caption"])
+            masked_captions.append(data["masked_caption"])
+            text_features.append(data["masked_caption_ids"])
             video_features.append(data["visual"])
-            label_list.append(data["label"])
+            label_list.append(data["label_ids"])
 
             total_video_len = data["visual"].shape[0]
 
@@ -110,7 +112,7 @@ class QGenDataset(Dataset):
 
         attention_mask = torch.cat([text_attention_mask, video_attention_mask], 1)
 
-        return {"masked_caption_ids": text_tensor, "visual": video_tensor, "label_ids": labels}
+        return {"masked_caption_ids": text_tensor, "visual": video_tensor, "label_ids": labels, "masked_caption": masked_captions, "label": label_list}
 
 class QGenDataModule(pl.LightningDataModule): 
     def __init__(self, tokenizer: PreTrainedTokenizerBase, batch_size: int = 32, eval_batch_size: Optional[int] = None,
