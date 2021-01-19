@@ -11,7 +11,7 @@ class NewEncoder(nn.Module):
         super().__init__()
         self.t5_stack = t5_stack
         self.text_embedding = text_embedding
-        self.visual_embedding = nn.Linear(visual_size, self.text_embedding.embedding_dim)
+        self.video_embedding = nn.Linear(visual_size, self.text_embedding.embedding_dim)
 
     def forward(self, text_token_ids, *args, **kwargs):
         text_embedding = self.text_embedding(text_token_ids)
