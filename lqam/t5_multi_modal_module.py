@@ -22,7 +22,7 @@ class NewEncoder(nn.Module):
 
 class T5AndI3D(T5ForConditionalGeneration):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         self.text_embedding = self.encoder.get_input_embeddings()
         self.visual_size = kwargs.visual_size
 
