@@ -92,7 +92,7 @@ class T5FillerModel(pl.LightningModule):
                                         eos_token_id=self.t5_pretrained_model.config.eos_token_id)
         self.write_prediction("ground_truth_prob", label_prob)
 
-        generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, visual = visual **self.generate_kwargs)
+        generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, visual = visual, **self.generate_kwargs)
         generated = self.tokenizer.batch_decode(
             compute_first_blank(generated_ids, self.t5_pretrained_model.config.decoder_start_token_id,
                                 self.extra_id_0, self.extra_id_1))
