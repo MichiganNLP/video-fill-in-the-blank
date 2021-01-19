@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 import argparse
-import itertools
-import json
 import sys
 
 import pandas as pd
@@ -18,11 +16,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("questions_path_or_url", metavar="QUESTIONS_CSV_FILE_OR_URL", nargs="?", default="-")
 
     parser.add_argument("--hit-count", type=int)
-
     parser.add_argument("--questions-per-hit", type=int, default=QUESTIONS_PER_HIT)
 
-    parser.add_argument("--already-used-indices-path")
-    parser.add_argument("--already-used-indices-split", choices=["train", "val", "test"])
+    parser.add_argument("--seed", type=int, default=1337)
 
     args = parser.parse_args()
 
@@ -37,40 +33,24 @@ def main() -> None:
     args = parse_args()
 
     df = pd.read_csv(args.input)
-    assert args.question_count is None or len(df) >= args.question_count
 
-    if args.already_used_indices_path:
-        assert args.already_used_indices_split
+    if args.question_count:
+        df = df.sample(args.question_count, random_state=args.seed)
 
-        with open(args.already_used_indices_path) as file:
-            already_used_indices = set(json.load(file)[args.already_used_indices_split])
-    else:
-        already_used_indices = frozenset()
-
-    selected_indices = []
-    for i in itertools.count():
-        if len(selected_indices) == (args.question_count or len(df)):
-            break
-        if i not in already_used_indices:
-            selected_indices.append(i)
-
-    assert (args.question_count is None and len(selected_indices) % args.questions_per_hit) \
-           or len(selected_indices) == args.question_count
-
-    hits = [
+    hits_df = pd.DataFrame([
         {
             k: v
-            for i, instance_i in enumerate(hit_instance_indices, start=1)
-            for k, v in [(f"video{i}_id", df.iloc[instance_i]["video_id"]),
-                         (f"video{i}_start_time", df.iloc[instance_i]["video_start_time"]),
-                         (f"video{i}_end_time", df.iloc[instance_i]["video_end_time"]),
-                         (f"question{i}", df.iloc[instance_i]["masked_caption"]),
-                         (f"label{i}", df.iloc[instance_i]["label"])]
+            for i, row in enumerate(hit_rows, start=1)
+            for k, v in [(f"video{i}_id", row.video_id),
+                         (f"video{i}_start_time", row.video_start_time),
+                         (f"video{i}_end_time", row.video_end_time),
+                         (f"question{i}", row.masked_caption),
+                         (f"label{i}", row.label)]
         }
-        for hit_instance_indices in chunks(selected_indices, args.questions_per_hit)
-    ]
+        for hit_rows in chunks(df.itertuples(), args.questions_per_hit)
+    ])
 
-    print(pd.DataFrame(hits).to_csv(index=False), end="")
+    print(hits_df.to_csv(index=False), end="")
 
 
 if __name__ == "__main__":
