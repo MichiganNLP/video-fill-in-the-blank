@@ -15,7 +15,7 @@ class NewEncoder(nn.Module):
 
     def forward(self, text_token_ids, *args, **kwargs):
         text_embedding = self.text_embedding(text_token_ids)
-        visual_embedding = self.video_embedding(kwargs.visual)
+        visual_embedding = self.video_embedding(kwargs['visual'])
         embedding = torch.cat([text_embedding, visual_embedding], dim=1)
         return self.t5_stack.forward(inputs_embeds=embedding, *args, **kwargs)
 
