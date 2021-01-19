@@ -55,7 +55,6 @@ def main() -> None:
     t5_like_pretrained_model.setEncoder()
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                            only_noun_phrases=args.only_noun_phrases,
-                           visual_size = args.visual_size,
                            generate_kwargs={"max_length": args.max_length,
                                             "num_beams": args.beam_size,
                                             "early_stopping": args.generation_early_stopping,
