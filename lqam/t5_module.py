@@ -72,9 +72,15 @@ class T5FillerModel(pl.LightningModule):
             # For the `generate` method it doesn't apply because it always computes it. We can't do much w/o
             # implementing our own version.
             encoder = self.t5_pretrained_model.get_encoder()
-            model_kwargs["encoder_outputs"] = encoder(masked_caption_ids, visual=visual)
+            if visual is not None:
+                model_kwargs["encoder_outputs"] = encoder(masked_caption_ids, visual=visual)
+            else:
+                model_kwargs["encoder_outputs"] = encoder(masked_caption_ids)
 
-        label_output = self(masked_caption_ids, label_ids, **model_kwargs)
+        if visual is None:
+            label_output = self(masked_caption_ids, label_ids, **model_kwargs)
+        else:
+            label_output = self(masked_caption_ids, visual, label_ids, **model_kwargs)
         self.log("loss", label_output["loss"], prog_bar=True)
 
         # We ignore the EOS token as it's about the EOS of the generation stream, not the end of the blank.
