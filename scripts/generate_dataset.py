@@ -35,7 +35,7 @@ def generate_data(instances: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
     selected_data = []
 
     for instance, instance_caption_docs in zip(tqdm(instances), chunks(docs, caption_counts_per_instance)):
-        if doc := next((doc for doc in docs if (noun_chunks := list(doc.noun_chunks))), None):
+        if doc := next((doc for doc in instance_caption_docs if (noun_chunks := list(doc.noun_chunks))), None):
             noun_chunk = random.choice(noun_chunks)
 
             chunk_start_in_caption = doc[noun_chunk.start].idx
