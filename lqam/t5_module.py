@@ -80,7 +80,7 @@ class T5FillerModel(pl.LightningModule):
         if visual is None:
             label_output = self(masked_caption_ids, label_ids, **model_kwargs)
         else:
-            label_output = self(masked_caption_ids, visual, label_ids, **model_kwargs)
+            label_output = self(masked_caption_ids, label_ids, visual=visual, **model_kwargs)
         self.log("loss", label_output["loss"], prog_bar=True)
 
         # We ignore the EOS token as it's about the EOS of the generation stream, not the end of the blank.
