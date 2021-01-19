@@ -35,4 +35,6 @@ class T5AndI3D(T5ForConditionalGeneration):
     def forward(self, masked_caption_ids=None, visual = None, labels = None, *args, **kwargs):
         if "encoder_outputs" not in kwargs:
             kwargs["encoder_outputs"] = self.encoder(masked_caption_ids, visual=visual)
-        return super().forward(labels = labels, return_dict = True, *args, **kwargs)
+        if "return_dict" not in kwargs:
+            kwargs["return_dict"] = True
+        return super().forward(labels = labels, *args, **kwargs)
