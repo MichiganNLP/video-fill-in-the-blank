@@ -67,19 +67,20 @@ class T5FillerModel(pl.LightningModule):
 
         model_kwargs = {}
 
+        if 'attention_mask' in _kwargs:
+            attention_mask = _kwargs['attention_mask']
+        else:
+            attention_mask = None
+
         if self.t5_pretrained_model.config.is_encoder_decoder:
             # Compute the encoder part only once.
             # For the `generate` method it doesn't apply because it always computes it. We can't do much w/o
             # implementing our own version.
             encoder = self.t5_pretrained_model.get_encoder()
             if visual is not None:
-                model_kwargs["encoder_outputs"] = encoder(masked_caption_ids, visual=visual, attention)
+                model_kwargs["encoder_outputs"] = encoder(masked_caption_ids, visual=visual, attention_mask=attention_mask)
             else:
-                model_kwargs["encoder_outputs"] = encoder(masked_caption_ids)
-        if 'attention_mask' in _kwargs:
-            attention_mask = _kwargs['attention_mask']
-        else:
-            attention_mask = None
+                model_kwargs["encoder_outputs"] = encoder(masked_caption_ids)        
 
         if visual is None:
             label_output = self(masked_caption_ids, label_ids=label_ids, **model_kwargs)
