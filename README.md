@@ -68,7 +68,7 @@ In case you need to have data annotated through Amazon Mechanical Turk.
 
 ### Preparing the annotation
 
-### Remove already used instances
+#### Remove already used instances
 
 If you want to release a new annotation batch, but you want to avoid repeating previous instances, then you can 
 create a new file that doesn't consider the ones previously used:
@@ -86,7 +86,7 @@ csvsql \
   already_used.csv > output.csv
 ```
 
-### Create the annotation input CSV file
+#### Create the annotation input CSV file
 
 ```bash
 ./scripts/generate_annotation_input.py $GENERATED_CSV_FILTERED_FILE > $MTURK_INPUT_CSV_FILE
