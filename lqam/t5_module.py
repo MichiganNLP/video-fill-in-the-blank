@@ -73,14 +73,18 @@ class T5FillerModel(pl.LightningModule):
             # implementing our own version.
             encoder = self.t5_pretrained_model.get_encoder()
             if visual is not None:
-                model_kwargs["encoder_outputs"] = encoder(masked_caption_ids, visual=visual)
+                model_kwargs["encoder_outputs"] = encoder(masked_caption_ids, visual=visual, attention)
             else:
                 model_kwargs["encoder_outputs"] = encoder(masked_caption_ids)
+        if 'attention_mask' in _kwargs:
+            attention_mask = _kwargs['attention_mask']
+        else:
+            attention_mask = None
 
         if visual is None:
             label_output = self(masked_caption_ids, label_ids=label_ids, **model_kwargs)
         else:
-            label_output = self(masked_caption_ids, label_ids=label_ids, visual=visual, **model_kwargs)
+            label_output = self(masked_caption_ids, label_ids=label_ids, visual=visual, attention_mask=attention_mask, **model_kwargs)
         self.log("loss", label_output["loss"], prog_bar=True)
 
         # We ignore the EOS token as it's about the EOS of the generation stream, not the end of the blank.
@@ -92,7 +96,7 @@ class T5FillerModel(pl.LightningModule):
                                         eos_token_id=self.t5_pretrained_model.config.eos_token_id)
         self.write_prediction("ground_truth_prob", label_prob)
 
-        generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, visual = visual, **self.generate_kwargs)
+        generated_ids = self.t5_pretrained_model.generate(masked_caption_ids, visual = visual,attention_mask=attention_mask, **self.generate_kwargs)
         generated = self.tokenizer.batch_decode(
             compute_first_blank(generated_ids, self.t5_pretrained_model.config.decoder_start_token_id,
                                 self.extra_id_0, self.extra_id_1))
