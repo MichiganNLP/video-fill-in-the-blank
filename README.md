@@ -68,6 +68,24 @@ In case you need to have data annotated through Amazon Mechanical Turk.
 
 ### Preparing the annotation
 
+### Remove already used instances
+
+If you want to release a new annotation batch, but you want to avoid repeating previous instances, then you can 
+create a new file that doesn't consider the ones previously used:
+
+```bash
+csvsql \
+  --query "select *
+           from input as i
+             left join already_used as a
+               on (i.video_id = a.video_id
+                   and i.video_start_time = a.video_start_time
+                   and i.video_end_time = a.video_end_time)
+           where a.video_id is null" \
+  input.csv \
+  already_used.csv > output.csv
+```
+
 ### Create the annotation input CSV file
 
 ```bash
