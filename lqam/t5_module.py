@@ -3,6 +3,8 @@ from typing import Any, Mapping, Optional, Sequence, Union, Iterable
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
+from torch.optim import Optimizer
+
 from transformers import AdamW, get_linear_schedule_with_warmup, MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
