@@ -1,4 +1,4 @@
-from typing import Any, Mapping, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence, Union
 
 import pytorch_lightning as pl
 import torch
