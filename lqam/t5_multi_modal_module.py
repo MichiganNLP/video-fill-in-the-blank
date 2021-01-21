@@ -25,12 +25,10 @@ class T5AndI3D(T5ForConditionalGeneration):
     def __init__(self, *args, **kwargs):
         self.visual_size = kwargs['visual_size']
         del kwargs['visual_size']
-        super().__init__(*args, **kwargs)
-        self.text_embedding = self.encoder.get_input_embeddings()
-        
+        super().__init__(*args, **kwargs)        
 
     def set_encoder(self):
-        self.encoder = NewEncoder(self.encoder, self.text_embedding, self.visual_size)
+        self.encoder = NewEncoder(self.encoder, self.encoder.get_input_embeddings(), self.visual_size)
     
     @overrides
     def forward(self, masked_caption_ids=None, visual = None, labels = None, *args, **kwargs):
