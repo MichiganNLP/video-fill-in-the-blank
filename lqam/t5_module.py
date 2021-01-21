@@ -3,7 +3,7 @@ from typing import Any, Mapping, Optional, Sequence
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
-from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase
+from transformers import AdamW, get_linear_schedule_with_warmup, MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
 from lqam.data_module import TYPE_BATCH
@@ -15,7 +15,7 @@ from lqam.t5_format_processing import compute_first_blank
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
 class T5FillerModel(pl.LightningModule):
     def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
-                 only_noun_phrases: bool = False, generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
+                 only_noun_phrases: bool = False, optimizer_args: Mapping[str, Any], generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
         super().__init__()
         # TODO: hparams
         # The model doesn't necessarily use T5 classes (e.g., `T5PreTrainedModel`).
@@ -24,6 +24,7 @@ class T5FillerModel(pl.LightningModule):
         self.t5_pretrained_model = t5_like_pretrained_model
         self.tokenizer = tokenizer
         self.accuracy = AlmostExactMatchAccuracy()
+        self.optimizer_args = optimizer_args
         self.generate_kwargs = generate_kwargs or {}
 
         self.extra_id_0 = self.tokenizer.convert_tokens_to_ids(["<extra_id_0>"])[0]
@@ -142,3 +143,16 @@ class T5FillerModel(pl.LightningModule):
 
     def on_test_epoch_end(self) -> None:
         self._on_epoch_end()
+    
+    @overrides
+    def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]]]:
+        optimizer = AdamW(self.parameters(), lr=self.optimizer_args['lr'], betas=(self.optimizer_args['beta1'], self.optimizer_args['beta2']),
+                          weight_decay=self.optimizer_args['weight_decay'])
+        if self.optimizer_args['lr_scheduling']:
+            if self.optimizer_args['lr_scheduling'] == "linear_with_warmup":
+                scheduler = get_linear_schedule_with_warmup(optimizer, 0.1 * self.optimizer_args['epochs'], self.optimizer_args['epochs'])
+            else:
+                raise ValueError(f"Unrecognized LR Scheduling {self.optimizer_args['lr_scheduling']}")
+            return [optimizer], [scheduler]
+        else:
+            return [optimizer]
