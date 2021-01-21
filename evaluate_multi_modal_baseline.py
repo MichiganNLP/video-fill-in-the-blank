@@ -61,8 +61,12 @@ def main() -> None:
                                             "early_stopping": args.generation_early_stopping,
                                             "no_repeat_ngram_size": args.no_repeat_ngram_size})
 
+    train_dataloaders = data_module.train_dataloader(os.path.join(args.data_path, 'train.pkl'))
+    val_dataloaders = data_module.val_dataloader(os.path.join(args.data_path, 'val.pkl'))
+    test_dataloaders=data_module.test_dataloader(os.path.join(args.data_path, 'test.pkl'))
     trainer = pl.Trainer(gpus=args.gpus)
-    trainer.test(filler, test_dataloaders=data_module.test_dataloader(os.path.join(args.data_path, 'test.pkl')))
+    trainer.fit(filler, train_dataloaders, val_dataloaders)
+    trainer.test(filler, test_dataloaders=test_dataloaders)
 
     predictions = {k: v.tolist() if isinstance(v, torch.Tensor) else v
                    for k, v in next(iter(trainer.evaluation_loop.predictions.predictions.values())).items()}
