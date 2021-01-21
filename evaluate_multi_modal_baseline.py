@@ -42,7 +42,12 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--only-noun-phrases", action="store_true")
 
     parser.add_argument("--predictions-output-path", default="predictions.csv")
-
+    parser.add_argument("--beta1", default=0.9, type=float, help="beta1 for the Adam optimizer")
+    parser.add_argument("--beta2", default=0.999, type=float, help="beta2 for the Adam optimizer")
+    parser.add_argument("--epochs", default=10, type=int)
+    parser.add_argument("--lr", default=0.0001, type=float)
+    parser.add_argument("--lr-scheduling", choices=("", "linear_with_warmup"), default="linear_with_warmup")
+    parser.add_argument("--weight-decay", default=1e-4, type=float)
     return parser.parse_args()
 
 
@@ -61,6 +66,7 @@ def main() -> None:
                                              'beta2': args.beta2,
                                              'lr_scheduling': args.lr_scheduling,
                                              'epochs': args.epochs,
+                                             'weight_decay': args.weight_decay
                                             },
                            generate_kwargs={"max_length": args.max_length,
                                             "num_beams": args.beam_size,
