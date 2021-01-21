@@ -14,8 +14,8 @@ from lqam.t5_format_processing import compute_first_blank
 
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
 class T5FillerModel(pl.LightningModule):
-    def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
-                 only_noun_phrases: bool = False, optimizer_args: Mapping[str, Any], generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
+    def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase, optimizer_args: Mapping[str, Any],
+                 only_noun_phrases: bool = False, generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
         super().__init__()
         # TODO: hparams
         # The model doesn't necessarily use T5 classes (e.g., `T5PreTrainedModel`).
