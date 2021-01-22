@@ -129,3 +129,32 @@ T5 text-only baseline:
 ```bash
 ./scripts/evaluate_text_only_baseline.py
 ```
+
+## Woker Bonus
+
+If you want to reward workers with **extra** bonus, prepare a `./scripts/bonus_info.json` file with the following fields:
+
+```json
+{
+	"workerIds": list[string],
+	"BonusAmounts": list[string],
+	"Reasons": list[string],
+	"UniqueRequestTokens": list[string]
+}
+```
+Then execute the following command
+
+```bash
+./scripts/bonus_mturk.py
+```
+
+You could refer to:
+
+ https://blog.mturk.com/tutorial-a-beginners-guide-to-crowdsourcing-ml-training-data-with-python-and-mturk-d8df4bdf2977
+
+and 
+
+https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/mturk.html?highlight=sendbonus#MTurk.Client.send_bonus
+
+for more information.
+
