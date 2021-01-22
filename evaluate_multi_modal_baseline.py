@@ -77,7 +77,7 @@ def main() -> None:
     val_dataloaders = data_module.val_dataloader(os.path.join(args.data_path, 'val.pkl'))
     test_dataloaders=data_module.test_dataloader(os.path.join(args.data_path, 'test.pkl'))
     trainer = pl.Trainer(gpus=args.gpus)
-    trainer.fit(filler, train_dataloaders, val_dataloaders)
+    # trainer.fit(filler, train_dataloaders, val_dataloaders)
     trainer.test(filler, test_dataloaders=test_dataloaders)
 
     predictions = {k: v.tolist() if isinstance(v, torch.Tensor) else v
