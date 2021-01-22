@@ -23,5 +23,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate /home/liunan/anaconda3/envs/lqam
 echo Sourced
-python -u /home/liunan/LifeQA-methodology/baseline_BOW_VF.py -v --data-path /scratch/mihalcea_root/mihalcea1/shared_data/ActivityNet_Captions > /home/liunan/LifeQA-methodology/train.txt
+python -u /home/liunan/LifeQA-methodology/baseline_BOW_VF.py -v --data-path /scratch/mihalcea_root/mihalcea1/shared_data/qgen > /home/liunan/LifeQA-methodology/train.txt
 echo "done"

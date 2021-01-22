@@ -7,16 +7,15 @@ import pytorch_lightning as pl
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from lqam.argparse_with_defaults import ArgumentParserWithDefaults
-from lqam.data_module import QGenDataModule
-from lqam.t5_module import T5FillerModel
+from lqam.methods.dataset import QGenDataModule, URL_DATA_VAL
+from lqam.methods.t5_filler_model import T5FillerModel
+from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 
 
 def _parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults(description="Evaluate the T5 text-only baseline.")
 
-    parser.add_argument("--data-path", default="https://drive.google.com/uc?id=1-JRsjFzP3Qmjti_w8ILV06msXjw4OXoB"
-                                               "&export=download")
+    parser.add_argument("--data-path", default=URL_DATA_VAL)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", "-j", type=int, default=0,
                         help="data loader workers. Each worker batch-tokenizes in parallel, "
@@ -39,14 +38,30 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--no-repeat-ngram-size", type=int)
     parser.add_argument("--only-noun-phrases", action="store_true")
 
+    # enable reproducibility
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--no-benchmark", dest="benchmark", action="store_false")
+    parser.add_argument("--no-deterministic", dest="deterministic", action="store_false")
+    
     parser.add_argument("--predictions-output-path", default="predictions.csv")
 
     return parser.parse_args()
 
 
+def _pandas_float_format(x: float) -> str:
+    if x == 0:
+        return "0"
+    elif abs(x) < 0.005:
+        return np.format_float_scientific(x, exp_digits=1, precision=0, trim="-")
+    else:
+        return f"{x:.2f}"
+
+
 def main() -> None:
     args = _parse_args()
 
+    pl.seed_everything(args.seed)
+    
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers)
 
@@ -58,7 +73,7 @@ def main() -> None:
                                             "early_stopping": args.generation_early_stopping,
                                             "no_repeat_ngram_size": args.no_repeat_ngram_size})
 
-    trainer = pl.Trainer(gpus=args.gpus)
+    trainer = pl.Trainer(gpus=args.gpus, benchmark=args.benchmark, deterministic=args.deterministic)
     trainer.test(filler, test_dataloaders=data_module.val_dataloader(args.data_path))
 
     predictions = {k: v.tolist() if isinstance(v, torch.Tensor) else v
@@ -67,9 +82,10 @@ def main() -> None:
     df.to_csv(args.predictions_output_path, index=False)
     print(f"Predictions saved in {args.predictions_output_path}. First rows:")
     print()
-    pd.options.display.float_format = \
-        lambda x: np.format_float_scientific(x, exp_digits=1, precision=0, trim="-") if abs(x) < 0.005 else f"{x:.2f}"
-    print(df.head(10))
+    pd.options.display.float_format = _pandas_float_format
+    with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0,
+                           "display.max_colwidth", None):
+        print(df.head(10))
 
 
 if __name__ == "__main__":

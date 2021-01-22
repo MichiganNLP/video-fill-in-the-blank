@@ -5,7 +5,7 @@ from unittest import TestCase
 import torch
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from lqam.t5_format_processing import compute_blank_map, compute_first_blank, is_extra_token
+from lqam.methods.t5_format_processing import compute_blank_map, compute_first_blank, is_extra_token
 
 
 class T5FormatProcessingTest(TestCase):
@@ -30,7 +30,7 @@ class T5FormatProcessingTest(TestCase):
         for d1, d2 in zip(expected_blank_map, actual_blank_map):
             self.assertEqual(set(d1.keys()), set(d2.keys()))
             for k, v in d1.items():
-                self.assertTrue((v == d2[k]).all())
+                self.assertTrue((v == d2[k]).all())  # noqa
 
     def test_compute_blank_map_with_input_tokens(self):
         masked_caption_ids = self.tokenizer(["The <extra_id_0> walks in <extra_id_1> park."],
@@ -78,4 +78,4 @@ class T5FormatProcessingTest(TestCase):
                                                                decoder_start_token_id=decoder_start_token_id,
                                                                extra_id_0=extra_id_0, extra_id_1=extra_id_1)))
 
-        self.assertTrue((expected_first_blank_ids == actual_first_blank_ids).all())
+        self.assertTrue((expected_first_blank_ids == actual_first_blank_ids).all())  # noqa

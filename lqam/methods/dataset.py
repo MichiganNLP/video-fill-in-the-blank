@@ -9,7 +9,11 @@ import torch
 
 import pickle
 
-from lqam.file_utils import cached_path
+from lqam.util.file_utils import cached_path
+
+URL_DATA_TEST = "https://drive.google.com/uc?id=1h-8ADZJDr32QgZMClQ6J1mvMWQY0Ahzx&export=download"
+URL_DATA_VAL = "https://drive.google.com/uc?id=1Fv5Yf79guD-95yNNGpFr-GHUMrNc-gSv&export=download"
+URL_DATA_TRAIN = "https://drive.google.com/uc?id=1hFnEFGLMurexpz9c3QOKAHZtMl0utzIJ&export=download"
 
 TYPE_BATCH = Mapping[str, Any]
 
@@ -31,14 +35,13 @@ class QGenDataset(Dataset):
         if not self.return_visual:
             row = self.data.iloc[i]
             # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
-            masked_caption = row["masked caption"]
-            label = row["label"]
             return {
-                "masked_caption": masked_caption,
-                "label": label,
+                # FIXME: this `replace` should be removed when the dataset files are fixes.
+                "masked_caption": row["masked caption"].replace("<extra_id_0>", "_____"),
+                "label": row["label"],
             }
         else:
-            return self.data[i]
+            return self.data[i]        
 
     def __len__(self) -> int:
         return len(self.data)
@@ -53,8 +56,13 @@ class QGenDataset(Dataset):
             stack = [instance[k] for instance in instances]
             batch[k] = stack
 
-            if self.t5_format and k == "label":
-                to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
+            if self.t5_format:
+                if k == "label":
+                    to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
+                elif k == "masked_caption":
+                    to_tokenize = [s.replace("_____", "<extra_id_0>") for s in stack]
+                else:
+                    to_tokenize = stack
             else:
                 to_tokenize = stack
 
@@ -64,8 +72,9 @@ class QGenDataset(Dataset):
             # anymore, so we shouldn't use as many workers as CPU cores but just a small number so the compute
             # devices aren't starving but not large so they never compete a lot with each other (esp. at the
             # beginning, where the pipeline of workers is starting).
-            batch[f"{k}_ids"] = self.tokenizer(to_tokenize, padding="longest", truncation=True,
-                                               return_tensors="pt")["input_ids"]
+            tokenization_output = self.tokenizer(to_tokenize, padding="longest", truncation=True, return_tensors="pt")
+            batch[f"{k}_ids"] = tokenization_output["input_ids"]
+            batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
         return batch
     
     def collate_fn_multi_modal(self, batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
@@ -136,16 +145,13 @@ class QGenDataModule(pl.LightningDataModule):
                           pin_memory=True, collate_fn=dataset.collate_fn)
 
     @overrides
-    def train_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1-5nFmc0bkNUn7V4wMB6j3mOCksX18Lr0"
-                                                "&export=download") -> DataLoader:
+    def train_dataloader(self, data_path: str = URL_DATA_TRAIN) -> DataLoader:
         return self._dataloader(data_path, batch_size=self.batch_size, train=True)
 
     @overrides
-    def val_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1-JRsjFzP3Qmjti_w8ILV06msXjw4OXoB"
-                                              "&export=download") -> DataLoader:
+    def val_dataloader(self, data_path: str = URL_DATA_VAL) -> DataLoader:
         return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
 
     @overrides
-    def test_dataloader(self, data_path: str = "https://drive.google.com/uc?id=1-5rnoxSGkf9UyO9xhhwkf7tuElyXG4Yn"
-                                               "&export=download") -> DataLoader:
+    def test_dataloader(self, data_path: str = URL_DATA_TEST) -> DataLoader:
         return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
