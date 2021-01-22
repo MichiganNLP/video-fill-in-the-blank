@@ -109,6 +109,18 @@ Visualize the annotation results:
 ./scripts/analyze_annotation_results.py --show-metrics INPUT_CSV_FILE_OR_URL > OUTPUT_TXT_FILE
 ```
 
+### Paying bonuses
+
+If you want to pay bonuses, prepare a CSV file with the fields `uuid`, `worker_id`, `bonus_amount`, `assignment_id`, and 
+`reason`. The `uuid` field is used to uniquely identify this bonus payment. It's optional, but useful, so it's
+recommended that you generate one randomly. Then run:
+
+```bash
+./scripts/pay_mturk_bonus.py BONUS_CSV_FILE
+```
+
+Use the `--production` flag to use it for production (real money) and not in the sandbox mode.
+
 ## Download the videos
 
 In case you want to download the video, given a file with one YouTube video ID per line (such as 
@@ -129,32 +141,3 @@ T5 text-only baseline:
 ```bash
 ./scripts/evaluate_text_only_baseline.py
 ```
-
-## Woker Bonus
-
-If you want to reward workers with **extra** bonus, prepare a `./scripts/bonus_info.json` file with the following fields:
-
-```json
-{
-	"workerIds": list[string],
-	"BonusAmounts": list[string],
-	"Reasons": list[string],
-	"UniqueRequestTokens": list[string]
-}
-```
-Then execute the following command
-
-```bash
-./scripts/bonus_mturk.py
-```
-
-You could refer to:
-
- https://blog.mturk.com/tutorial-a-beginners-guide-to-crowdsourcing-ml-training-data-with-python-and-mturk-d8df4bdf2977
-
-and 
-
-https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/mturk.html?highlight=sendbonus#MTurk.Client.send_bonus
-
-for more information.
-
