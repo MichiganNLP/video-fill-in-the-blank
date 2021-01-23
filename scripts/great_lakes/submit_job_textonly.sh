@@ -4,19 +4,10 @@
 
 #SBATCH --job-name=textonly
 #SBATCH --mail-type=BEGIN,END,FAIL
-<<<<<<< HEAD
 #SBATCH --cpus-per-task=20
 #SBATCH --mem=16G
 #SBATCH --gres=gpu:1
 #SBATCH --time=8:00:00
-=======
-#SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=2gb
-#SBATCH --ntasks=
-#SBATCH --tasks-per-node=1
-#SBATCH --gres=gpu:1
-#SBATCH --time=0-5:00:00
->>>>>>> c9206db (Update time and ntasks for the baseline experiments.)
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 # The application(s) to execute along with its input arguments and options:
@@ -30,8 +21,8 @@ conda activate lqam
 echo Sourced
 
 python -m scripts.evaluate_text_only_baseline --gpus=1 --max-length=10 \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=96
-echo evaluating "python -m scripts.evaluate_text_only_baseline --batch-size=96 --gpus=1 --max-length=10 --generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4"
+--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=256
+echo evaluating "python -m scripts.evaluate_text_only_baseline --batch-size=512 --gpus=1 --max-length=10 --generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4"
 
 command="python -m scripts.evaluate_text_only_baseline --gpus=1 --max-length=10 --num-workers=4"
 
