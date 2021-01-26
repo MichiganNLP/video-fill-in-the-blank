@@ -12,7 +12,7 @@ SPACY_MODEL = create_spacy_model(prefer_gpu=True)
 
 def strip_punctuation(s: str) -> str:
     # See https://stackoverflow.com/a/266162/1165181
-    return s.translate(str.maketrans("", "", string.punctuation))
+    return s.translate(str.maketrans("", "", string.punctuation)).strip()
 
 
 def compute_decision_score(precision: float, recall: float) -> float:
