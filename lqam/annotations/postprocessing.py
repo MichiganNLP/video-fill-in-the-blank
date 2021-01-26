@@ -30,7 +30,7 @@ def order_worker_answers_by_question(worker_answers: Mapping[str, str]) -> Seque
         # noinspection PyUnusedLocal
         if match := RE_ANSWER_KEY.match(k) or (match := RE_ANSWER_INPUT_KEY.match(k)):
             question_i = int(match.group("question_index"))
-            i = match.groupdict().get("answer_index", sys.maxsize)
+            i = int(match.groupdict().get("answer_index", sys.maxsize))
             answers_by_question[question_i].append((i, worker_answers[k]))
 
     return [[sorted_i_and_question_answers[1]
