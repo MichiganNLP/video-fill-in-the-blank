@@ -12,19 +12,11 @@ from lqam.util.iterable_utils import chunks
 
 def parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults()
-
     parser.add_argument("questions_path_or_url", metavar="QUESTIONS_CSV_FILE_OR_URL", nargs="?", default="-")
-
-    parser.add_argument("--hit-count", type=int)
     parser.add_argument("--questions-per-hit", type=int, default=QUESTIONS_PER_HIT)
-
-    parser.add_argument("--seed", type=int, default=1337)
-
     args = parser.parse_args()
 
     args.input = sys.stdin if args.questions_path_or_url == "-" else cached_path(args.questions_path_or_url)
-
-    args.question_count = args.hit_count * args.questions_per_hit if args.hit_count else None
 
     return args
 
@@ -33,9 +25,6 @@ def main() -> None:
     args = parse_args()
 
     df = pd.read_csv(args.input)
-
-    if args.question_count:
-        df = df.sample(args.question_count, random_state=args.seed)
 
     hits_df = pd.DataFrame([
         {

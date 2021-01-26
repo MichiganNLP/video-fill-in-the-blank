@@ -19,7 +19,7 @@ This repo contains the annotation scheme, results and methods for the LifeQA pro
     conda env create
     conda activate lqam
     python -m spacy download en_core_web_trf
-    export PYTHONPATH=$PWD
+    export PYTHONPATH=.
     ```
 
 3. Put the data under `data/`. For example, in Great Lakes it can be a symlink:
@@ -76,15 +76,32 @@ create a new file that doesn't consider the ones previously used:
 ```bash
 csvsql \
   --query "select *
-           from input as i
-             left join already_used as a
+           from filename as i
+             left join already_used_filename as a
                on (i.video_id = a.video_id
                    and i.video_start_time = a.video_start_time
                    and i.video_end_time = a.video_end_time)
            where a.video_id is null" \
-  input.csv \
-  already_used.csv > output.csv
+  $GENERATED_CSV_FILTERED_FILE \
+  --no-inference \
+  $ALREADY_USED_CSV_FILE > $GENERATED_CSV_FILTERED_FILE
 ```
+
+#### Subsample
+
+If you want to select a random sample of certain size (e.g., 1000; first make sure you have at least that many), run:
+
+```bash
+csvsql \
+  --query "select *
+           from filename
+           order by random()
+           limit 1000" \
+  --no-inference \
+  $GENERATED_CSV_FILTERED_FILE > $GENERATED_CSV_FILTERED_FILE
+```
+
+If you want to both remove some already used instances and subsample, note you can combine the last 2 commands.
 
 #### Create the annotation input CSV file
 
@@ -95,10 +112,7 @@ csvsql \
 If you just want to take a random portion, do:
 
 ```bash
-./scripts/generate_annotation_input.py \
-    --hit-count $HIT_COUNT \
-    $GENERATED_CSV_FILTERED_FILE \
-    > $MTURK_INPUT_CSV_FILE
+./scripts/generate_annotation_input.py $GENERATED_CSV_FILTERED_FILE > $MTURK_INPUT_CSV_FILE
 ```
 
 ### Using the annotation results
