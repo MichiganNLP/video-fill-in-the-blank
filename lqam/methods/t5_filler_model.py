@@ -152,7 +152,7 @@ class T5FillerModel(pl.LightningModule):
 
         label_ids[label_ids == self.t5_pretrained_model.config.pad_token_id] = -100  # Mask for the loss computation.
         label_output = self(masked_caption_ids, masked_caption_attention_mask, label_ids, **model_kwargs)
-        self.log("loss", label_output.loss, prog_bar=True)
+        # self.log("loss", label_output.loss, prog_bar=True)
         label_ids[label_ids == -100] = self.t5_pretrained_model.config.pad_token_id  # Mask for the loss computation.
 
         label_prob = compute_answer_prob(label_output.logits, label_ids, self.t5_pretrained_model.config,
