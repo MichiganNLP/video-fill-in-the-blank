@@ -98,8 +98,8 @@ class QGenDataset(Dataset):
             if total_video_len > max_video_len:
                 max_video_len = total_video_len
         
-        label_list = [f"<extra_id_0> {label} <extra_id_1>" for label in label_list]
-        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=label_list, padding=True, return_tensors="pt")
+        label_with_special_tokens = [f"<extra_id_0> {label} <extra_id_1>" for label in label_list]
+        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=label_with_special_tokens, padding=True, return_tensors="pt")
         text_tensor = text_batch.input_ids
         text_attention_mask = text_batch.attention_mask
         labels = text_batch.labels
