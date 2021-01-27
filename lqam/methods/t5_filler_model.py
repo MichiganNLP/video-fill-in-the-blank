@@ -91,11 +91,10 @@ class T5FillerModel(pl.LightningModule):
         generated_output = self.t5_pretrained_model.generate(masked_caption_ids,
                                                             attention_mask=masked_caption_attention_mask,
                                                             **self.generate_kwargs)
-        if visual is None:
-            generated_ids = generated_output.sequences
-        #FIXME: I don't know why the output of the multi-modal model is already a tensor
-        else:
-            generated_ids = generated_output
+
+        generated_ids = generated_output.sequences
+
+        generated_ids = generated_output
         generated = self.tokenizer.batch_decode(
             compute_first_blank(generated_ids, self.t5_pretrained_model.config.decoder_start_token_id,
                                 self.extra_id_0, self.extra_id_1))
