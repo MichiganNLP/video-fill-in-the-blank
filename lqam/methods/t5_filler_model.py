@@ -93,8 +93,6 @@ class T5FillerModel(pl.LightningModule):
                                                             **self.generate_kwargs)
 
         generated_ids = generated_output.sequences
-
-        generated_ids = generated_output
         generated = self.tokenizer.batch_decode(
             compute_first_blank(generated_ids, self.t5_pretrained_model.config.decoder_start_token_id,
                                 self.extra_id_0, self.extra_id_1))
