@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u ../multi_modal_model_t5.py --data-path /scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/VATEX/ --num-workers 8
+python -u evaluate_multi_modal_baseline.py --data-path /scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/VATEX/ --num-workers 8 --gpus 1
 echo done
