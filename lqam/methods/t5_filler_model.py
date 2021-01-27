@@ -72,7 +72,7 @@ class T5FillerModel(pl.LightningModule):
     def training_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> torch.Tensor:
         if batch.get('visual'):
             return self(batch["masked_caption_ids"], batch.get("masked_caption_attention_mask"),
-                        batch.get("label_ids"))["loss"]
+                        batch.get("label_ids"), visual=batch.get(visual))["loss"]
         else:
             return self(batch["masked_caption_ids"], batch.get("masked_caption_attention_mask"),
                         batch.get("label_ids"))["loss"]
