@@ -73,7 +73,7 @@ def compute_first_blank_instance(generated_ids: torch.Tensor, decoder_start_toke
         extra_id_1_i = next(iter((generated_ids == extra_id_1).nonzero(as_tuple=True)[0]), len(generated_ids))  # noqa
         return generated_ids[extra_id_0_i + 1:extra_id_1_i]
     else:
-        return generated_ids
+        return generated_ids[extra_id_0_i:]
 
 
 def compute_first_blank(generated_ids: torch.Tensor, decoder_start_token_id: int, extra_id_0: int,
