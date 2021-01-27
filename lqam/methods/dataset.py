@@ -122,7 +122,7 @@ class QGenDataset(Dataset):
         attention_mask = torch.cat([text_attention_mask, video_attention_mask], 1)
 
         return {"masked_caption_ids": text_tensor, "visual": video_tensor, "label_ids": labels, "masked_caption": masked_captions,
-                                                     "label": label_list, 'attention_mask': attention_mask}
+                                                     "label": label_list, 'masked_caption_attention_mask': attention_mask}
 
 class QGenDataModule(pl.LightningDataModule): 
     def __init__(self, tokenizer: PreTrainedTokenizerBase, batch_size: int = 32, eval_batch_size: Optional[int] = None,
