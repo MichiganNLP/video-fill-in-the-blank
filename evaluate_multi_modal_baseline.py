@@ -8,10 +8,10 @@ import torch
 import os
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
-from lqam.argparse_with_defaults import ArgumentParserWithDefaults
+from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.data_module import QGenDataModule
 from lqam.methods.t5_filler_model import T5FillerModel
-from lqam.t5_multi_modal_module import T5AndI3D
+from lqam.methods.t5_multi_modal_module import T5AndI3D
 
 def _parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults(description="Evaluate the T5 multi-modal baseline.")
