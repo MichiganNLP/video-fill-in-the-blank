@@ -21,7 +21,7 @@ class NewEncoder(nn.Module):
             "encoder_hidden_states":kwargs.get('encoder_hidden_states'),
             "encoder_attention_mask":kwargs.get('encoder_attention_mask'),
             "head_mask":kwargs.get('head_mask'),
-            # "encoder_head_mask":kwargs.get('encoder_head_mask'),
+            "encoder_head_mask":kwargs.get('encoder_head_mask'),
             "past_key_values":kwargs.get('past_key_values'),
             "use_cache":kwargs.get('use_cache'),
             "output_attentions":kwargs.get('output_attentions'),
