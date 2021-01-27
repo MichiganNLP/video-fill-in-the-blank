@@ -49,6 +49,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--lr-scheduling", choices=("", "linear_with_warmup"), default="linear_with_warmup")
     parser.add_argument("--weight-decay", default=1e-4, type=float)
     parser.add_argument("--default-root-dir", type=str, default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/")
+    parser.add_argument("--fast-dev-run", action="store_true")
     return parser.parse_args()
 
 
