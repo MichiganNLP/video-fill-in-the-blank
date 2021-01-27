@@ -87,6 +87,9 @@ csvsql \
   $ALREADY_USED_CSV_FILE > $GENERATED_CSV_FILTERED_FILE
 ```
 
+You can remove already used instances from multiple files by substituting `$ALREADY_USED_CSV_FILE` from the last
+command with: `<(csvstack $ALREADY_USED_CSV_FILE1 $ALREADY_USED_CSV_FILE2 ...)`.
+
 #### Subsample
 
 If you want to select a random sample of certain size (e.g., 1000; first make sure you have at least that many), run:
