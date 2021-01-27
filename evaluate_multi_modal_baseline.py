@@ -48,6 +48,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--lr", default=0.0001, type=float)
     parser.add_argument("--lr-scheduling", choices=("", "linear_with_warmup"), default="linear_with_warmup")
     parser.add_argument("--weight-decay", default=1e-4, type=float)
+    parser.add_argument("--default-root-dir", type=str, default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/")
     return parser.parse_args()
 
 
@@ -76,7 +77,7 @@ def main() -> None:
     train_dataloaders = data_module.train_dataloader(os.path.join(args.data_path, 'train.pkl'))
     val_dataloaders = data_module.val_dataloader(os.path.join(args.data_path, 'val.pkl'))
     test_dataloaders=data_module.test_dataloader(os.path.join(args.data_path, 'test.pkl'))
-    trainer = pl.Trainer(gpus=args.gpus)
+    trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.default_root_dir)
     trainer.fit(filler, train_dataloaders, val_dataloaders)
     trainer.test(filler, test_dataloaders=test_dataloaders)
 
