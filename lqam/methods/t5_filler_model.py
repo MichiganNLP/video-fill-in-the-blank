@@ -86,14 +86,11 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("masked_caption", masked_caption)
 
         # Generate an answer from scratch:
-        if visual is None:
-            generated_output = self.t5_pretrained_model.generate(masked_caption_ids,
-                                                             attention_mask=masked_caption_attention_mask,
-                                                             **self.generate_kwargs)
-        else:
-            generated_output = self.t5_pretrained_model.generate(masked_caption_ids, visual=visual,
-                                                             attention_mask=masked_caption_attention_mask,
-                                                             **self.generate_kwargs)
+        if visual is not None:
+            self.generate_kwargs['visual'] = visual
+        generated_output = self.t5_pretrained_model.generate(masked_caption_ids,
+                                                            attention_mask=masked_caption_attention_mask,
+                                                            **self.generate_kwargs)
         generated_ids = generated_output.sequences
         generated = self.tokenizer.batch_decode(
             compute_first_blank(generated_ids, self.t5_pretrained_model.config.decoder_start_token_id,

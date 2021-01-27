@@ -17,8 +17,6 @@ class NewEncoder(nn.Module):
         text_embedding = self.text_embedding(text_token_ids)
         visual_embedding = self.video_embedding(kwargs['visual'])
         del kwargs['visual']
-        kwargs['return_dict'] = kwargs['return_dict_in_generate']
-        del kwargs['return_dict_in_generate']
         embedding = torch.cat([text_embedding, visual_embedding], dim=1)
         return self.t5_stack.forward(inputs_embeds=embedding, *args, **kwargs)
 
