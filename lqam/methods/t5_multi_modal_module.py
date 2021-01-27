@@ -17,6 +17,8 @@ class NewEncoder(nn.Module):
         text_embedding = self.text_embedding(text_token_ids)
         visual_embedding = self.video_embedding(kwargs['visual'])
         del kwargs['visual']
+        kwargs['return_dict'] = kwargs['return_dict_in_generate']
+        del kwargs['return_dict_in_generate']
         embedding = torch.cat([text_embedding, visual_embedding], dim=1)
         return self.t5_stack.forward(inputs_embeds=embedding, *args, **kwargs)
 
@@ -34,6 +36,4 @@ class T5AndI3D(T5ForConditionalGeneration):
     def forward(self, masked_caption_ids=None, visual = None, labels = None, *args, **kwargs):
         if "encoder_outputs" not in kwargs:
             kwargs["encoder_outputs"] = self.encoder(masked_caption_ids, visual=visual)
-        if "return_dict" not in kwargs:
-            kwargs["return_dict"] = True
         return super().forward(labels = labels, *args, **kwargs)
