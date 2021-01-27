@@ -23,7 +23,7 @@ dependencies:
   - pip=20.3
   - python=3.8
   - pytorch=1.7.1
-  - conda-forge::pytorch-lightning=1.1.0
+  - conda-forge::pytorch-lightning=1.1.6
   - conda-forge::rarfile=4.0
   - conda-forge::tensorboard=2.4.0
   - torchvision=0.8.2
