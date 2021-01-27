@@ -18,12 +18,12 @@ class NewEncoder(nn.Module):
         visual_embedding = self.video_embedding(kwargs['visual'])
         encoder_args = {
             "attention_mask":kwargs.get('attention_mask'),
-            # "encoder_hidden_states":kwargs.get('encoder_hidden_states'),
-            # "encoder_attention_mask":kwargs.get('encoder_attention_mask'),
-            # "head_mask":kwargs.get('head_mask'),
+            "encoder_hidden_states":kwargs.get('encoder_hidden_states'),
+            "encoder_attention_mask":kwargs.get('encoder_attention_mask'),
+            "head_mask":kwargs.get('head_mask'),
             # "encoder_head_mask":kwargs.get('encoder_head_mask'),
-            # "past_key_values":kwargs.get('past_key_values'),
-            # "use_cache":kwargs.get('use_cache'),
+            "past_key_values":kwargs.get('past_key_values'),
+            "use_cache":kwargs.get('use_cache'),
             "output_attentions":kwargs.get('output_attentions'),
             "output_hidden_states":kwargs.get('output_hidden_states'),
             "return_dict":kwargs.get('return_dict')
