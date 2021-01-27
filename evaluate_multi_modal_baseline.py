@@ -9,7 +9,7 @@ import os
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
-from lqam.data_module import QGenDataModule
+from lqam.methods.dataset import QGenDataModule
 from lqam.methods.t5_filler_model import T5FillerModel
 from lqam.methods.t5_multi_modal_module import T5AndI3D
 
