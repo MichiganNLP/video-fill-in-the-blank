@@ -78,7 +78,7 @@ def main() -> None:
     train_dataloaders = data_module.train_dataloader(os.path.join(args.data_path, 'train.pkl'))
     val_dataloaders = data_module.val_dataloader(os.path.join(args.data_path, 'val.pkl'))
     test_dataloaders=data_module.test_dataloader(os.path.join(args.data_path, 'test.pkl'))
-    trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.default_root_dir, fast_dev_run = args.fast_dev_run)
+    trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.default_root_dir, fast_dev_run = args.fast_dev_run, max_epochs = args.epochs)
     trainer.fit(filler, train_dataloaders, val_dataloaders)
     trainer.test(filler, test_dataloaders=test_dataloaders)
 
