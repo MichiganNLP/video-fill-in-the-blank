@@ -4,7 +4,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 from overrides import overrides
-from lqam.methods.t5_module import T5FillerModel
+from lqam.methods.t5_filler_model import T5FillerModel
 
 class NewEncoder(nn.Module):
     def __init__(self, t5_stack: T5Stack, text_embedding, visual_size: int) -> None:
