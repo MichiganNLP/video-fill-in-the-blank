@@ -1,11 +1,12 @@
-from typing import Any, Mapping, Optional, Sequence, Union, Iterable, Tuple
+from typing import Any, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import pytorch_lightning as pl
 import torch
-from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 from overrides import overrides
-from transformers import MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase, AdamW, get_linear_schedule_with_warmup
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler  # noqa
+from transformers import AdamW, MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase, \
+    get_linear_schedule_with_warmup
 from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
 
 from lqam.core.noun_phrases import create_spacy_model
@@ -15,9 +16,11 @@ from lqam.methods.metrics import AlmostExactMatchAccuracy
 from lqam.methods.t5_format_processing import compute_first_blank
 from lqam.util.iterable_utils import chunks
 
+
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
 class T5FillerModel(pl.LightningModule):
-    def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase, optimizer_args: Mapping[str, Any],
+    def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
+                 optimizer_args: Mapping[str, Any],
                  only_noun_phrases: bool = False, generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
         super().__init__()
         # TODO: hparams
@@ -70,27 +73,32 @@ class T5FillerModel(pl.LightningModule):
                                         labels=label_ids, **kwargs)
 
     def training_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> torch.Tensor:
-        if batch.get('visual') is not None:
-            return self(batch["masked_caption_ids"], batch.get("masked_caption_attention_mask"),
-                        batch.get("label_ids"), visual=batch.get('visual'))["loss"]
-        else:
-            return self(batch["masked_caption_ids"], batch.get("masked_caption_attention_mask"),
-                        batch.get("label_ids"))["loss"]
+        kwargs = {}
+
+        visual = batch.get('visual')
+        if visual is not None:
+            kwargs["visual"] = visual
+
+        loss = self(batch["masked_caption_ids"], batch.get("masked_caption_attention_mask"),
+                    batch.get("label_ids"), **kwargs)["loss"]
+        self.log("loss", loss)
+
+        return loss
 
     def _prefix_allowed_ids(self, _batch_id: int, input_ids: torch.Tensor) -> Sequence[int]:
         return [self.tokenizer.eos_token_id] if input_ids[-1] == self.extra_id_1 else self.all_token_ids
 
     def _generative_step(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: torch.Tensor,
-                         label_ids: torch.Tensor, masked_caption: Sequence[str], label: Sequence[str], 
-                         visual: torch.Tensor = None, **_kwargs) -> None:
+                         label_ids: torch.Tensor, masked_caption: Sequence[str], label: Sequence[str],
+                         visual: Optional[torch.Tensor] = None, **_kwargs) -> None:
         self.write_prediction("masked_caption", masked_caption)
 
         # Generate an answer from scratch:
         if visual is not None:
             self.generate_kwargs['visual'] = visual
         generated_output = self.t5_pretrained_model.generate(masked_caption_ids,
-                                                            attention_mask=masked_caption_attention_mask,
-                                                            **self.generate_kwargs)
+                                                             attention_mask=masked_caption_attention_mask,
+                                                             **self.generate_kwargs)
 
         generated_ids = generated_output.sequences
         generated = self.tokenizer.batch_decode(
@@ -152,7 +160,7 @@ class T5FillerModel(pl.LightningModule):
 
         label_ids[label_ids == self.t5_pretrained_model.config.pad_token_id] = -100  # Mask for the loss computation.
         label_output = self(masked_caption_ids, masked_caption_attention_mask, label_ids, **model_kwargs)
-        # self.log("loss", label_output.loss, prog_bar=True)
+        self.log("eval_loss", label_output.loss, prog_bar=True)
         label_ids[label_ids == -100] = self.t5_pretrained_model.config.pad_token_id  # Mask for the loss computation.
 
         label_prob = compute_answer_prob(label_output.logits, label_ids, self.t5_pretrained_model.config,
@@ -178,11 +186,13 @@ class T5FillerModel(pl.LightningModule):
 
     @overrides
     def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]]]:
-        optimizer = AdamW(self.parameters(), lr=self.optimizer_args['lr'], betas=(self.optimizer_args['beta1'], self.optimizer_args['beta2']),
+        optimizer = AdamW(self.parameters(), lr=self.optimizer_args['lr'],
+                          betas=(self.optimizer_args['beta1'], self.optimizer_args['beta2']),
                           weight_decay=self.optimizer_args['weight_decay'])
         if self.optimizer_args['lr_scheduling']:
             if self.optimizer_args['lr_scheduling'] == "linear_with_warmup":
-                scheduler = get_linear_schedule_with_warmup(optimizer, 0.1 * self.optimizer_args['epochs'], self.optimizer_args['epochs'])
+                scheduler = get_linear_schedule_with_warmup(optimizer, 0.1 * self.optimizer_args['epochs'],
+                                                            self.optimizer_args['epochs'])
             else:
                 raise ValueError(f"Unrecognized LR Scheduling {self.optimizer_args['lr_scheduling']}")
             return [optimizer], [scheduler]
