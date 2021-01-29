@@ -28,8 +28,8 @@ class QGenDataset(Dataset):
         row = self.df.iloc[i]
         # TODO: return the visual features if `self.return_visual`.
         return {
-            # FIXME: this `replace` should be removed when the dataset files are fixes.
-            "masked_caption": row["masked caption"].replace("<extra_id_0>", "_____"),
+            # FIXME: `replace` and "masked caption" key should be removed when the dataset files are fixes.
+            "masked_caption": row.get("masked caption", row.get("masked_caption")).replace("<extra_id_0>", "_____"),
             "label": row["label"],
         }
 
