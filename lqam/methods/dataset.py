@@ -10,7 +10,7 @@ from lqam.util.file_utils import cached_path
 
 URL_DATA_TEST = "https://drive.google.com/uc?id=1h-8ADZJDr32QgZMClQ6J1mvMWQY0Ahzx&export=download"
 URL_DATA_VAL = "https://drive.google.com/uc?id=1Fv5Yf79guD-95yNNGpFr-GHUMrNc-gSv&export=download"
-URL_DATA_TRAIN = "https://drive.google.com/uc?id=1hFnEFGLMurexpz9c3QOKAHZtMl0utzIJ&export=download"
+URL_DATA_TRAIN = "https://drive.google.com/uc?id=1BureM8nfvmgoHxaZeVWeUpYTuTrX_Kcx&export=download"
 
 TYPE_BATCH = Mapping[str, Any]
 
