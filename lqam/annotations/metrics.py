@@ -147,8 +147,8 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
 
     question_with_answers = (question.replace("_____", clean_answer) for _, clean_answer in answers_flat)
 
-    np_map = {answer: is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
-                                                            start + len(clean_answer)))
+    np_map = {answer: clean_answer and is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
+                                                                             start + len(clean_answer)))
               for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers))}
 
     for worker_id, worker_answers in answers_map.items():
