@@ -273,6 +273,8 @@ class TestNounPhrases(TestCase):
 
             ("_____ is a great way to stay healthy.", "Eating in the morning", True),
             ("_____ is a great way to stay healthy.", "To eat in the morning", True),
+
+            ("A baby is listening to a lady's song as _____.", "she is signing", False),
         ]
 
         texts_starts_ends_and_nps = [(question.replace("_____", answer), (start := question.index("_____")),
