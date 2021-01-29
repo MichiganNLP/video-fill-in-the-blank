@@ -40,7 +40,7 @@ def order_worker_answers_by_question(worker_answers: Mapping[str, str]) -> Seque
 
 def parse_hits(filepath_or_buffer: FilePathOrBuffer) -> Mapping[str, Mapping[str, Any]]:
     df = pd.read_csv(filepath_or_buffer, converters={"Answer.taskAnswers": json.loads})
-    hits = (df
+    hits = (df[df["RejectionTime"].isna()]
             .groupby(["HITId"] + [c for c in df.columns if c.startswith("Input.")])
             .agg({"Answer.taskAnswers": lambda lists: [x for list_ in lists for x in list_],
                   "WorkerId": lambda lists: list(lists)})
