@@ -5,6 +5,8 @@ import pytorch_lightning as pl
 from overrides import overrides
 from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizerBase
+import numpy as np
+import os
 import torch
 
 import pickle
@@ -19,36 +21,37 @@ TYPE_BATCH = Mapping[str, Any]
 
 
 class QGenDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, return_visual: bool = False,
+    def __init__(self, data_path: str, visual_data_path:str, tokenizer: PreTrainedTokenizerBase, return_visual: bool = False,
                  t5_format: bool = True) -> None:
         super().__init__()
-        if not return_visual:
-            self.data = pd.read_csv(cached_path(data_path))
-        else:
-            with open(cached_path(data_path), 'rb') as f:
-                self.data = self.preprocess_visual(pickle.load(f))
+            
+        self.data = pd.read_csv(cached_path(data_path))
+
+        self.visual_data_path = visual_data_path
         self.tokenizer = tokenizer
         self.return_visual = return_visual
         self.t5_format = t5_format
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
+        row = self.data.iloc[i]
         if not self.return_visual:
-            row = self.data.iloc[i]
             # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
             return {
-                # FIXME: this `replace` should be removed when the dataset files are fixes.
-                "masked_caption": row["masked caption"].replace("<extra_id_0>", "_____"),
+                "masked_caption": row["masked caption"],
                 "label": row["label"],
             }
         else:
-            return self.data[i]        
+            video_id = row['videoID']
+            video_feature = np.load(os.path.join(self.visual_data_path, video_id + '.npy'))
+            return {
+                "masked_caption": row["masked caption"],
+                "label": row["label"],
+                'visual': video_feature
+            }
+                   
 
     def __len__(self) -> int:
         return len(self.data)
-
-    def preprocess_visual(self, data):
-        out = [{"masked_caption": d[1], "masked_caption_ids": d[2], "visual": d[4], "label": d[3]} for d in data]
-        return out
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
         batch = {}
@@ -60,7 +63,7 @@ class QGenDataset(Dataset):
                 if k == "label":
                     to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
                 elif k == "masked_caption":
-                    to_tokenize = [s.replace("_____", "<extra_id_0>") for s in stack]
+                    to_tokenize = stack
                 else:
                     to_tokenize = stack
             else:
@@ -134,8 +137,8 @@ class QGenDataModule(pl.LightningDataModule):
         self.eval_batch_size = eval_batch_size or batch_size
         self.hasVisual = hasVisual
 
-    def _dataloader(self, data_path: str, batch_size: int, train: bool) -> DataLoader:
-        dataset = QGenDataset(data_path, tokenizer=self.tokenizer, return_visual=self.hasVisual)
+    def _dataloader(self, data_path: str, visual_data_path:str, batch_size: int, train: bool) -> DataLoader:
+        dataset = QGenDataset(data_path, visual_data_path, tokenizer=self.tokenizer, return_visual=self.hasVisual)
         # TODO: bucket-batching could make training faster, and consume less memory.
         if self.hasVisual:
             return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
@@ -145,13 +148,13 @@ class QGenDataModule(pl.LightningDataModule):
                           pin_memory=True, collate_fn=dataset.collate_fn)
 
     @overrides
-    def train_dataloader(self, data_path: str = URL_DATA_TRAIN) -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.batch_size, train=True)
+    def train_dataloader(self, data_path: str = URL_DATA_TRAIN, visual_data_path: Optional[str] = None) -> DataLoader:
+        return self._dataloader(data_path, visual_data_path=visual_data_path, batch_size=self.batch_size, train=True)
 
     @overrides
-    def val_dataloader(self, data_path: str = URL_DATA_VAL) -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
+    def val_dataloader(self, data_path: str = URL_DATA_VAL, visual_data_path: Optional[str] = None) -> DataLoader:
+        return self._dataloader(data_path, visual_data_path=visual_data_path, batch_size=self.eval_batch_size, train=False)
 
     @overrides
-    def test_dataloader(self, data_path: str = URL_DATA_TEST) -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
+    def test_dataloader(self, data_path: str = URL_DATA_TEST, visual_data_path: Optional[str] = None) -> DataLoader:
+        return self._dataloader(data_path, visual_data_path=visual_data_path, batch_size=self.eval_batch_size, train=False)
