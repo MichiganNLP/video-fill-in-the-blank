@@ -11,7 +11,8 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.methods.dataset import QGenDataModule
 from lqam.methods.t5_filler_model import T5FillerModel
-from lqam.methods.t5_multi_modal_module import T5AndI3D
+from lqam.methods.t5_multi_modal_module import T5AndVisual
+
 
 def _parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults(description="Evaluate the T5 multi-modal baseline.")
@@ -48,7 +49,8 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--lr", default=0.0001, type=float)
     parser.add_argument("--lr-scheduling", choices=("", "linear_with_warmup"), default="linear_with_warmup")
     parser.add_argument("--weight-decay", default=1e-4, type=float)
-    parser.add_argument("--default-root-dir", type=str, default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/")
+    parser.add_argument("--default-root-dir", type=str,
+                        default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/")
     parser.add_argument("--fast-dev-run", action="store_true")
     return parser.parse_args()
 
@@ -57,19 +59,20 @@ def main() -> None:
     args = _parse_args()
 
     tokenizer = AutoTokenizer.from_pretrained(args.model)
-    data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers, hasVisual=True)
+    data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers,
+                                 hasVisual=True)
 
-    t5_like_pretrained_model = T5AndI3D.from_pretrained(args.model, visual_size=args.visual_size)
+    t5_like_pretrained_model = T5AndVisual.from_pretrained(args.model, visual_size=args.visual_size)
     t5_like_pretrained_model.set_encoder()
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                            only_noun_phrases=args.only_noun_phrases,
-                           optimizer_args = {'lr': args.lr,
-                                             'beta1': args.beta1,
-                                             'beta2': args.beta2,
-                                             'lr_scheduling': args.lr_scheduling,
-                                             'epochs': args.epochs,
-                                             'weight_decay': args.weight_decay
-                                            },
+                           optimizer_args={'lr': args.lr,
+                                           'beta1': args.beta1,
+                                           'beta2': args.beta2,
+                                           'lr_scheduling': args.lr_scheduling,
+                                           'epochs': args.epochs,
+                                           'weight_decay': args.weight_decay
+                                           },
                            generate_kwargs={"max_length": args.max_length,
                                             "num_beams": args.beam_size,
                                             "early_stopping": args.generation_early_stopping,
@@ -77,8 +80,9 @@ def main() -> None:
 
     train_dataloaders = data_module.train_dataloader(os.path.join(args.data_path, 'train.pkl'))
     val_dataloaders = data_module.val_dataloader(os.path.join(args.data_path, 'val.pkl'))
-    test_dataloaders=data_module.test_dataloader(os.path.join(args.data_path, 'test.pkl'))
-    trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.default_root_dir, fast_dev_run = args.fast_dev_run, max_epochs = args.epochs)
+    test_dataloaders = data_module.test_dataloader(os.path.join(args.data_path, 'test.pkl'))
+    trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.default_root_dir, fast_dev_run=args.fast_dev_run,
+                         max_epochs=args.epochs)
     trainer.fit(filler, train_dataloaders, val_dataloaders)
     trainer.test(filler, test_dataloaders=test_dataloaders)
 

@@ -1,15 +1,20 @@
+import pickle
 from typing import Any, Iterable, Mapping, Optional, Sequence
 
 import pandas as pd
 import pytorch_lightning as pl
+import torch
 from overrides import overrides
 from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizerBase
+<<<<<<< HEAD
 import numpy as np
 import os
 import torch
 
 import pickle
+=======
+>>>>>>> 9cf356f55c10518d464bd0ac9ea37fcb94ff6952
 
 from lqam.util.file_utils import cached_path
 
@@ -73,11 +78,10 @@ class QGenDataset(Dataset):
             batch[f"{k}_ids"] = tokenization_output["input_ids"]
             batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
         return batch
-    
+
     def collate_fn_multi_modal(self, batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
         batch_size = len(batch)
         masked_captions = []
-        text_features = []
         video_features = []
         label_list = []
 
@@ -86,7 +90,6 @@ class QGenDataset(Dataset):
         for i in range(batch_size):
             data = batch[i]
             masked_captions.append(data["masked_caption"])
-            text_features.append(data["masked_caption_ids"])
             video_features.append(data["visual"])
             label_list.append(data["label"])
 
@@ -94,9 +97,10 @@ class QGenDataset(Dataset):
 
             if total_video_len > max_video_len:
                 max_video_len = total_video_len
-        
+
         label_with_special_tokens = [f"<extra_id_0> {label} <extra_id_1>" for label in label_list]
-        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=text_features,tgt_texts=label_with_special_tokens, padding=True, return_tensors="pt")
+        text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=masked_captions, tgt_texts=label_with_special_tokens,
+                                                          padding=True, return_tensors="pt")
         text_tensor = text_batch.input_ids
         text_attention_mask = text_batch.attention_mask
         labels = text_batch.labels
@@ -118,10 +122,12 @@ class QGenDataset(Dataset):
 
         attention_mask = torch.cat([text_attention_mask, video_attention_mask], 1)
 
-        return {"masked_caption_ids": text_tensor, "visual": video_tensor, "label_ids": labels, "masked_caption": masked_captions,
-                                                     "label": label_list, 'masked_caption_attention_mask': attention_mask}
+        return {"masked_caption_ids": text_tensor, "visual": video_tensor, "label_ids": labels,
+                "masked_caption": masked_captions,
+                "label": label_list, 'masked_caption_attention_mask': attention_mask}
 
-class QGenDataModule(pl.LightningDataModule): 
+
+class QGenDataModule(pl.LightningDataModule):
     def __init__(self, tokenizer: PreTrainedTokenizerBase, batch_size: int = 32, eval_batch_size: Optional[int] = None,
                  num_workers: int = 0, hasVisual=False, **kwargs):
         super().__init__(**kwargs)
@@ -136,10 +142,10 @@ class QGenDataModule(pl.LightningDataModule):
         # TODO: bucket-batching could make training faster, and consume less memory.
         if self.hasVisual:
             return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
-                          pin_memory=True, collate_fn=dataset.collate_fn_multi_modal)
+                              pin_memory=True, collate_fn=dataset.collate_fn_multi_modal)
         else:
             return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
-                          pin_memory=True, collate_fn=dataset.collate_fn)
+                              pin_memory=True, collate_fn=dataset.collate_fn)
 
     @overrides
     def train_dataloader(self, data_path: str = URL_DATA_TRAIN, visual_data_path: Optional[str] = None) -> DataLoader:
