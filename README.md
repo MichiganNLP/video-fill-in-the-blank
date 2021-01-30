@@ -123,7 +123,13 @@ If you just want to take a random portion, do:
 Visualize the annotation results:
 
 ```bash
-./scripts/analyze_annotation_results.py --show-metrics INPUT_CSV_FILE_OR_URL > OUTPUT_TXT_FILE
+./scripts/analyze_annotation_results.py --show-metrics ANNOTATION_RESULTS_CSV_FILE_OR_URL > OUTPUT_TXT_FILE
+```
+
+### Prepare for a randomly sampled manual review
+
+```bash
+./scripts/prepare_to_review_workers.py ANNOTATION_RESULTS_CSV_FILE_OR_URL > OUTPUT_CSV_FILE
 ```
 
 ### Paying bonuses
