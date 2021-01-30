@@ -12,7 +12,7 @@ SPACY_MODEL = create_spacy_model(prefer_gpu=True)
 
 def strip_punctuation(s: str) -> str:
     # See https://stackoverflow.com/a/266162/1165181
-    return s.translate(str.maketrans("", "", string.punctuation))
+    return s.translate(str.maketrans("", "", string.punctuation)).strip()
 
 
 def compute_decision_score(precision: float, recall: float) -> float:
@@ -147,8 +147,8 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
 
     question_with_answers = (question.replace("_____", clean_answer) for _, clean_answer in answers_flat)
 
-    np_map = {answer: is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
-                                                            start + len(clean_answer)))
+    np_map = {answer: clean_answer and is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
+                                                                             start + len(clean_answer)))
               for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers))}
 
     for worker_id, worker_answers in answers_map.items():

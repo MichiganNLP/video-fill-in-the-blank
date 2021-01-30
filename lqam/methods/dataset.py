@@ -15,7 +15,7 @@ from lqam.util.file_utils import cached_path
 
 URL_DATA_TEST = "https://drive.google.com/uc?id=1h-8ADZJDr32QgZMClQ6J1mvMWQY0Ahzx&export=download"
 URL_DATA_VAL = "https://drive.google.com/uc?id=1Fv5Yf79guD-95yNNGpFr-GHUMrNc-gSv&export=download"
-URL_DATA_TRAIN = "https://drive.google.com/uc?id=1hFnEFGLMurexpz9c3QOKAHZtMl0utzIJ&export=download"
+URL_DATA_TRAIN = "https://drive.google.com/uc?id=1BureM8nfvmgoHxaZeVWeUpYTuTrX_Kcx&export=download"
 
 TYPE_BATCH = Mapping[str, Any]
 
@@ -37,18 +37,17 @@ class QGenDataset(Dataset):
         if not self.return_visual:
             # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
             return {
-                "masked_caption": row["masked caption"],
+                "masked_caption": row.get("masked caption", row.get("masked_caption")).replace("<extra_id_0>", "_____"),
                 "label": row["label"],
             }
         else:
             video_id = row['videoID']
             video_feature = np.load(os.path.join(self.visual_data_path, video_id + '.npy'))
             return {
-                "masked_caption": row["masked caption"],
+                "masked_caption": row.get("masked caption", row.get("masked_caption")).replace("<extra_id_0>", "_____"),
                 "label": row["label"],
                 'visual': video_feature
             }
-                   
 
     def __len__(self) -> int:
         return len(self.data)
@@ -59,13 +58,8 @@ class QGenDataset(Dataset):
             stack = [instance[k] for instance in instances]
             batch[k] = stack
 
-            if self.t5_format:
-                if k == "label":
-                    to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
-                elif k == "masked_caption":
-                    to_tokenize = stack
-                else:
-                    to_tokenize = stack
+            if self.t5_format and k == "label":
+                to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
             else:
                 to_tokenize = stack
 

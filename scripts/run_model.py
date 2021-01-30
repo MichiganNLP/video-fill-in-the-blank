@@ -52,6 +52,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--fast-dev-run", action="store_true")
     parser.add_argument("--test", action="store_true")
     parser.add_argument("--has-visual", action="store_true")
+    parser.add_argument("--visual-data-path", default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/I3D_video_features")
     return parser.parse_args()
 
 
@@ -79,11 +80,11 @@ def main() -> None:
 
     visual_data_path = None
     if args.has_visual:
-        visual_data_path = args.data_path
+        visual_data_path = args.visual_data_path
 
-    train_dataloaders = data_module.train_dataloader(os.path.join(args.data_path, 'train.csv'), visual_data_path = visual_data_path)
-    val_dataloaders = data_module.val_dataloader(os.path.join(args.data_path, 'val.csv'), visual_data_path = visual_data_path)
-    test_dataloaders=data_module.test_dataloader(os.path.join(args.data_path, 'test.csv'), visual_data_path = visual_data_path)
+    train_dataloaders = data_module.train_dataloader(visual_data_path = visual_data_path)
+    val_dataloaders = data_module.val_dataloader(visual_data_path = visual_data_path)
+    test_dataloaders=data_module.test_dataloader( visual_data_path = visual_data_path)
     trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.default_root_dir, fast_dev_run = args.fast_dev_run, max_epochs = args.epochs)
     if not args.test:
         trainer.fit(filler, train_dataloaders, val_dataloaders)

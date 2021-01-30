@@ -30,7 +30,7 @@ def order_worker_answers_by_question(worker_answers: Mapping[str, str]) -> Seque
         # noinspection PyUnusedLocal
         if match := RE_ANSWER_KEY.match(k) or (match := RE_ANSWER_INPUT_KEY.match(k)):
             question_i = int(match.group("question_index"))
-            i = match.groupdict().get("answer_index", sys.maxsize)
+            i = int(match.groupdict().get("answer_index", sys.maxsize))
             answers_by_question[question_i].append((i, worker_answers[k]))
 
     return [[sorted_i_and_question_answers[1]
@@ -40,7 +40,7 @@ def order_worker_answers_by_question(worker_answers: Mapping[str, str]) -> Seque
 
 def parse_hits(filepath_or_buffer: FilePathOrBuffer) -> Mapping[str, Mapping[str, Any]]:
     df = pd.read_csv(filepath_or_buffer, converters={"Answer.taskAnswers": json.loads})
-    hits = (df
+    hits = (df[df["RejectionTime"].isna()]
             .groupby(["HITId"] + [c for c in df.columns if c.startswith("Input.")])
             .agg({"Answer.taskAnswers": lambda lists: [x for list_ in lists for x in list_],
                   "WorkerId": lambda lists: list(lists)})

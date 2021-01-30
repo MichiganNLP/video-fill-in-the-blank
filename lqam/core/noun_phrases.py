@@ -30,7 +30,8 @@ def is_noun_phrase_or_n_bar(span: spacy.tokens.Span) -> bool:
     root = span.root
     return (is_phrase(span)
             and (root.pos_ in {"NOUN", "PRON", "PROPN"}
-                 or root.tag_ == "VBG"  # Gerund. Example: "*Eating in the morning* is a great way to stay healthy."
+                 or (root.tag_ == "VBG" and all(child.dep_ != "aux" for child in root.children))
+                 # Example with gerund: "*Eating in the morning* is a great way to stay healthy."
                  or (root.tag_ == "VB" and root.i > 0 and root.nbor(-1).tag_ == "TO")  # Infinitive.
                  # Example with infinitive: "*To eat in the morning* is a great way to stay healthy."
                  or span[0].tag_.startswith("W"))  # Wh-word. Example: "They describe *how it works*."

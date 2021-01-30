@@ -9,8 +9,8 @@ class TestQGenDataset(TestCase):
     def test_dataset_format(self):
         train_dataset = QGenDataset(URL_DATA_TRAIN, tokenizer=AutoTokenizer.from_pretrained("t5-base"))
         train_expected_first_item = {
-            "masked_caption": "_____ and one man are riding on the back of an elephant.",
-            "label": "Two Kids",
+            "masked_caption": "_____ wearing harnesses using ropes to climb up a rock slope.",
+            "label": "People",
         }
         train_actual_first_item = train_dataset[0]
 
