@@ -11,7 +11,7 @@ from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.methods.dataset import QGenDataModule
 from lqam.methods.t5_filler_model import T5FillerModel
-from lqam.methods.t5_multi_modal_module import T5AndI3D
+from lqam.methods.t5_multi_modal_module import T5AndVisual
 
 def _parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults(description="Evaluate the T5 multi-modal baseline.")
@@ -62,7 +62,7 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers, hasVisual=args.has_visual)
 
-    t5_like_pretrained_model = T5AndI3D.from_pretrained(args.model, visual_size=args.visual_size)
+    t5_like_pretrained_model = T5AndVisual.from_pretrained(args.model, visual_size=args.visual_size)
     t5_like_pretrained_model.set_encoder()
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                            only_noun_phrases=args.only_noun_phrases,
