@@ -44,7 +44,10 @@ class QGenDataset(Dataset):
             }
         else:
             video_id = row['video_id']
-            video_feature = torch.LongTensor(np.load(os.path.join(self.visual_data_path, video_id + '.npy'))).squeeze(0)
+            start_time = str(row['video_start_time'])
+            end_time = str(row['video_end_time'])
+            video_file_name = video_id + '_' + '0'*(6-len(start_time)) + start_time + '_' + '0'*(6-len(end_time)) + end_time
+            video_feature = torch.LongTensor(np.load(os.path.join(self.visual_data_path, video_file_name + '.npy'))).squeeze(0)
             return {
                 "masked_caption": row.get("masked caption", row.get("masked_caption")).replace("<extra_id_0>", "_____"),
                 "label": row["label"],
