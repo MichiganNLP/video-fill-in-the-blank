@@ -62,8 +62,12 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers, hasVisual=args.has_visual)
 
-    t5_like_pretrained_model = T5AndVisual.from_pretrained(args.model, visual_size=args.visual_size)
-    t5_like_pretrained_model.set_encoder()
+    if args.has_visual:
+        t5_like_pretrained_model = T5AndVisual.from_pretrained(args.model, visual_size=args.visual_size)
+        t5_like_pretrained_model.set_encoder()
+    else:
+        t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
+    
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                            only_noun_phrases=args.only_noun_phrases,
                            optimizer_args = {'lr': args.lr,
