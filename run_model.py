@@ -52,7 +52,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--fast-dev-run", action="store_true")
     parser.add_argument("--test", action="store_true")
     parser.add_argument("--has-visual", action="store_true")
-    parser.add_argument("--visual-data-path", default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/I3D_video_features")
+    parser.add_argument("--visual-data-path", default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/I3D_video_features")
     return parser.parse_args()
 
 
