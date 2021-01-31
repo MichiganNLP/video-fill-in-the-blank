@@ -7,14 +7,11 @@ import torch
 from overrides import overrides
 from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizerBase
-<<<<<<< HEAD
 import numpy as np
 import os
 import torch
 
 import pickle
-=======
->>>>>>> 9cf356f55c10518d464bd0ac9ea37fcb94ff6952
 
 from lqam.util.file_utils import cached_path
 
