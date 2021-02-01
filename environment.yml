@@ -15,7 +15,7 @@ dependencies:
   - csvkit=1.0.5
   - cudatoolkit=11.0.221
   - conda-forge::cupy>=5.0.0b4,<9.0.0  # For spaCy.
-  - nvidia::cudnn=8.0.4  # cuDNN 8 isn't available from the default channel yet.
+  - conda-forge::cudnn=8.0.5
   - numpy=1.18.1
   - conda-forge::overrides=3.1.0
   - pandas=1.1.3
