@@ -37,7 +37,7 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-huggingface-
     - name: Download spaCy model
-      run: python -m spacy download en_core_web_trf
+      run: spacy download en_core_web_trf
     - name: Run tests
       run: python -m unittest discover .
     - name: Evaluate text-only T5 baseline
