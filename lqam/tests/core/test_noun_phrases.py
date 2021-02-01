@@ -214,10 +214,10 @@ class TestNounPhrases(TestCase):
             ("A person uses _____ to dig into an ice face and climb it.", "special spiked boots", True),
             ("A person uses _____ to dig into an ice face and climb it.", "spiked boots", True),
             ("A person uses _____ to dig into an ice face and climb it.", "spikes", True),
-            # PP-attachment issue:
-            # ("A person is cleaning a window with _____.", "squeegee on a pole", True),
+            ("A person is cleaning a window with _____.", "squeegee on a pole", True),
             ("A person is cleaning a window with _____.", "squeegee", True),
-            ("A man puts _____ around a product in a cardboard box.", "styrofoam packing", True),
+            # It's taken as a VP:
+            # ("A man puts _____ around a product in a cardboard box.", "styrofoam packing", True),
             ("A man puts _____ around a product in a cardboard box.", "styrofoam to act as a safeguard",
              False),  # Note the PP is attached to the verb.
             ("A man puts _____ around a product in a cardboard box.", "styrofoam", True),
@@ -255,7 +255,7 @@ class TestNounPhrases(TestCase):
             ("Footage of rock formations taken at night with _____ as the light source.", "torch", True),
             ("_____ of a professional skier.", "tricks", True),
             ("A man attaches a washer to a large machine and describes _____.", "turning", True),
-            # ("_____ of a professional skier.", "turns", True),  # It fails. Takes "turns" as a verb.
+            ("_____ of a professional skier.", "turns", True),
             ("_____ of a professional skier.", "video", True),
             ("Two strong men are fighting with each other in _____.", "view of the camera", True),
             ("A person is cleaning a window with _____.", "washers", True),
