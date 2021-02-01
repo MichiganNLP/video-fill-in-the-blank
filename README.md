@@ -18,7 +18,7 @@ This repo contains the annotation scheme, results and methods for the LifeQA pro
     ```bash
     conda env create
     conda activate lqam
-    python -m spacy download en_core_web_trf
+    spacy download en_core_web_trf
     export PYTHONPATH=.
     ```
 
