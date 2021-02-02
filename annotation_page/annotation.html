@@ -644,22 +644,21 @@
 
   function setUpInputListeners() {
     questions.forEach((_, i) => {
-      $(`#answer-input-${(0, i)}`)
-          .keydown(e => {
-            if (e.keyCode === ENTER_KEY_CODE) {
-              e.preventDefault();
-              if (e.ctrlKey) {
-                const $nextBlank = $(`#next-instance-${(0, i)}`);
-                if ($nextBlank.length) {
-                  $nextBlank.click();
-                }
-              } else {
-                addAnswer($(e.target), i);
-              }
-            } else {
-              showInputValidity($(e.target), true);
+      $(`#answer-input-${(0, i)}`).keydown(e => {
+        if (e.keyCode === ENTER_KEY_CODE) {
+          e.preventDefault();
+          if (e.ctrlKey) {
+            const $nextBlank = $(`#next-instance-${(0, i)}`);
+            if ($nextBlank.length) {
+              $nextBlank.click();
             }
-          });
+          } else {
+            addAnswer($(e.target), i);
+          }
+        } else {
+          showInputValidity($(e.target), true);
+        }
+      });
       checkValidationAlerts(i);
     });
   }
