@@ -118,6 +118,17 @@ If you just want to take a random portion, do:
 ./scripts/generate_annotation_input.py $GENERATED_CSV_FILTERED_FILE > $MTURK_INPUT_CSV_FILE
 ```
 
+### Previewing the annotation web page
+
+Run:
+
+```bash
+python -m http.server
+```
+
+Then open
+http://localhost:8000/annotation_page/amt_testing_page.html?templatePagePath=annotation.html&dataPath=../$MTURK_INPUT_CSV_FILE
+
 ### Using the annotation results
 
 Visualize the annotation results:
