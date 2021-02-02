@@ -186,7 +186,7 @@ class T5FillerModel(pl.LightningModule):
 
     @overrides
     def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]], None]:
-        if self.optimizer_args = None:
+        if self.optimizer_args == None:
             return None
         else:
             optimizer = AdamW(self.parameters(), lr=self.optimizer_args['lr'],
