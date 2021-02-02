@@ -68,7 +68,7 @@ def main() -> None:
     else:
         t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
     
-    if test:
+    if args.test:
         optimizer_args = None
     else:
         optimizer_args = {'lr': args.lr,
