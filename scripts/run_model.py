@@ -50,7 +50,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--weight-decay", default=1e-4, type=float)
     parser.add_argument("--default-root-dir", type=str, default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/")
     parser.add_argument("--fast-dev-run", action="store_true")
-    parser.add_argument("--test", action="store_true")
+    parser.add_argument("--train", action="store_true")
     parser.add_argument("--has-visual", action="store_true")
     parser.add_argument("--visual-data-path", default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/I3D_video_features")
     return parser.parse_args()
@@ -68,9 +68,7 @@ def main() -> None:
     else:
         t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
     
-    if args.test:
-        optimizer_args = None
-    else:
+    if args.train:
         optimizer_args = {'lr': args.lr,
                             'beta1': args.beta1,
                             'beta2': args.beta2,
@@ -78,6 +76,8 @@ def main() -> None:
                             'epochs': args.epochs,
                             'weight_decay': args.weight_decay
                         }
+    else:
+        optimizer_args = None
     
     filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                            only_noun_phrases=args.only_noun_phrases,
@@ -95,7 +95,7 @@ def main() -> None:
     val_dataloaders = data_module.val_dataloader(visual_data_path = visual_data_path)
     test_dataloaders=data_module.test_dataloader( visual_data_path = visual_data_path)
     trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.default_root_dir, fast_dev_run = args.fast_dev_run, max_epochs = args.epochs)
-    if not args.test:
+    if args.train:
         trainer.fit(filler, train_dataloaders, val_dataloaders)
     trainer.test(filler, test_dataloaders=test_dataloaders)
 
