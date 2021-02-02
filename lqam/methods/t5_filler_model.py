@@ -20,7 +20,7 @@ from lqam.util.iterable_utils import chunks
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
 class T5FillerModel(pl.LightningModule):
     def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
-                 optimizer_args: Mapping[str, Any],
+                 optimizer_args: Optional[Mapping[str, Any]]=None,
                  only_noun_phrases: bool = False, generate_kwargs: Optional[Mapping[str, Any]] = None) -> None:
         super().__init__()
         # TODO: hparams
@@ -185,16 +185,19 @@ class T5FillerModel(pl.LightningModule):
         self._on_epoch_end()
 
     @overrides
-    def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]]]:
-        optimizer = AdamW(self.parameters(), lr=self.optimizer_args['lr'],
-                          betas=(self.optimizer_args['beta1'], self.optimizer_args['beta2']),
-                          weight_decay=self.optimizer_args['weight_decay'])
-        if self.optimizer_args['lr_scheduling']:
-            if self.optimizer_args['lr_scheduling'] == "linear_with_warmup":
-                scheduler = get_linear_schedule_with_warmup(optimizer, 0.1 * self.optimizer_args['epochs'],
-                                                            self.optimizer_args['epochs'])
-            else:
-                raise ValueError(f"Unrecognized LR Scheduling {self.optimizer_args['lr_scheduling']}")
-            return [optimizer], [scheduler]
+    def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]], None]:
+        if self.optimizer_args = None:
+            return None
         else:
-            return [optimizer]
+            optimizer = AdamW(self.parameters(), lr=self.optimizer_args['lr'],
+                            betas=(self.optimizer_args['beta1'], self.optimizer_args['beta2']),
+                            weight_decay=self.optimizer_args['weight_decay'])
+            if self.optimizer_args['lr_scheduling']:
+                if self.optimizer_args['lr_scheduling'] == "linear_with_warmup":
+                    scheduler = get_linear_schedule_with_warmup(optimizer, 0.1 * self.optimizer_args['epochs'],
+                                                                self.optimizer_args['epochs'])
+                else:
+                    raise ValueError(f"Unrecognized LR Scheduling {self.optimizer_args['lr_scheduling']}")
+                return [optimizer], [scheduler]
+            else:
+                return [optimizer]
