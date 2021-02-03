@@ -88,7 +88,7 @@ class QGenDataset(Dataset):
             video_features = []
             for i in range(batch_size):
                 video_features.append(instances[i])
-                total_video_len = data["visual"].shape[0]
+                total_video_len = instance[i]["visual"].shape[0]
 
                 if total_video_len > max_video_len:
                     max_video_len = total_video_len
