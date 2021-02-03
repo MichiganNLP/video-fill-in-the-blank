@@ -4,12 +4,12 @@
 
 #SBATCH --job-name=lightning_mm_t5_model
 #SBATCH --mail-type=BEGIN,END,FAIL
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=16
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem-per-cpu=10000m 
 #SBATCH --gres=gpu:1
-#SBATCH --time=02-5:00:00
+#SBATCH --time=5:00:00
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 # The application(s) to execute along with its input arguments and options:
@@ -21,5 +21,5 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u run.py --gpus 1 --has-visual --num-workers 8
+python -u ../run_model.py --gpus 1 --has-visual --num-workers 8
 echo done
