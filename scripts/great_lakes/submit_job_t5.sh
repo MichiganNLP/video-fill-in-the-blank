@@ -21,5 +21,7 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-python -u ./scripts/run_model.py --gpus 1 --has-visual --num-workers 8 --default-root-dir "/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/"
+PYTHONPATH=/home/ruoyaow/LifeQA-methodology
+export PYTHONPATH
+python -u ../run_model.py --gpus 1 --has-visual --num-workers 8 --default-root-dir "/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/"
 echo done
