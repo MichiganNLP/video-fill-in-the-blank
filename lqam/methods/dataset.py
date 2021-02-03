@@ -82,7 +82,7 @@ class QGenDataset(Dataset):
             tokenization_output = self.tokenizer(to_tokenize, padding="longest", truncation=True, return_tensors="pt")
             batch[f"{k}_ids"] = tokenization_output["input_ids"]
             batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
-        if "visual" in instances:
+        if len(instances) > 0 and "visual" in instances[0]:
             batch_size = len(instances)
             max_video_len = 0
             video_features = []
