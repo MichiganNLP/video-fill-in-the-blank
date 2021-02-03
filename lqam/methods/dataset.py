@@ -63,8 +63,13 @@ class QGenDataset(Dataset):
             stack = [instance[k] for instance in instances]
             batch[k] = stack
 
-            if self.t5_format and k == "label":
-                to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
+            if self.t5_format:
+                if k == "label":
+                    to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
+                elif k == "masked_caption":
+                    to_tokenize = [s.replace("_____", "<extra_id_0>") for s in stack]
+                else:
+                    to_tokenize = stack
             else:
                 to_tokenize = stack
 
