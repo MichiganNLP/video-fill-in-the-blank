@@ -124,11 +124,6 @@ class QGenDataModule(pl.LightningDataModule):
 
     def _dataloader(self, data_path: str, visual_data_path:str, batch_size: int, train: bool) -> DataLoader:
         dataset = QGenDataset(data_path, visual_data_path, tokenizer=self.tokenizer, return_visual=self.hasVisual)
-        # TODO: bucket-batching could make training faster, and consume less memory.
-        # if self.hasVisual:
-        #     return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
-        #                       pin_memory=True, collate_fn=dataset.collate_fn_multi_modal)
-        # else:
         return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
                             pin_memory=True, collate_fn=dataset.collate_fn)
 
