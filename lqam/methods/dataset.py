@@ -39,7 +39,7 @@ class QGenDataset(Dataset):
         if not self.return_visual:
             # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
             return {
-                "masked_caption": row.get("masked caption", row.get("masked_caption")).replace("<extra_id_0>", "_____"),
+                "masked_caption": row.get("masked_caption"),
                 "label": row["label"],
             }
         else:
@@ -49,7 +49,7 @@ class QGenDataset(Dataset):
             video_file_name = video_id + '_' + '0'*(6-len(start_time)) + start_time + '_' + '0'*(6-len(end_time)) + end_time
             video_feature = torch.LongTensor(np.load(os.path.join(self.visual_data_path, video_file_name + '.npy'))).squeeze(0)
             return {
-                "masked_caption": row.get("masked caption", row.get("masked_caption")).replace("<extra_id_0>", "_____"),
+                "masked_caption": row.get("masked_caption"),
                 "label": row["label"],
                 'visual': video_feature
             }
@@ -111,54 +111,6 @@ class QGenDataset(Dataset):
             batch['masked_caption_attention_mask'] = torch.cat([batch['masked_caption_attention_mask'], video_attention_mask], 1)
 
         return batch
-
-    # def collate_fn_multi_modal(self, batch: Sequence[Sequence[Any]]) -> TYPE_BATCH:
-    #     batch_size = len(batch)
-    #     masked_captions = []
-    #     video_features = []
-    #     label_list = []
-
-    #     max_video_len = 0
-    #     visual_size = batch[0]["visual"].shape[1]
-    #     for i in range(batch_size):
-    #         data = batch[i]
-    #         masked_captions.append(data["masked_caption"])
-    #         video_features.append(data["visual"])
-    #         label_list.append(data["label"])
-
-    #         total_video_len = data["visual"].shape[0]
-
-    #         if total_video_len > max_video_len:
-    #             max_video_len = total_video_len
-
-    #     label_with_special_tokens = [f"<extra_id_0> {label} <extra_id_1>" for label in label_list]
-    #     text_batch = self.tokenizer.prepare_seq2seq_batch(src_texts=masked_captions, tgt_texts=label_with_special_tokens,
-    #                                                       padding=True, return_tensors="pt")
-    #     text_tensor = text_batch.input_ids
-    #     text_attention_mask = text_batch.attention_mask
-    #     labels = text_batch.labels
-
-    #     video_tensor = torch.zeros(batch_size, max_video_len, visual_size, dtype=torch.float)
-
-    #     video_attention_mask = torch.zeros(batch_size, max_video_len, dtype=torch.long)
-
-    #     for i in range(batch_size):
-    #         video = video_features[i]
-    #         video_len = len(video)
-
-    #         # The input to the transformer is gonna be:
-    #         # t_1 ... t_n pad ... pad </s> v_1 ... v_m pad ... pad
-
-    #         video_len = video.shape[0]
-    #         video_tensor[i, :video_len] = video
-    #         video_attention_mask[i, :video_len] = True
-
-    #     attention_mask = torch.cat([text_attention_mask, video_attention_mask], 1)
-
-    #     return {"masked_caption_ids": text_tensor, "visual": video_tensor, "label_ids": labels,
-    #             "masked_caption": masked_captions,
-    #             "label": label_list, 'masked_caption_attention_mask': attention_mask}
-
 
 class QGenDataModule(pl.LightningDataModule):
     def __init__(self, tokenizer: PreTrainedTokenizerBase, batch_size: int = 32, eval_batch_size: Optional[int] = None,
