@@ -20,7 +20,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--train-data-path", default=URL_DATA_TRAIN)
     parser.add_argument("--val-data-path", default=URL_DATA_VAL)
     parser.add_argument("--test-data-path", default=URL_DATA_TEST)
-    parser.add_argument("--visual-data-path", default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/I3D_video_features")
+    parser.add_argument("--visual-data-path", default="../data")
 
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", "-j", type=int, default=0,
@@ -57,7 +57,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--lr", default=0.0001, type=float)
     parser.add_argument("--lr-scheduling", choices=("", "linear_with_warmup"), default="linear_with_warmup")
     parser.add_argument("--weight-decay", default=1e-4, type=float)
-    parser.add_argument("--default-root-dir", type=str, default="/scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX/multimodal_model/")
+    parser.add_argument("--default-root-dir", type=str, default=None)
     parser.add_argument("--fast-dev-run", action="store_true")
     parser.add_argument("--train", action="store_true")
     parser.add_argument("--has-visual", action="store_true")
