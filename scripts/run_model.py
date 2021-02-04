@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
+from pytorch_lightning.trainer.connectors.profiler_connector import PROFILERS
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 from lqam.methods import dataset
@@ -58,6 +59,7 @@ def _parse_args() -> argparse.Namespace:
 
     parser.add_argument("--train", action="store_true")
     parser.add_argument("--fast-dev-run", action="store_true")
+    parser.add_argument("--profiler", choices=PROFILERS)
     parser.add_argument("--epochs", default=10, type=int)
     parser.add_argument("--lr", default=1e-4, type=float)
     parser.add_argument("--lr-scheduler", choices=["", "linear_with_warmup"], default="linear_with_warmup",
@@ -96,7 +98,8 @@ def main() -> None:
                                             "no_repeat_ngram_size": args.no_repeat_ngram_size})
 
     trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.trainer_default_root_dir, fast_dev_run=args.fast_dev_run,
-                         max_epochs=args.epochs, benchmark=args.benchmark, deterministic=args.deterministic)
+                         max_epochs=args.epochs, benchmark=args.benchmark, deterministic=args.deterministic,
+                         profiler=args.profiler)
 
     visual_data_dir = args.visual_data_dir if args.use_visual else None
 
