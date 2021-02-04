@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=20
 #SBATCH --mem=50G
-#SBATCH --time=2:00:00
+#SBATCH --time=5:00:00
 
 echo Started!
 # Use your own conda because Great Lakes ones are old and thus problematic.
