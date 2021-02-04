@@ -42,7 +42,6 @@ class T5FillerModel(pl.LightningModule):
         self.tokenizer = tokenizer
         self.accuracy = AlmostExactMatchAccuracy()
         self.generate_kwargs = generate_kwargs or {}
-        self.lr = lr
 
         self.generate_kwargs.setdefault("return_dict_in_generate", True)
         self.generate_kwargs.setdefault("output_scores", True)
