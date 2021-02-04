@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Optional
+from typing import Any, Iterable, Mapping, MutableMapping, Optional
 
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ URL_DATA_TEST = "https://drive.google.com/uc?id=1h-8ADZJDr32QgZMClQ6J1mvMWQY0Ahz
 URL_DATA_VAL = "https://drive.google.com/uc?id=1Fv5Yf79guD-95yNNGpFr-GHUMrNc-gSv&export=download"
 URL_DATA_TRAIN = "https://drive.google.com/uc?id=1BureM8nfvmgoHxaZeVWeUpYTuTrX_Kcx&export=download"
 
-TYPE_BATCH = Mapping[str, Any]
+TYPE_BATCH = MutableMapping[str, Any]
 
 
 # From https://stackoverflow.com/a/53403392/1165181
