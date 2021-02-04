@@ -105,7 +105,7 @@ class T5FillerModel(pl.LightningModule):
 
     def _generative_step(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: torch.Tensor,
                          label_ids: torch.Tensor, masked_caption: Sequence[str], label: Sequence[str],
-                         **kwargs) -> None:
+                         log_prefix: str = "", **kwargs) -> None:
         self.write_prediction("masked_caption", masked_caption)
 
         del kwargs["label_attention_mask"]
@@ -161,7 +161,7 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("generated_prob", generated_prob)
 
         accuracy = self.accuracy(generated, label)
-        self.log("accuracy_step", accuracy, prog_bar=True)
+        self.log(f"{log_prefix}accuracy_step", accuracy, prog_bar=True)
 
         # --- Compute the ground truth likelihood ---
 
@@ -177,7 +177,7 @@ class T5FillerModel(pl.LightningModule):
 
         # Clone `label_ids` because `forward` modifies it, but later we need to use it.
         label_output = self(masked_caption_ids, masked_caption_attention_mask, label_ids.clone(), **kwargs)
-        self.log("eval_loss", label_output.loss, prog_bar=True)
+        self.log(f"{log_prefix}loss", label_output.loss, prog_bar=True)
 
         label_prob = compute_answer_prob(label_output.logits, label_ids, self.t5_pretrained_model.config,
                                          ignore_eos_token=True)
@@ -185,11 +185,11 @@ class T5FillerModel(pl.LightningModule):
 
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
-        self._generative_step(**batch)
+        self._generative_step(**batch, log_prefix="val_")
 
     @overrides
     def test_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
-        self._generative_step(**batch)
+        self._generative_step(**batch, log_prefix="test_")
 
     def _on_epoch_end(self) -> None:
         self.log("accuracy", self.accuracy.compute(), prog_bar=True)
