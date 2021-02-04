@@ -191,14 +191,14 @@ class T5FillerModel(pl.LightningModule):
     def test_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
         self._generative_step(**batch, log_prefix="test_")
 
-    def _on_epoch_end(self) -> None:
-        self.log("accuracy", self.accuracy.compute(), prog_bar=True)
+    def _on_epoch_end(self, log_prefix: str = "") -> None:
+        self.log(f"{log_prefix}accuracy", self.accuracy.compute(), prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
-        self._on_epoch_end()
+        self._on_epoch_end(log_prefix="val_")
 
     def on_test_epoch_end(self) -> None:
-        self._on_epoch_end()
+        self._on_epoch_end(log_prefix="test_")
 
     @overrides
     def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]]]:
