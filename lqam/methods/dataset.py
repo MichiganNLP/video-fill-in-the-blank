@@ -1,17 +1,14 @@
-import pickle
-from typing import Any, Iterable, Mapping, Optional, Sequence
+from pathlib import Path
+from typing import Any, Iterable, MutableMapping, Optional
 
+import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
+from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader, Dataset
 from transformers import PreTrainedTokenizerBase
-import numpy as np
-import os
-import torch
-
-import pickle
 
 from lqam.util.file_utils import cached_path
 
@@ -19,46 +16,45 @@ URL_DATA_TEST = "https://drive.google.com/uc?id=1h-8ADZJDr32QgZMClQ6J1mvMWQY0Ahz
 URL_DATA_VAL = "https://drive.google.com/uc?id=1Fv5Yf79guD-95yNNGpFr-GHUMrNc-gSv&export=download"
 URL_DATA_TRAIN = "https://drive.google.com/uc?id=1BureM8nfvmgoHxaZeVWeUpYTuTrX_Kcx&export=download"
 
-TYPE_BATCH = Mapping[str, Any]
+TYPE_BATCH = MutableMapping[str, Any]
+
+
+# From https://stackoverflow.com/a/53403392/1165181
+# There's also one in https://github.com/allenai/allennlp/blob/4535f5c/allennlp/nn/util.py#L119
+def get_mask_from_sequence_lengths(lengths: torch.Tensor) -> torch.Tensor:
+    max_length = lengths.max()
+    return torch.arange(max_length).expand(len(lengths), max_length) < lengths.unsqueeze(1)  # noqa
 
 
 class QGenDataset(Dataset):
-    def __init__(self, data_path: str, visual_data_path:str, tokenizer: PreTrainedTokenizerBase, return_visual: bool = False,
-                 t5_format: bool = True) -> None:
+    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, t5_format: bool = True,
+                 visual_data_dir: Optional[str] = None) -> None:
         super().__init__()
-            
-        self.data = pd.read_csv(cached_path(data_path))
-
-        self.visual_data_path = visual_data_path
+        self.df = pd.read_csv(cached_path(data_path))
         self.tokenizer = tokenizer
-        self.return_visual = return_visual
         self.t5_format = t5_format
+        self.visual_data_dir = Path(visual_data_dir) if visual_data_dir else None
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
-        row = self.data.iloc[i]
-        if not self.return_visual:
-            # The masked caption is already in T5 format: "<extra_id_0>" is the blank name.
-            return {
-                "masked_caption": row.get("masked_caption"),
-                "label": row["label"],
-            }
-        else:
-            video_id = row['video_id']
-            start_time = str(row['video_start_time'])
-            end_time = str(row['video_end_time'])
-            video_file_name = video_id + '_' + '0'*(6-len(start_time)) + start_time + '_' + '0'*(6-len(end_time)) + end_time
-            video_feature = torch.LongTensor(np.load(os.path.join(self.visual_data_path, video_file_name + '.npy'))).squeeze(0)
-            return {
-                "masked_caption": row.get("masked_caption"),
-                "label": row["label"],
-                'visual': video_feature
-            }
+        row = self.df.iloc[i]
+
+        output = {
+            "masked_caption": row["masked_caption"],
+            "label": row["label"],
+        }
+
+        if self.visual_data_dir:
+            video_file_name = f"{row['video_id']}_{row['video_start_time']:06d}_{row['video_end_time']:06d}.npy"
+            output["visual"] = torch.from_numpy(np.load(self.visual_data_dir / video_file_name)).squeeze(0)  # noqa
+
+        return output
 
     def __len__(self) -> int:
-        return len(self.data)
+        return len(self.df)
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
         batch = {}
+
         for k in ["masked_caption", "label"]:
             stack = [instance[k] for instance in instances]
             batch[k] = stack
@@ -82,59 +78,40 @@ class QGenDataset(Dataset):
             tokenization_output = self.tokenizer(to_tokenize, padding="longest", truncation=True, return_tensors="pt")
             batch[f"{k}_ids"] = tokenization_output["input_ids"]
             batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
-        if len(instances) > 0 and "visual" in instances[0]:
-            batch_size = len(instances)
-            max_video_len = 0
-            video_features = []
-            visual_size = instances[0]['visual'].shape[1]
-            for i in range(batch_size):
-                video_features.append(instances[i]['visual'])
-                total_video_len = instances[i]["visual"].shape[0]
 
-                if total_video_len > max_video_len:
-                    max_video_len = total_video_len
+        if "visual" in next(iter(instances), {}):
+            visual_list = [instance["visual"] for instance in instances]
+            batch["visual"] = pad_sequence(visual_list, batch_first=True)
 
-            video_tensor = torch.zeros(batch_size, max_video_len, visual_size, dtype=torch.float)
-            video_attention_mask = torch.zeros(batch_size, max_video_len, dtype=torch.long)
-
-            for i in range(batch_size):
-                video = video_features[i]
-                video_len = len(video)
-
-                # The input to the transformer is gonna be:
-                # t_1 ... t_n pad ... pad </s> v_1 ... v_m pad ... pad
-
-                video_len = video.shape[0]
-                video_tensor[i, :video_len] = video
-                video_attention_mask[i, :video_len] = True
-            batch['visual'] = video_tensor
-            batch['masked_caption_attention_mask'] = torch.cat([batch['masked_caption_attention_mask'], video_attention_mask], 1)
+            lengths = torch.as_tensor([visual_instance.size(0) for visual_instance in visual_list])
+            batch["visual_attention_mask"] = get_mask_from_sequence_lengths(lengths)
 
         return batch
 
-class QGenDataModule(pl.LightningDataModule):
+
+class QGenDataModule(pl.LightningDataModule):  # noqa
     def __init__(self, tokenizer: PreTrainedTokenizerBase, batch_size: int = 32, eval_batch_size: Optional[int] = None,
-                 num_workers: int = 0, hasVisual=False, **kwargs):
-        super().__init__(**kwargs)
+                 num_workers: int = 0, visual_data_dir: Optional[str] = None):
+        super().__init__()
         self.tokenizer = tokenizer
         self.num_workers = num_workers
         self.batch_size = batch_size
         self.eval_batch_size = eval_batch_size or batch_size
-        self.hasVisual = hasVisual
+        self.visual_data_dir = visual_data_dir
 
-    def _dataloader(self, data_path: str, visual_data_path:str, batch_size: int, train: bool) -> DataLoader:
-        dataset = QGenDataset(data_path, visual_data_path, tokenizer=self.tokenizer, return_visual=self.hasVisual)
+    def _dataloader(self, data_path: str, batch_size: int, train: bool) -> DataLoader:
+        dataset = QGenDataset(data_path, tokenizer=self.tokenizer, visual_data_dir=self.visual_data_dir)
         return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
-                            pin_memory=True, collate_fn=dataset.collate_fn)
+                          pin_memory=True, collate_fn=dataset.collate_fn)
 
     @overrides
-    def train_dataloader(self, data_path: str = URL_DATA_TRAIN, visual_data_path: Optional[str] = None) -> DataLoader:
-        return self._dataloader(data_path, visual_data_path=visual_data_path, batch_size=self.batch_size, train=True)
+    def train_dataloader(self, data_path: str = URL_DATA_TRAIN) -> DataLoader:
+        return self._dataloader(data_path, batch_size=self.batch_size, train=True)
 
     @overrides
-    def val_dataloader(self, data_path: str = URL_DATA_VAL, visual_data_path: Optional[str] = None) -> DataLoader:
-        return self._dataloader(data_path, visual_data_path=visual_data_path, batch_size=self.eval_batch_size, train=False)
+    def val_dataloader(self, data_path: str = URL_DATA_VAL) -> DataLoader:
+        return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
 
     @overrides
-    def test_dataloader(self, data_path: str = URL_DATA_TEST, visual_data_path: Optional[str] = None) -> DataLoader:
-        return self._dataloader(data_path, visual_data_path=visual_data_path, batch_size=self.eval_batch_size, train=False)
+    def test_dataloader(self, data_path: str = URL_DATA_TEST) -> DataLoader:
+        return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)

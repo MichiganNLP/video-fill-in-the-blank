@@ -166,12 +166,18 @@ youtube-dl -f "best[ext=mp4]/best" -o "videos/%(id)s.%(ext)s" --batch-file FILE
 
 ## Training
 
-TODO
+```bash
+./scripts/run_model.py --train
+```
+
+See the available options using the flag `--help`.
 
 ## Evaluation
 
-T5 text-only baseline:
+Evaluate the T5 text-only baseline:
 
 ```bash
-./scripts/evaluate_text_only_baseline.py
+./scripts/run_model.py
 ```
+
+See the available options using the flag `--help`.
