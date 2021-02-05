@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Iterable, Mapping, MutableMapping, Optional
+from typing import Any, Iterable, MutableMapping, Optional
 
 import numpy as np
 import pandas as pd
@@ -91,12 +91,16 @@ class QGenDataset(Dataset):
 
 class QGenDataModule(pl.LightningDataModule):  # noqa
     def __init__(self, tokenizer: PreTrainedTokenizerBase, batch_size: int = 32, eval_batch_size: Optional[int] = None,
-                 num_workers: int = 0, visual_data_dir: Optional[str] = None):
+                 num_workers: int = 0, train_data_path: str = URL_DATA_TRAIN, val_data_path: str = URL_DATA_VAL,
+                 test_data_path: str = URL_DATA_TEST, visual_data_dir: Optional[str] = None):
         super().__init__()
         self.tokenizer = tokenizer
         self.num_workers = num_workers
         self.batch_size = batch_size
         self.eval_batch_size = eval_batch_size or batch_size
+        self.train_data_path = train_data_path
+        self.val_data_path = val_data_path
+        self.test_data_path = test_data_path
         self.visual_data_dir = visual_data_dir
 
     def _dataloader(self, data_path: str, batch_size: int, train: bool) -> DataLoader:
@@ -106,13 +110,13 @@ class QGenDataModule(pl.LightningDataModule):  # noqa
                           pin_memory=True, collate_fn=dataset.collate_fn)
 
     @overrides
-    def train_dataloader(self, data_path: str = URL_DATA_TRAIN) -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.batch_size, train=True)
+    def train_dataloader(self) -> DataLoader:
+        return self._dataloader(self.train_data_path, batch_size=self.batch_size, train=True)
 
     @overrides
-    def val_dataloader(self, data_path: str = URL_DATA_VAL) -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
+    def val_dataloader(self) -> DataLoader:
+        return self._dataloader(self.val_data_path, batch_size=self.eval_batch_size, train=False)
 
     @overrides
-    def test_dataloader(self, data_path: str = URL_DATA_TEST) -> DataLoader:
-        return self._dataloader(data_path, batch_size=self.eval_batch_size, train=False)
+    def test_dataloader(self) -> DataLoader:
+        return self._dataloader(self.test_data_path, batch_size=self.eval_batch_size, train=False)

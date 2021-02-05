@@ -16,9 +16,8 @@ from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 
 
 def _parse_args() -> argparse.Namespace:
-    parser = ArgumentParserWithDefaults(description="Evaluate the T5 multi-modal baseline.")
+    parser = ArgumentParserWithDefaults(description="Train and evaluate the T5-based baselines.")
 
-    # Data paths
     parser.add_argument("--train-data-path", default=dataset.URL_DATA_TRAIN)
     parser.add_argument("--val-data-path", default=dataset.URL_DATA_VAL)
     parser.add_argument("--test-data-path", default=dataset.URL_DATA_VAL)  # TODO: change to test.
@@ -48,7 +47,6 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--only-noun-phrases", action="store_true")
     parser.add_argument("--use-visual", action="store_true")
 
-    # enable reproducibility
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--no-benchmark", dest="benchmark", action="store_false")
     parser.add_argument("--no-deterministic", dest="deterministic", action="store_false")
@@ -103,12 +101,9 @@ def main() -> None:
 
     visual_data_dir = args.visual_data_dir if args.use_visual else None
 
-    dataset.URL_DATA_TRAIN = args.train_data_path
-    dataset.URL_DATA_VAL = args.val_data_path
-    dataset.URL_DATA_TEST = args.test_data_path
-
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers,
-                                 visual_data_dir=visual_data_dir)
+                                 train_data_path=args.train_data_path, val_data_path=args.val_data_path,
+                                 test_data_path=args.test_data_path, visual_data_dir=visual_data_dir)
 
     if args.train:
         trainer.fit(filler, datamodule=data_module)
