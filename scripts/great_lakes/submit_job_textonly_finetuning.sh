@@ -21,4 +21,4 @@ conda activate lqam
 echo Sourced
 
 python -m scripts.evaluate_text_only_baseline --gpus=1 --max-length=10 \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --train --batch_size=256
+--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --train --batch_size=96
