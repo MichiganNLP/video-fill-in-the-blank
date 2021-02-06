@@ -19,6 +19,6 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
-
-python -m scripts.evaluate_text_only_baseline --gpus=1 --max-length=10 \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --train --batch_size=256
+python -m scripts.run_model --gpus 1 --generation-early-stopping --no-repeat-ngram-size 2 \
+--num-workers 3 --train --batch-size 96 --epochs 200
+echo done

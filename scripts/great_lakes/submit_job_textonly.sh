@@ -20,8 +20,8 @@ echo Sourcing
 conda activate lqam
 echo Sourced
 
-python -m scripts.evaluate_text_only_baseline --gpus=1 --max-length=10 \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=256
+python -m scripts.evaluate_text_only_baseline --gpus=1 \
+--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=512
 echo evaluating "python -m scripts.evaluate_text_only_baseline --batch-size=512 --gpus=1 --max-length=10 --generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4"
 
 command="python -m scripts.evaluate_text_only_baseline --gpus=1 --max-length=10 --num-workers=4"
