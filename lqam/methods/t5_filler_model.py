@@ -108,7 +108,10 @@ class T5FillerModel(pl.LightningModule):
                          log_prefix: str = "", **kwargs) -> None:
         self.write_prediction("masked_caption", masked_caption)
 
+<<<<<<< HEAD
+=======
         additional_answers = kwargs.pop("additional_answers", None)
+>>>>>>> main
         del kwargs["label_attention_mask"]
 
         # --- Generate an answer from scratch ---

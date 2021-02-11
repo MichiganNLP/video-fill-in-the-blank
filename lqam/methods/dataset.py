@@ -2,7 +2,11 @@ from pathlib import Path
 from typing import Any, Iterable, MutableMapping, Optional
 
 import numpy as np
+<<<<<<< HEAD
+import pandas as pd
+=======
 import json
+>>>>>>> main
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
@@ -37,7 +41,11 @@ class QGenDataset(Dataset):
         self.visual_data_dir = Path(visual_data_dir) if visual_data_dir else None
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
+<<<<<<< HEAD
+        row = self.df.iloc[i]
+=======
         row = self.df[i]
+>>>>>>> main
 
         output = {
             "masked_caption": row["masked_caption"],
@@ -46,6 +54,12 @@ class QGenDataset(Dataset):
         if "additional_answers" in row:
             flattened_add_ans = list(set([add_ans for worker_ans in row['additional_answers'] for add_ans in worker_ans]))
             output["additional_answers"] = flattened_add_ans
+
+        if self.visual_data_dir:
+            video_file_name = f"{row['video_id']}_{row['video_start_time']:06d}_{row['video_end_time']:06d}.npy"
+            output["visual"] = torch.from_numpy(np.load(self.visual_data_dir / video_file_name)).squeeze(0)  # noqa
+
+        return output
 
         if self.visual_data_dir:
             video_file_name = f"{row['video_id']}_{row['video_start_time']:06d}_{row['video_end_time']:06d}.npy"
@@ -83,10 +97,13 @@ class QGenDataset(Dataset):
             batch[f"{k}_ids"] = tokenization_output["input_ids"]
             batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
 
+<<<<<<< HEAD
+=======
         if "additional_answers" in next(iter(instances)):
             # This is List[List]
             batch["additional_answers"] = [instance['additional_answers'] for instance in instances]
 
+>>>>>>> main
         if "visual" in next(iter(instances), {}):
             visual_list = [instance["visual"] for instance in instances]
             batch["visual"] = pad_sequence(visual_list, batch_first=True)
