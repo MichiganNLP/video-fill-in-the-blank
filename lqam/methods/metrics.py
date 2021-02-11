@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, Optional
 
 import pytorch_lightning as pl
 import torch
@@ -35,7 +35,7 @@ class F1Scores(pl.metrics.Metric):
         return [ans.split() for ans in additional_answers]
 
     @overrides
-    def update(self, preds: Sequence[str], labels: Sequence[str], additional_answers_list: Sequence[Sequence[str]]) -> None:  # noqa
+    def update(self, preds: Sequence[str], labels: Sequence[str], additional_answers_list: Optional[Sequence[Sequence[str]]]=None) -> None:  # noqa
         assert len(preds) == len(additional_answers_list)
         # for debug
         # FIXME: If we don't need to use additional answers alone in other cases, we can put gt into them at the data reading step 
@@ -57,10 +57,10 @@ class AlmostExactMatchAccuracyAdditionAnswers(pl.metrics.Metric):
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
     @overrides
-    def update(self, preds: Sequence[str], targets: Sequence[Sequence[str]]) -> None:  # noqa
-        assert len(preds) == len(targets)
-        self.correct += sum(exact_match_many(pred, target) for pred, target in zip(preds, targets))
-        self.total += len(targets)
+    def update(self, preds: Sequence[str], labels: Sequence[str], additional_answers: Optional[Sequence[Sequence[str]]] = None) -> None:  # noqa
+        assert len(preds) == len(additional_answers)
+        self.correct += sum(exact_match_many(pred, additional_answers + [label]) for pred, label, additional_answers in zip(preds, labels, additional_answers))
+        self.total += len(additional_answers)
 
     @overrides
     def compute(self) -> float:

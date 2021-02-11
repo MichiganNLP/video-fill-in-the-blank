@@ -171,7 +171,7 @@ class T5FillerModel(pl.LightningModule):
         if additional_answers is not None:
             F1_scores = self.F1Scores(generated, label, additional_answers)
             self.log(f"{log_prefix}F1_scores_step", F1_scores, prog_bar=True)
-            accuracy_with_additional_answers = self.accuracy_many(generated, additional_answers)
+            accuracy_with_additional_answers = self.accuracy_many(generated, label, additional_answers)
             self.log(f"{log_prefix}accuracy_with_additional_answers_step", accuracy_with_additional_answers, prog_bar=True)
 
         # --- Compute the ground truth likelihood ---
