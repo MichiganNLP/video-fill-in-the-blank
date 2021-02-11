@@ -17,10 +17,10 @@ conda activate lqam
 echo Sourced
 
 echo evaluting greedy search
-echo evaluating "python -m scripts.run_model --gpus=1 --max-length=10 \
+greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 \
 --generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=512"
-python -m scripts.run_model --gpus=1 \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=512
+echo "evaluating ${greedy_command}"
+eval greedy_command
 
 echo evaluting beam search
 command="python -m scripts.run_model --gpus=1 --max-length=10 --num-workers=4"
