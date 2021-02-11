@@ -167,7 +167,7 @@ class T5FillerModel(pl.LightningModule):
         self.log(f"{log_prefix}accuracy_step", accuracy, prog_bar=True)
 
         if additional_answers is not None:
-            F1_scores = self.F1Scores(generated, additional_answers)
+            F1_scores = self.F1Scores(generated, label, additional_answers)
             self.log(f"{log_prefix}F1_scores_step", F1_scores, prog_bar=True)
 
         # --- Compute the ground truth likelihood ---
@@ -200,6 +200,7 @@ class T5FillerModel(pl.LightningModule):
 
     def _on_epoch_end(self, log_prefix: str = "") -> None:
         self.log(f"{log_prefix}accuracy", self.accuracy.compute(), prog_bar=True)
+        self.log(f"{log_prefix}F1_scores", self.F1Scores.compute(), prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
         self._on_epoch_end(log_prefix="val_")
