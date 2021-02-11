@@ -33,3 +33,9 @@ def compute_token_level_f1_many(answer_tokens: Iterator[str], ground_truths_toke
 
 def exact_match(unnormalized_answer1: str, unnormalized_answer2: str) -> bool:
     return normalize_answer(unnormalized_answer1) == normalize_answer(unnormalized_answer2)
+
+def exact_match_many(unnormalized_answer1: str, unnormalized_answer2_list: Iterator[str]) -> bool:
+    for answer in unnormalized_answer2_list:
+        if exact_match(unnormalized_answer1, answer):
+            return True
+    return False
