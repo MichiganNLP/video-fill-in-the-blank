@@ -20,5 +20,5 @@ echo Sourcing
 conda activate lqam
 echo Sourced
 python -m scripts.run_model --gpus 1 --generation-early-stopping --no-repeat-ngram-size 2 \
---num-workers 3 --train --batch-size 96 --epochs 200
+--num-workers 4 --train --batch-size 96 --epochs 50
 echo done
