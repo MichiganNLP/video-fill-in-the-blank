@@ -44,14 +44,7 @@ class QGenDataset(Dataset):
             "label": row["label"],
         }
         if "additional_answers" in row:
-            flattened_add_ans = list(set([add_ans for worker_ans in row['additional_answers'] for add_ans in worker_ans]))
-            output["additional_answers"] = flattened_add_ans
-
-        if self.visual_data_dir:
-            video_file_name = f"{row['video_id']}_{row['video_start_time']:06d}_{row['video_end_time']:06d}.npy"
-            output["visual"] = torch.from_numpy(np.load(self.visual_data_dir / video_file_name)).squeeze(0)  # noqa
-
-        return output
+            output["additional_answers"] = row['additional_answers']
 
         if self.visual_data_dir:
             video_file_name = f"{row['video_id']}_{row['video_start_time']:06d}_{row['video_end_time']:06d}.npy"

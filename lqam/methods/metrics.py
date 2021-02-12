@@ -4,10 +4,7 @@ import pytorch_lightning as pl
 import torch
 from overrides import overrides
 
-from lqam.core.metrics import exact_match
-from lqam.core.metrics import compute_token_level_f1_many
-from lqam.core.metrics import exact_match_many
-
+from lqam.core.metrics import exact_match, compute_token_level_f1_many, exact_match_many, tokenize_answer_to_compute_metrics, flatten_answers
 
 class AlmostExactMatchAccuracy(pl.metrics.Metric):
     def __init__(self, *args, **kwargs) -> None:
@@ -31,20 +28,16 @@ class F1Scores(pl.metrics.Metric):
         self.add_state("score_sum", default=torch.tensor(0.0), dist_reduce_fx="sum")
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
-    def _split_answers(self, additional_answers: Sequence[str]) -> Sequence[Sequence[str]]:
-        return [ans.split() for ans in additional_answers]
+    def _split_answers(self, answers: Sequence[str]) -> Sequence[Sequence[str]]:
+        return [tokenize_answer_to_compute_metrics(answer) for answer in answers]
 
     @overrides
-    def update(self, preds: Sequence[str], labels: Sequence[str], additional_answers_list: Optional[Sequence[Sequence[str]]]=None) -> None:  # noqa
-        assert len(preds) == len(additional_answers_list)
-        # for debug
-        # FIXME: If we don't need to use additional answers alone in other cases, we can put gt into them at the data reading step 
-        batch_sum = sum(compute_token_level_f1_many(pred.split(), self._split_answers(set(additional_answers+[label]))) 
-                        for pred, label, additional_answers in zip(preds, labels, additional_answers_list))
-        self.score_sum += batch_sum
-        # self.score_sum += sum(compute_token_level_f1_many(pred, self._split_answers(additional_answers)) 
-        #                         for pred, additional_answers in zip(preds, additional_answers_list))
-        self.total += len(additional_answers_list)
+    def update(self, preds: Sequence[str], labels: Sequence[str], additional_answers_list: Optional[Sequence[Sequence[Sequence[str]]]]= None) -> None:  # noqa
+        assert len(preds) == len(labels)
+        answers_list = flatten_answers(labels, additional_answers_list)
+        self.score_sum += sum(compute_token_level_f1_many(tokenize_answer_to_compute_metrics(pred), self._split_answers(set(answers))) 
+                        for pred, answers in zip(preds, answers_list))
+        self.total += len(labels)
 
     @overrides
     def compute(self) -> float:
@@ -57,10 +50,11 @@ class AlmostExactMatchAccuracyAdditionAnswers(pl.metrics.Metric):
         self.add_state("total", default=torch.tensor(0), dist_reduce_fx="sum")
 
     @overrides
-    def update(self, preds: Sequence[str], labels: Sequence[str], additional_answers: Optional[Sequence[Sequence[str]]] = None) -> None:  # noqa
-        assert len(preds) == len(additional_answers)
-        self.correct += sum(exact_match_many(pred, additional_answers + [label]) for pred, label, additional_answers in zip(preds, labels, additional_answers))
-        self.total += len(additional_answers)
+    def update(self, preds: Sequence[str], labels: Sequence[str], additional_answers_list: Optional[Sequence[Sequence[Sequence[str]]]] = None) -> None:  # noqa
+        assert len(preds) == len(labels)
+        answers_list = flatten_answers(labels, additional_answers_list)
+        self.correct += sum(exact_match_many(pred, answers) for pred, answers in zip(preds, answers_list))
+        self.total += len(labels)
 
     @overrides
     def compute(self) -> float:

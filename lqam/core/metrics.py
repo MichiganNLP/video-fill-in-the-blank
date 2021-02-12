@@ -1,6 +1,6 @@
 import re
 import string
-from typing import Iterable, Iterator, Set
+from typing import Iterable, Iterator, Set, Optional
 
 RE_A_AN_THE_OR_PUNCTUATION = re.compile(rf"\b(?:an?|the)\b|[{re.escape(string.punctuation)}]")
 RE_MULTIPLE_SPACES = re.compile(r"\s{2,}")
@@ -39,3 +39,12 @@ def exact_match_many(unnormalized_answer1: str, unnormalized_answer2_list: Itera
         if exact_match(unnormalized_answer1, answer):
             return True
     return False
+
+def flatten_additional_answers(additional_answers: Iterable[Iterable[str]]) -> Iterable[str]: 
+    return list(set([add_ans for worker_ans in additional_answers for add_ans in worker_ans]))
+
+def flatten_answers(labels: Iterable[str], additional_answers_list: Optional[Iterable[Iterable[Iterable[str]]]]) -> Iterable[Iterable[str]]:
+    if additional_answers_list is None:
+        return labels
+    else:
+        return [flatten_additional_answers(add_ans) + [label] for add_ans, label in zip(additional_answers_list, labels)] 
