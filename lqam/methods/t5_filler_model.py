@@ -16,7 +16,6 @@ from lqam.methods.dataset import TYPE_BATCH
 from lqam.methods.decoding import arg_noun_phrase, compute_answer_prob
 from lqam.methods.metrics import AlmostExactMatchAccuracy
 from lqam.methods.metrics import F1Scores
-from lqam.methods.metrics import AlmostExactMatchAccuracyAdditionAnswers
 from lqam.methods.t5_format_processing import compute_first_blank
 from lqam.util.iterable_utils import chunks
 
@@ -43,8 +42,9 @@ class T5FillerModel(pl.LightningModule):
         self.t5_pretrained_model = t5_like_pretrained_model
         self.tokenizer = tokenizer
         self.accuracy = AlmostExactMatchAccuracy()
-        self.accuracy_many = AlmostExactMatchAccuracyAdditionAnswers()
+        self.accuracy_many = AlmostExactMatchAccuracy()
         self.F1Scores = F1Scores()
+        self.F1Scores_labels = F1Scores()
         self.generate_kwargs = generate_kwargs or {}
 
         self.generate_kwargs.setdefault("return_dict_in_generate", True)
@@ -171,6 +171,8 @@ class T5FillerModel(pl.LightningModule):
         if additional_answers is not None:
             F1_scores = self.F1Scores(generated, label, additional_answers)
             self.log(f"{log_prefix}F1_scores_step", F1_scores, prog_bar=True)
+            F1_scores_labels = self.F1Scores_labels(generated, label)
+            self.log(f"{log_prefix}F1_scores_labels_step", F1_scores_labels, prog_bar=True)
             accuracy_with_additional_answers = self.accuracy_many(generated, label, additional_answers)
             self.log(f"{log_prefix}accuracy_with_additional_answers_step", accuracy_with_additional_answers, prog_bar=True)
 
@@ -205,6 +207,7 @@ class T5FillerModel(pl.LightningModule):
     def _on_epoch_end(self, log_prefix: str = "") -> None:
         self.log(f"{log_prefix}accuracy", self.accuracy.compute(), prog_bar=True)
         self.log(f"{log_prefix}F1_scores", self.F1Scores.compute(), prog_bar=True)
+        self.log(f"{log_prefix}F1_scores_labels", self.F1Scores_labels.compute(), prog_bar=True)
         self.log(f"{log_prefix}accuracy_with_additional_answers", self.accuracy_many.compute(), prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
