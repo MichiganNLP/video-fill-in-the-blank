@@ -16,5 +16,6 @@ eval "$(conda shell.bash hook)"
 echo Sourcing
 conda activate lqam
 echo Sourced
+export
 PYTHONPATH=. python -u scripts/run_model.py --use-visual --train --gpus 1 --num-workers 3 --batch-size 64
 echo Done
