@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #SBATCH --job-name=t5_i3d
 #SBATCH --account=mihalcea1
