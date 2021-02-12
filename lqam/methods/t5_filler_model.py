@@ -78,6 +78,9 @@ class T5FillerModel(pl.LightningModule):
     @overrides
     def on_epoch_start(self) -> None:
         self.accuracy.reset()
+        self.accuracy_many.reset()
+        self.F1Scores.reset()
+        self.F1Scores_labels.reset()
 
     @overrides
     def forward(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: Optional[torch.Tensor] = None,
