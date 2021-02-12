@@ -45,6 +45,6 @@ def flatten_additional_answers(additional_answers: Iterable[Iterable[str]]) -> I
 
 def flatten_answers(labels: Iterable[str], additional_answers_list: Optional[Iterable[Iterable[Iterable[str]]]]) -> Iterable[Iterable[str]]:
     if additional_answers_list is None:
-        return labels
+        return [[label] for label in labels]
     else:
         return [flatten_additional_answers(add_ans) + [label] for add_ans, label in zip(additional_answers_list, labels)] 
