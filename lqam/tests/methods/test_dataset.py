@@ -23,8 +23,7 @@ class TestQGenDataset(TestCase):
     def test_dataset_format_val(self):
         val_dataset = QGenDataset(URL_DATA_VAL, tokenizer=self.tokenizer)
         val_expected_first_item = {
-            "masked_caption": "In a gym with someone spotting him, a man is lifting _____ performing squats in a squat rack."
-                              "back and forth.",
+            "masked_caption": "In a gym with someone spotting him, a man is lifting _____ performing squats in a squat rack.",
             "label": "weights",
         }
         val_actual_first_item = val_dataset[0]
