@@ -23,9 +23,9 @@ class TestQGenDataset(TestCase):
     def test_dataset_format_val(self):
         val_dataset = QGenDataset(URL_DATA_VAL, tokenizer=self.tokenizer)
         val_expected_first_item = {
-            "masked_caption": "A man is laying on the floor with a ball underneath _____ and beginning to roll "
+            "masked_caption": "In a gym with someone spotting him, a man is lifting _____ performing squats in a squat rack."
                               "back and forth.",
-            "label": "his neck",
+            "label": "weights",
         }
         val_actual_first_item = val_dataset[0]
         self.assertEqual(val_expected_first_item, val_actual_first_item)
