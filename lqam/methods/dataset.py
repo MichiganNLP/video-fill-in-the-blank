@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Iterable, MutableMapping, Optional
 
 import numpy as np
-import pandas as pd
+import json
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
@@ -12,9 +12,9 @@ from transformers import PreTrainedTokenizerBase
 
 from lqam.util.file_utils import cached_path
 
-URL_DATA_TEST = "https://drive.google.com/uc?id=1h-8ADZJDr32QgZMClQ6J1mvMWQY0Ahzx&export=download"
-URL_DATA_VAL = "https://drive.google.com/uc?id=1Fv5Yf79guD-95yNNGpFr-GHUMrNc-gSv&export=download"
-URL_DATA_TRAIN = "https://drive.google.com/uc?id=1BureM8nfvmgoHxaZeVWeUpYTuTrX_Kcx&export=download"
+URL_DATA_TEST = "https://drive.google.com/uc?id=1t-jrqvFZ4RvstXpMeoi5GkHIt4prk4-l&export=download"
+URL_DATA_VAL = "https://drive.google.com/uc?id=1rglAizpxanVDejDP6HuCM7UaXLxEQwnK&export=download"
+URL_DATA_TRAIN = "https://drive.google.com/uc?id=1ap1ifkLUPs3IzqN-xHh6PYc_VSOzlsWH&export=download"
 
 TYPE_BATCH = MutableMapping[str, Any]
 
@@ -30,18 +30,21 @@ class QGenDataset(Dataset):
     def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, t5_format: bool = True,
                  visual_data_dir: Optional[str] = None) -> None:
         super().__init__()
-        self.df = pd.read_csv(cached_path(data_path))
+        with open(cached_path(data_path), 'r') as f:
+            self.df = json.load(f)
         self.tokenizer = tokenizer
         self.t5_format = t5_format
         self.visual_data_dir = Path(visual_data_dir) if visual_data_dir else None
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
-        row = self.df.iloc[i]
+        row = self.df[i]
 
         output = {
             "masked_caption": row["masked_caption"],
             "label": row["label"],
         }
+        if "additional_answers" in row:
+            output["additional_answers"] = row['additional_answers']
 
         if self.visual_data_dir:
             video_file_name = f"{row['video_id']}_{row['video_start_time']:06d}_{row['video_end_time']:06d}.npy"
@@ -78,6 +81,10 @@ class QGenDataset(Dataset):
             tokenization_output = self.tokenizer(to_tokenize, padding="longest", truncation=True, return_tensors="pt")
             batch[f"{k}_ids"] = tokenization_output["input_ids"]
             batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
+
+        if "additional_answers" in next(iter(instances)):
+            # This is List[List]
+            batch["additional_answers"] = [instance['additional_answers'] for instance in instances]
 
         if "visual" in next(iter(instances), {}):
             visual_list = [instance["visual"] for instance in instances]
