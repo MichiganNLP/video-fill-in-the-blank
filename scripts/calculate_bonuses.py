@@ -5,7 +5,7 @@ from collections import defaultdict
 import pandas as pd
 
 from lqam.annotations import MAX_COVERED_ANSWERS_PER_QUESTION_BONUS_TYPE_1, MIN_ANSWERS_PER_QUESTION, \
-    PAY_PER_ANSWER_BONUS_TYPE_1, QUESTIONS_PER_HIT
+    PAY_PER_ANSWER_BONUS_TYPE_1, PAY_PER_HIT_BONUS_TYPE_2, QUESTIONS_PER_HIT
 from lqam.annotations.postprocessing import compute_instances_by_worker_id, hits_to_instances, parse_hits
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
@@ -31,34 +31,56 @@ def main() -> None:
 
     instances_by_worker_id = compute_instances_by_worker_id(instances, compute_np_answers=True)
 
-    correct_answers_by_worker_assignment = defaultdict(lambda: defaultdict(int))
-    for worker_id, worker_instances in instances_by_worker_id.items():
+    correct_answers_by_assignment = defaultdict(int)
+    for worker_instances in instances_by_worker_id.values():
         for instance in worker_instances:
-            correct_answers_by_worker_assignment[worker_id][instance["assignment_id"]] += len(instance["np_answers"])
+            correct_answers_by_assignment[instance["assignment_id"]] += len(instance["np_answers"])
 
-    # TODO: for each hit and worker, compute how many NP answers the worker has. Then subtract 10, multiply by a
-    #  number and set a max (bonus type I). Then, check which worker(s) has the max number of NP answers (bonus type
-    #  II). Save these amounts (and build the "reason" string as well) and then use them.
-    # TODO: Skip the workers that don't receive a bonus (or maybe pay them 1 cent and thank them for participating?).
-    # TODO: bonus type 3: exceptional workers? or manually?
+    bonus_type_1_amount = {assignment_id: (min(max(0, correct_answer_count - MIN_ANSWERS_PER_HIT),
+                                               MAX_COVERED_ANSWERS_PER_HIT_BONUS_TYPE_1) * PAY_PER_ANSWER_BONUS_TYPE_1)
+                           for assignment_id, correct_answer_count in correct_answers_by_assignment.items()}
 
-    bonus_type_1_amount = {worker_id: {assignment_id: (min(max(0, correct_answer_count - MIN_ANSWERS_PER_HIT),
-                                                           MAX_COVERED_ANSWERS_PER_HIT_BONUS_TYPE_1)
-                                                       * PAY_PER_ANSWER_BONUS_TYPE_1)
-                                       for assignment_id, correct_answer_count in worker_assignments.items()}
-                           for worker_id, worker_assignments in correct_answers_by_worker_assignment.items()}
+    best_assignment_by_hit = {hit_id: max(((assignment_id, correct_answers_by_assignment[assignment_id])
+                                           for assignment_id in hit["assignment_ids"].values()), key=lambda t: t[1])[0]
+                              for hit_id, hit in hits.items()}
 
-    assignment_to_hit = {assignment_id: hit_id
-                         for hit_id, hit in hits.items()
-                         for assignment_id in hit["assignment_ids"].values()}
+    bonus_type_2_amount = {assignment_id: PAY_PER_HIT_BONUS_TYPE_2 for assignment_id in best_assignment_by_hit.values()}
 
-    correct_answers_by_hit_worker = defaultdict(lambda: defaultdict(int))
-    for worker_id, worker_correct_answers_by_assignment in correct_answers_by_worker_assignment.items():
-        for assignment_id, correct_answer_count in worker_correct_answers_by_assignment.items():
-            correct_answers_by_hit_worker[assignment_to_hit[assignment_id]][worker_id] += correct_answer_count
+    assignments_by_worker = defaultdict(list)
+    for hit in hits.values():
+        for worker_id, assignment_id in hit["assignment_ids"].items():
+            assignments_by_worker[worker_id].append(assignment_id)
 
-    bonus_type_2_amount = {hit_id: {max(hit_correct_answers_by_worker.items(), key=lambda t: t[1])[0]: 0.2}
-                           for hit_id, hit_correct_answers_by_worker in correct_answers_by_hit_worker.items()}
+    pay_per_worker = {worker_id: sum(bonus_type_1_amount[assignment_id] + bonus_type_2_amount[assignment_id]
+                                     for assignment_id in assignment_ids)
+                      for worker_id, assignment_ids in assignments_by_worker.items()}
+
+    # We give a thank you note to those workers that don't receive any bonus money. This is also in part a way to let
+    # them know they didn't qualify for any bonus. Otherwise, there would be radio silence.
+    #
+    # We're working with floats, so it may not be exactly 0. So we compare with something lower than 0.005 which
+    # would be in turn rounded to 0.
+    #
+    # We need to indicate the bonus assignment ID, so we just pick any.
+    participation_bonus_amount = {next(iter(instances_by_worker_id[worker_id]))["assignment_id"]: 0.01
+                                  for worker_id, amount in pay_per_worker.items()
+                                  if amount < 0.005}
+
+    worker_by_assignment = {assignment_id: worker_id
+                            for hit in hits.values()
+                            for worker_id, assignment_id in hit["assignment_ids"].items()}
+
+    # TODO: build the "reason" string as well
+    # TODO: should use decimal for money?
+    # TODO: round to cents.
+
+    {
+        {
+            "assignment_id": assignment_id,
+            "worker_id": worker_id,
+            "bonus_amount": ,
+        } for assignment_id, worker_id in worker_by_assignment.items()
+    }
 
     df = pd.DataFrame(
         {

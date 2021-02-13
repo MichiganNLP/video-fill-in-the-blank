@@ -112,7 +112,7 @@ def compute_instances_by_worker_id(
             answer_level_metrics = None
 
         for worker_id, answers in instance["answers"].items():
-            instance_for_worker = {
+            worker_instance = {
                 **{k: v for k, v in instance.items() if k not in {"answers", "assignment_ids", "statuses"}},
                 "answers": answers,
                 "assignment_id": instance["assignment_ids"][worker_id],
@@ -120,10 +120,10 @@ def compute_instances_by_worker_id(
             }
 
             if compute_np_answers:
-                instance_for_worker["np_answers"] = [answer
-                                                     for answer in formatted_answers[worker_id]
-                                                     if answer_level_metrics[worker_id][answer]["np"]]
+                worker_instance["np_answers"] = [answer
+                                                 for answer in formatted_answers[worker_id]
+                                                 if answer_level_metrics[worker_id][answer]["np"]]
 
-            instances_by_worker_id[worker_id].append(instance_for_worker)
+            instances_by_worker_id[worker_id].append(worker_instance)
 
     return instances_by_worker_id
