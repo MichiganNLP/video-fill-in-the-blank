@@ -32,9 +32,7 @@ def _compute_annotation_metrics_once(
     for i, worker_question_answers in enumerate(answers):
         if ignored_workers[i]:
             ff1 = precision = recall = 0
-        else:
-            assert worker_question_answers
-
+        elif worker_question_answers:  # It could happen because of some weird issues with the annotation interface.
             other_workers_answers = (answers[j]
                                      for j in range(len(answers))
                                      if j != i and not ignored_workers[j])
@@ -51,6 +49,8 @@ def _compute_annotation_metrics_once(
             true_positives = len(worker_question_answers_set & other_answers)
             precision = true_positives / len(worker_question_answers_set)
             recall = true_positives / len(other_answers)
+        else:
+            ff1 = precision = recall = np.nan
 
         ff1s.append(ff1)
         precisions.append(precision)
@@ -104,7 +104,7 @@ def compute_annotation_metrics(
 
 
 def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[str, Sequence[str]],
-                                            std_answer_tokens: str, ignored_workers: Optional[Sequence[bool]] = None
+                                            std_answer: str, ignored_workers: Optional[Sequence[bool]] = None
                                             ) -> Mapping[str, Mapping[str, Mapping[str, Any]]]:
     ignored_workers = ignored_workers or [False for _ in answers_map]
 
@@ -114,8 +114,8 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
                                         for answer in worker_answers]
                             for worker_id, worker_answers in answers_map.items()}
 
-    std_answer_normalized = normalize_answer(std_answer_tokens)
-    std_answer_tokens = frozenset(tokenize_answer_to_compute_metrics(std_answer_normalized))
+    std_answer_normalized = normalize_answer(std_answer)
+    std_answer = frozenset(tokenize_answer_to_compute_metrics(std_answer_normalized))
 
     results = defaultdict(lambda: defaultdict(dict))
 
@@ -126,7 +126,7 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
                                  if other_worker_id != worker_id and not ignored_workers[i]]
         other_answer_tokens = {tokens
                                for other_worker_answers in other_workers_answers
-                               for _, _, tokens in other_worker_answers} | {std_answer_tokens}
+                               for _, _, tokens in other_worker_answers} | {std_answer}
         other_normalized_answers = {normalized_answer
                                     for other_worker_answers in other_workers_answers
                                     for _, normalized_answer, _ in other_worker_answers} | {std_answer_normalized}
@@ -147,8 +147,8 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
 
     question_with_answers = (question.replace("_____", clean_answer) for _, clean_answer in answers_flat)
 
-    np_map = {answer: clean_answer and is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
-                                                                             start + len(clean_answer)))
+    np_map = {answer: bool(clean_answer) and is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
+                                                                                   start + len(clean_answer)))
               for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers))}
 
     for worker_id, worker_answers in answers_map.items():

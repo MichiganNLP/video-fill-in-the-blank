@@ -1,8 +1,8 @@
+import json
 from pathlib import Path
 from typing import Any, Iterable, MutableMapping, Optional
 
 import numpy as np
-import json
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
@@ -30,30 +30,32 @@ class QGenDataset(Dataset):
     def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, t5_format: bool = True,
                  visual_data_dir: Optional[str] = None) -> None:
         super().__init__()
-        with open(cached_path(data_path), 'r') as f:
-            self.df = json.load(f)
+        with open(cached_path(data_path)) as file:
+            self.instances = json.load(file)
         self.tokenizer = tokenizer
         self.t5_format = t5_format
         self.visual_data_dir = Path(visual_data_dir) if visual_data_dir else None
 
     def __getitem__(self, i: int) -> TYPE_BATCH:
-        row = self.df[i]
+        instance = self.instances[i]
 
         output = {
-            "masked_caption": row["masked_caption"],
-            "label": row["label"],
+            "masked_caption": instance["masked_caption"],
+            "label": instance["label"],
         }
-        if "additional_answers" in row:
-            output["additional_answers"] = row['additional_answers']
+
+        if "additional_answers" in instance:
+            output["additional_answers"] = instance["additional_answers"]
 
         if self.visual_data_dir:
-            video_file_name = f"{row['video_id']}_{row['video_start_time']:06d}_{row['video_end_time']:06d}.npy"
+            video_file_name = (f"{instance['video_id']}_{instance['video_start_time']:06d}"
+                               f"_{instance['video_end_time']:06d}.npy")
             output["visual"] = torch.from_numpy(np.load(self.visual_data_dir / video_file_name)).squeeze(0)  # noqa
 
         return output
 
     def __len__(self) -> int:
-        return len(self.df)
+        return len(self.instances)
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
         batch = {}
@@ -83,8 +85,7 @@ class QGenDataset(Dataset):
             batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
 
         if "additional_answers" in next(iter(instances)):
-            # This is List[List]
-            batch["additional_answers"] = [instance['additional_answers'] for instance in instances]
+            batch["additional_answers"] = [instance["additional_answers"] for instance in instances]
 
         if "visual" in next(iter(instances), {}):
             visual_list = [instance["visual"] for instance in instances]

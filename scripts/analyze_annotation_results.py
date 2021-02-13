@@ -6,6 +6,8 @@ from collections import defaultdict
 
 import numpy as np
 import pandas as pd
+import torch
+from torch.nn.utils.rnn import pad_sequence
 
 from lqam.annotations.metrics import compute_annotation_metrics, compute_answer_level_annotation_metrics
 from lqam.annotations.postprocessing import format_answer, hits_to_instances, parse_hits
@@ -87,7 +89,7 @@ def main() -> None:
             with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0):
                 answer_level_metrics_str = f"\nAnswer-level metrics:\n{answer_df.to_string(index=False)}"
 
-            ff1s_list.append(ff1s)
+            ff1s_list.append(torch.from_numpy(ff1s))
         else:
             std_answer_metrics_str = ""
             aggregated_metrics_str = ""
@@ -153,9 +155,11 @@ Worker answers:
         print("*** Aggregated metrics ***")
         print()
 
-        ff1s_matrix = np.stack(ff1s_list)
+        # Note the questions may have a different number of workers because it may be an unfinished annotation.
+        ff1s_matrix = pad_sequence(ff1s_list, batch_first=True, padding_value=np.nan).numpy()
+        ff1s_questions = np.nanmean(ff1s_matrix, axis=1)  # Because it's macro avg, we first avg each question.
 
-        print(f"Question-level workers' first answer avg. F1 (FF1): {100 * ff1s_matrix.mean():.0f}%")
+        print(f"Question-level workers' first answer macro avg. F1 (FF1): {100 * ff1s_questions.mean():.0f}%")
 
         if worker_stats:
             total_stats = {k: sum(w_stats[k] for w_stats in worker_stats.values())
