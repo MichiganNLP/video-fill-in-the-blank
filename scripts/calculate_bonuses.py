@@ -26,10 +26,13 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
+    # TODO: use decimal for money?
+
     hits = parse_hits(args.annotation_results_path)
     instances = hits_to_instances(hits)
 
-    # assert all(instance["status"] == "approved" for instance in instances)  # FIXME
+    # assert all(instance["status"] == "approved" for instance in instances), \
+    #     "All assignments should have been reviewed already."  # FIXME
 
     instances_by_worker_id = compute_instances_by_worker_id(instances, compute_np_answers=True)
 
@@ -73,11 +76,11 @@ def main() -> None:
                             for hit in hits.values()
                             for worker_id, assignment_id in hit["assignment_ids"].items()}
 
-    considered_assignment_ids = set(bonus_type_1_amount) | set(bonus_type_2_amount) | set(participation_bonus_amount)
-
-    # FIXME: seems like the participation bonus isn't working. It appears 0 instead.
-    #       Some appear in bonus type 1 with zero money.
-    # TODO: should use decimal for money?
+    considered_assignment_ids = {assignment_id
+                                 for assignment_id in worker_by_assignment
+                                 if (bonus_type_1_amount.get(assignment_id, 0)
+                                     + bonus_type_2_amount.get(assignment_id, 0)
+                                     + participation_bonus_amount.get(assignment_id, 0)) >= MIN_PAYABLE_AMOUNT}
 
     df = pd.DataFrame([
         {
