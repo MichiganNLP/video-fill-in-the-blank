@@ -10,6 +10,8 @@ from lqam.annotations.postprocessing import compute_instances_by_worker_id, hits
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
 
+MIN_PAYABLE_AMOUNT = 0.005  # The min that gets rounded up to a cent, which is actually the min.
+
 MIN_ANSWERS_PER_HIT = QUESTIONS_PER_HIT * MIN_ANSWERS_PER_QUESTION
 
 MAX_COVERED_ANSWERS_PER_HIT_BONUS_TYPE_1 = QUESTIONS_PER_HIT * MAX_COVERED_ANSWERS_PER_QUESTION_BONUS_TYPE_1
@@ -51,7 +53,8 @@ def main() -> None:
         for worker_id, assignment_id in hit["assignment_ids"].items():
             assignments_by_worker[worker_id].append(assignment_id)
 
-    pay_per_worker = {worker_id: sum(bonus_type_1_amount[assignment_id] + bonus_type_2_amount[assignment_id]
+    pay_per_worker = {worker_id: sum(bonus_type_1_amount.get(assignment_id, 0)
+                                     + bonus_type_2_amount.get(assignment_id, 0)
                                      for assignment_id in assignment_ids)
                       for worker_id, assignment_ids in assignments_by_worker.items()}
 
@@ -64,35 +67,42 @@ def main() -> None:
     # We need to indicate the bonus assignment ID, so we just pick any.
     participation_bonus_amount = {next(iter(instances_by_worker_id[worker_id]))["assignment_id"]: 0.01
                                   for worker_id, amount in pay_per_worker.items()
-                                  if amount < 0.005}
+                                  if amount < MIN_PAYABLE_AMOUNT}
 
     worker_by_assignment = {assignment_id: worker_id
                             for hit in hits.values()
                             for worker_id, assignment_id in hit["assignment_ids"].items()}
 
-    # TODO: build the "reason" string as well
+    considered_assignment_ids = set(bonus_type_1_amount) | set(bonus_type_2_amount) | set(participation_bonus_amount)
+
+    # FIXME: seems like the participation bonus isn't working. It appears 0 instead.
+    #       Some appear in bonus type 1 with zero money.
     # TODO: should use decimal for money?
-    # TODO: round to cents.
 
-    {
+    df = pd.DataFrame([
         {
+            # We pay all the bonuses altogether at once for each assignment ID (and it's unique). So we use it as
+            # the UUID to avoid duplicate payments.
+            "uuid": assignment_id,
             "assignment_id": assignment_id,
-            "worker_id": worker_id,
-            "bonus_amount": ,
-        } for assignment_id, worker_id in worker_by_assignment.items()
-    }
-
-    df = pd.DataFrame(
-        {
-            # We pay all the bonuses altogether at once for each worker-assignment-ID pair. So we use this pair as the
-            # UUID to avoid duplicate payments.
-            "uuid": f"{worker_id}-{assignment_id}",
-            "worker_id": worker_id,
-            "bonus_amount": 0.01,  # TODO
-            "assignment_id": assignment_id,
-            "reason": "",  # TODO
-        } for hit in hits.values() for worker_id, assignment_id in hit["assignment_ids"].items()
-    )
+            "worker_id": worker_by_assignment[assignment_id],
+            "bonus_amount": round(bonus_type_1_amount.get(assignment_id, 0)
+                                  + bonus_type_2_amount.get(assignment_id, 0)
+                                  + participation_bonus_amount.get(assignment_id, 0), ndigits=2),
+            "reason": (""
+                       + (f"You receive ${bonus_type_1_amount[assignment_id]} because you provided a total of "
+                          f"{correct_answers_by_assignment[assignment_id]} correct answers in this HIT. "
+                          if bonus_type_1_amount.get(assignment_id, 0) >= MIN_PAYABLE_AMOUNT else "")
+                       + (f"You receive ${bonus_type_2_amount[assignment_id]} because you were the worker with "
+                          f"the highest number of correct answers in the HIT. "
+                          if bonus_type_2_amount.get(assignment_id, 0) >= MIN_PAYABLE_AMOUNT else "")
+                       + ("We send this one-cent bonus to be able to communicate with you (there's no other way "
+                          "as far as we know). We wanted to let you know that unfortunately you didn't qualify for any "
+                          "bonus for this task. We thank you a lot for your participation! "
+                          if assignment_id in participation_bonus_amount else "")
+                       + "If you have any question or concern, please contact us."),
+        } for assignment_id in considered_assignment_ids
+    ])
 
     print(df.to_csv(index=False), end="")
 
