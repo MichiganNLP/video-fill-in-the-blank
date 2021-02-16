@@ -26,20 +26,21 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    # TODO: use decimal for money?
+    hits_by_id = parse_hits(args.annotation_results_path)
+    instances_by_id = hits_to_instances(hits_by_id)
 
-    hits = parse_hits(args.annotation_results_path)
-    instances = hits_to_instances(hits)
+    assert all(all(status == "approved" for status in instance["statuses"]) for instance in instances_by_id.values()), \
+        "All assignments should have been reviewed already (approved or rejected)."
 
-    # assert all(instance["status"] == "approved" for instance in instances), \
-    #     "All assignments should have been reviewed already."  # FIXME
-
-    instances_by_worker_id = compute_instances_by_worker_id(instances, compute_np_answers=True)
+    instances_by_worker_id = compute_instances_by_worker_id(instances_by_id, compute_np_answers=True)
 
     correct_answers_by_assignment = defaultdict(int)
     for worker_instances in instances_by_worker_id.values():
         for instance in worker_instances:
             correct_answers_by_assignment[instance["assignment_id"]] += len(instance["np_answers"])
+
+    # We could use `Decimal` to handle money because floats can introduce errors after many calculations. However,
+    # here we're doing quite simple calculations. So it's not necessary.
 
     bonus_type_1_amount = {assignment_id: (min(max(0, correct_answer_count - MIN_ANSWERS_PER_HIT),
                                                MAX_COVERED_ANSWERS_PER_HIT_BONUS_TYPE_1) * PAY_PER_ANSWER_BONUS_TYPE_1)
@@ -47,12 +48,12 @@ def main() -> None:
 
     best_assignment_by_hit = {hit_id: max(((assignment_id, correct_answers_by_assignment[assignment_id])
                                            for assignment_id in hit["assignment_ids"].values()), key=lambda t: t[1])[0]
-                              for hit_id, hit in hits.items()}
+                              for hit_id, hit in hits_by_id.items()}
 
     bonus_type_2_amount = {assignment_id: PAY_PER_HIT_BONUS_TYPE_2 for assignment_id in best_assignment_by_hit.values()}
 
     assignments_by_worker = defaultdict(list)
-    for hit in hits.values():
+    for hit in hits_by_id.values():
         for worker_id, assignment_id in hit["assignment_ids"].items():
             assignments_by_worker[worker_id].append(assignment_id)
 
@@ -73,7 +74,7 @@ def main() -> None:
                                   if amount < MIN_PAYABLE_AMOUNT}
 
     worker_by_assignment = {assignment_id: worker_id
-                            for hit in hits.values()
+                            for hit in hits_by_id.values()
                             for worker_id, assignment_id in hit["assignment_ids"].items()}
 
     considered_assignment_ids = {assignment_id
