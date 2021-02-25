@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import html
 import json
 import sys
 
@@ -35,7 +36,9 @@ def main() -> None:
             for k, v in [(f"video{i}_id", instance["video_id"]),
                          (f"video{i}_start_time", instance["video_start_time"]),
                          (f"video{i}_end_time", instance["video_end_time"]),
-                         (f"question{i}", instance["masked_caption"]),
+                         # We escape the HTML because it could have quotes and so break the JS or HTML code and the
+                         # page not work at all:
+                         (f"question{i}", html.escape(instance["masked_caption"])),
                          (f"label{i}", instance["label"])]
         }
         for hit_instances in chunks(instances, args.questions_per_hit)

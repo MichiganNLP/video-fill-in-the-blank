@@ -1,3 +1,4 @@
+import html
 import json
 import operator
 import re
@@ -71,6 +72,9 @@ def parse_hits(filepath_or_buffer: FilePathOrBuffer, include_accepted: bool = Tr
         del hit["ApprovalTime"]
 
         hit["question_count"] = max(int(k[len("Input.question"):]) for k in hit if k.startswith("Input.question"))
+
+        for i in range(hit["question_count"]):
+            df[f"Input.question{i + 1}"] = df[f"Input.question{i + 1}"].apply(html.unescape)
 
     return {hit["HITId"]: hit for hit in hits}
 

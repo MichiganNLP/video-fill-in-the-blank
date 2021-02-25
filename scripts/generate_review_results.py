@@ -47,10 +47,13 @@ def main() -> None:
     correct_answers_by_worker = df[df["correct?"]].groupby("worker_id")["answer"].count().sort_index()
 
     correct_answers_per_considered_q_by_worker = {
-        worker_id: correct_answers_by_worker.get(
-            # If it's not found then it means it wasn't sampled because the quality was low after filtering out
-            # non-NP answers. We re-compute it as we need it for some cases then.
-            worker_id, np_answers_per_question_by_worker[worker_id]) / instance_count_considered
+        worker_id: (
+                correct_answers_by_worker.get(
+                    # If it's not found then it means it wasn't sampled because the quality was low after filtering out
+                    # non-NP answers. We re-compute it as we need it for some cases then.
+                    worker_id, np_answers_per_question_by_worker[worker_id] * instance_count_considered) /
+                instance_count_considered
+        )
         for worker_id, instance_count_considered in q_count_considered_by_worker.items()
     }
 
@@ -61,7 +64,7 @@ def main() -> None:
         # TODO: throw a warning for the first condition.
         if (q_count < 25 and correct_answers_per_considered_q < args.min_good_answers_per_question) \
                 or correct_answers_per_considered_q < 1:
-            print(worker_id, correct_answers_per_considered_q, q_count_by_worker[worker_id])
+            print(worker_id, correct_answers_per_considered_q, q_count)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ import pytorch_lightning as pl
 
 from lqam.annotations import MIN_ACCEPTABLE_ANSWERS_PER_QUESTION, REVIEW_SAMPLE_SIZE_PER_WORKER
 from lqam.annotations.postprocessing import compute_instances_by_worker_id, hits_to_instances, parse_hits
+from lqam.core.metrics import normalize_answer
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
 
@@ -36,15 +37,21 @@ def main() -> None:
     instances = hits_to_instances(hits)
     instances_by_worker_id = compute_instances_by_worker_id(instances, compute_np_answers=True)
 
+    # TODO: change it to accept all the instances from the workers that we previously accepted all from them.
+    # But a list of exceptions of workers to not auto-approve.
+    # A list of problematic hits. 3E9ZFLPWOXRVU3D5TC98SM0RRILIXK, and the ones in test.
+
     for worker_id, worker_instances in list(instances_by_worker_id.items()):
         np_answers_per_question = \
             sum(len(instance["np_answers"]) for instance in worker_instances) / len(worker_instances)
-        if np_answers_per_question < args.min_good_answers_per_question:
+        if np_answers_per_question < args.min_good_answers_per_question:  # FIXME: consider the 2 thresholds
             del instances_by_worker_id[worker_id]
 
     for worker_id in instances_by_worker_id:
         if len(instances_by_worker_id[worker_id]) > args.sample_size:
             instances_by_worker_id[worker_id] = random.sample(instances_by_worker_id[worker_id], args.sample_size)
+
+    # TODO: accept those with unavailable video reports.
 
     df = pd.DataFrame([
         {
@@ -52,14 +59,14 @@ def main() -> None:
             **{k: instance[k] for k in ["video_id", "video_start_time", "video_end_time", "video_url", "question",
                                         "label"]},
             "answer": answer,
+            "reviewer": "",
+            # We can already annotate some:
+            "correct?": "y" if normalize_answer(answer) == normalize_answer(instance["label"]) else "",
         }
         for worker_id, worker_instances in instances_by_worker_id.items()
         for instance in worker_instances
         for answer in instance["answers"]
     ])
-
-    df["reviewer"] = ""
-    df["correct?"] = ""
 
     print(df.to_csv(index=False), end="")
 

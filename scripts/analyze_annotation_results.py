@@ -55,7 +55,9 @@ def main() -> None:
 
         pd.options.display.float_format = lambda x: f"{x: >3.0f}"
 
-        if args.compute_metrics:
+        there_are_answers = any(worker_answers for worker_answers in instance["answers"].values())
+
+        if args.compute_metrics and there_are_answers:
             ff1s, precisions, recalls, decision_scores, (
                 std_ff1, std_precision, std_recall, std_decision_score), ignored_workers = compute_annotation_metrics(
                 instance["answers"].values(), instance["label"], args.ignore_zero_scores)
@@ -92,7 +94,8 @@ def main() -> None:
             ff1s_list.append(torch.from_numpy(ff1s))
         else:
             std_answer_metrics_str = ""
-            aggregated_metrics_str = ""
+            aggregated_metrics_str = "\n\nWARNING: this question has no answers. Ignored for the metrics computation." \
+                if args.compute_metrics and not there_are_answers else ""
             answer_level_metrics_str = ""
 
         # Convert the index into a column. Otherwise, the index name and column names are output in different lines.

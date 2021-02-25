@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import argparse
+import json
+import sys
 from collections import defaultdict
-
-import pandas as pd
 
 from lqam.annotations import MAX_COVERED_ANSWERS_PER_QUESTION_BONUS_TYPE_1, MIN_ANSWERS_PER_QUESTION, \
     PAY_PER_ANSWER_BONUS_TYPE_1, PAY_PER_HIT_BONUS_TYPE_2, QUESTIONS_PER_HIT
@@ -19,17 +19,24 @@ MAX_COVERED_ANSWERS_PER_HIT_BONUS_TYPE_1 = QUESTIONS_PER_HIT * MAX_COVERED_ANSWE
 
 def parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults()
-    parser.add_argument("annotation_results_path", metavar="ANNOTATION_RESULTS_FILE_OR_URL", type=cached_path)
-    return parser.parse_args()
+    parser.add_argument("annotation_results_path_or_url", metavar="ANNOTATION_RESULTS_FILE_OR_URL", nargs="?",
+                        default="-")
+    args = parser.parse_args()
+
+    args.input = sys.stdin if args.annotation_results_path_or_url == "-" \
+        else cached_path(args.annotation_results_path_or_url)
+
+    return args
 
 
 def main() -> None:
     args = parse_args()
 
-    hits_by_id = parse_hits(args.annotation_results_path)
+    hits_by_id = parse_hits(args.input)
     instances_by_id = hits_to_instances(hits_by_id)
 
-    assert all(all(status == "approved" for status in instance["statuses"]) for instance in instances_by_id.values()), \
+    assert all(all(status == "approved" for status in instance["statuses"].values())
+               for instance in instances_by_id.values()), \
         "All assignments should have been reviewed already (approved or rejected)."
 
     instances_by_worker_id = compute_instances_by_worker_id(instances_by_id, compute_np_answers=True)
@@ -83,17 +90,17 @@ def main() -> None:
                                      + bonus_type_2_amount.get(assignment_id, 0)
                                      + participation_bonus_amount.get(assignment_id, 0)) >= MIN_PAYABLE_AMOUNT}
 
-    df = pd.DataFrame([
-        {
+    for assignment_id in considered_assignment_ids:
+        print(json.dumps({
             # We pay all the bonuses altogether at once for each assignment ID (and it's unique). So we use it as
             # the UUID to avoid duplicate payments.
-            "uuid": assignment_id,
-            "assignment_id": assignment_id,
-            "worker_id": worker_by_assignment[assignment_id],
-            "bonus_amount": round(bonus_type_1_amount.get(assignment_id, 0)
-                                  + bonus_type_2_amount.get(assignment_id, 0)
-                                  + participation_bonus_amount.get(assignment_id, 0), ndigits=2),
-            "reason": (""
+            "UniqueRequestToken": assignment_id,
+            "AssignmentId": assignment_id,
+            "WorkerId": worker_by_assignment[assignment_id],
+            "BonusAmount": str(round(bonus_type_1_amount.get(assignment_id, 0)  # The API expects a string amount.
+                                     + bonus_type_2_amount.get(assignment_id, 0)
+                                     + participation_bonus_amount.get(assignment_id, 0), ndigits=2)),
+            "Reason": (""
                        + (f"You receive ${bonus_type_1_amount[assignment_id]} because you provided a total of "
                           f"{correct_answers_by_assignment[assignment_id]} correct answers in this HIT. "
                           if bonus_type_1_amount.get(assignment_id, 0) >= MIN_PAYABLE_AMOUNT else "")
@@ -105,10 +112,7 @@ def main() -> None:
                           "bonus for this task. We thank you a lot for your participation! "
                           if assignment_id in participation_bonus_amount else "")
                        + "If you have any question or concern, please contact us."),
-        } for assignment_id in considered_assignment_ids
-    ])
-
-    print(df.to_csv(index=False), end="")
+        }))
 
 
 if __name__ == "__main__":

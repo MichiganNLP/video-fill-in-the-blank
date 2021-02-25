@@ -39,27 +39,28 @@ You can skip these steps if the data is already generated.
 [VATEX split JSON file](https://eric-xw.github.io/vatex-website/download.html) (replacing the variables with values):
 
     ```bash
-    ./scripts/generate_dataset_from_vatex.py $VATEX_JSON_FILE_OR_URL > $GENERATED_CSV_FILE
+    ./scripts/generate_dataset_from_vatex.py $VATEX_JSON_FILE_OR_URL > $GENERATED_JSON_FILE
     ```
 
-2. Create a list of the available videos:
+2. Create a list of the available videos (you first need to set the env var `GOOGLE_API_KEY` that can use the 
+   YouTube API):
 
     ```bash
-    csvcut -c video_id $GENERATED_CSV_FILE \
+    jq --raw-output '.[] | .video_id' $GENERATED_JSON_FILE \
       | sed 1d \
       | sort \
       | uniq \
       | ./scripts/list_available_videos.py > $AVAILABLE_VIDEO_IDS_FILE
     ```
 
-3. Filter the CSV file based on the available videos:
+3. Filter the JSON file based on the available videos:
 
     ```bash
-    csvjoin \
-      -c video_id \
-      $GENERATED_CSV_FILE \
-      <(echo video_id && cat $AVAILABLE_VIDEO_IDS_FILE) \
-      > $GENERATED_CSV_FILTERED_FILE
+    jq \
+      --compact-output \
+      --slurpfile ids <((echo '[' && sed 's/.*/"&"/g' < $AVAILABLE_VIDEO_IDS_FILE | paste -s -d, - && echo ']') | jq .) \
+      '[ JOIN(INDEX($ids[][]; .); .video_id)[] | select(.[1] != null) | .[0] ]' \
+      $GENERATED_JSON_FILE > $GENERATED_JSON_FILTERED_FILE
     ```
 
 ## Annotation
