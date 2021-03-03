@@ -3,7 +3,8 @@ import argparse
 
 import pandas as pd
 
-from lqam.annotations import MIN_ACCEPTABLE_ANSWERS_PER_QUESTION, REVIEW_SAMPLE_SIZE_PER_WORKER
+from lqam.annotations import MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1, MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2, \
+    MIN_QUESTION_COUNT_FOR_THRESHOLD_2, REVIEW_SAMPLE_SIZE_PER_WORKER
 from lqam.annotations.postprocessing import compute_instances_by_worker_id, hits_to_instances, parse_hits
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
@@ -14,7 +15,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("annotation_results_path", metavar="ANNOTATION_RESULTS_FILE_OR_URL", type=cached_path)
     parser.add_argument("reviewed_answers_path", metavar="REVIEWED_ANSWERS_FILE_OR_URL", type=cached_path)
     parser.add_argument("--sample-size-used", type=int, default=REVIEW_SAMPLE_SIZE_PER_WORKER)
-    parser.add_argument("--min-good-answers-per-question", type=float, default=MIN_ACCEPTABLE_ANSWERS_PER_QUESTION)
     return parser.parse_args()
 
 
@@ -60,11 +60,13 @@ def main() -> None:
     for worker_id, correct_answers_per_considered_q in correct_answers_per_considered_q_by_worker.items():
         q_count = q_count_by_worker[worker_id]
 
-        # TODO: document and refactor
-        # TODO: throw a warning for the first condition.
-        if (q_count < 25 and correct_answers_per_considered_q < args.min_good_answers_per_question) \
-                or correct_answers_per_considered_q < 1:
-            print(worker_id, correct_answers_per_considered_q, q_count)
+        if q_count < MIN_QUESTION_COUNT_FOR_THRESHOLD_2 \
+                and correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1:
+            if correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2:
+                print(worker_id, correct_answers_per_considered_q, q_count)
+            else:
+                print(f"WARNING: the worker {worker_id} passes the conditions but is in between the 2 thresholds ("
+                      f"{correct_answers_per_considered_q}, {q_count}). The worker isn't doing a great job.")
 
 
 if __name__ == "__main__":

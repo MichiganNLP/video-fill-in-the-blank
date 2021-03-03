@@ -36,6 +36,8 @@ jq \
 
 ### Create the annotation input CSV file
 
+Run:
+
 ```bash
 ./scripts/generate_annotation_input.py $GENERATED_JSON_FILTERED_FILE > $MTURK_INPUT_CSV_FILE
 ```
@@ -54,11 +56,15 @@ Then open
 
 ## Visualize the annotation results
 
+Run:
+
 ```bash
 ./scripts/analyze_annotation_results.py --show-metrics $ANNOTATION_RESULTS_CSV_FILE_OR_URL > $OUTPUT_TXT_FILE
 ```
 
 ## Prepare for a randomly sampled manual review
+
+Run:
 
 ```bash
 ./scripts/prepare_to_review_workers.py $ANNOTATION_RESULTS_CSV_FILE_OR_URL > $OUTPUT_CSV_FILE
@@ -66,7 +72,19 @@ Then open
 
 ## Incorporate the review
 
-TODO
+Run:
+
+```bash
+./scripts/generate_review_results.py $ANNOTATION_RESULTS_CSV_FILE_OR_URL $REVIEWED_CSV_FILE
+```
+
+Then create a copy of `$ANNOTATION_RESULTS_CSV_FILE_OR_URL`, and reject the workers that are part of the output. For 
+this, for each rejected one, put the following reason in the "Reject" column:
+
+> Unfortunately we are rejecting the assignment as many of the answers are wrong. If you have questions, please contact
+> us.
+
+For the rest, put an "x" in the "Approve" column. Then upload it to AMT.
 
 ## Pay the bonuses
 
@@ -77,7 +95,7 @@ the end.
 1. First calculate the bonuses:
 
 ```bash
-./script/calculate_bonuses.py $ANNOTATION_RESULTS_CSV_FILE_OR_URL > $OUTPUT_JSONL_FILE
+./scripts/calculate_bonuses.py $ANNOTATION_RESULTS_CSV_FILE_OR_URL > $OUTPUT_JSONL_FILE
 ```
 
 2. Make sure you have the AWS credentials set up. For this, run `aws configure` and set the key ID and secret.
@@ -87,4 +105,18 @@ the end.
 
 ```bash
 tr '\n' '\0' < $OUTPUT_JSONL_FILE | xargs -0 -L 1 aws mturk send-bonus --cli-input-json
+```
+
+If you want to pay only some bonuses from the file, you can run the same command, and the already paid ones are 
+going to be skipped. However, it will make the command fail. A trick is to make every command spawn by `xargs` to not 
+fail by using `sh -c` and appending `|| true`. However, by using `sh`, the `xargs` args are going to be expanded. So 
+then they need to be escaped. You can put them in between single quotes (because double quotes strings may allow 
+shell expansions). Finally, for this, we need to escape the single quotes. Doing `\'` doesn't work. A way of 
+escaping is by ending the single quotes, and immediately adding a single quote in between double quotes, then 
+continue with the single-quoted string. All in all, you can do: 
+
+```bash
+tr '\n' '\0' < $OUTPUT_JSONL_FILE \
+  | sed "s/'/'\"'\"'/g" \
+  | xargs -0 -L 1 -I{} bash -c "aws mturk send-bonus --cli-input-json '{}' || true"
 ```

@@ -40,13 +40,17 @@ def order_worker_answers_by_question(worker_answers: Mapping[str, str]) -> Seque
             for _, i_and_question_answers in sorted(answers_by_question.items(), key=operator.itemgetter(0))]
 
 
-def parse_hits(filepath_or_buffer: FilePathOrBuffer, include_accepted: bool = True) -> Mapping[str, Mapping[str, Any]]:
+def parse_hits(filepath_or_buffer: FilePathOrBuffer, include_accepted: bool = True,
+               include_rejected: bool = False) -> Mapping[str, Mapping[str, Any]]:
     df = pd.read_csv(filepath_or_buffer, converters={"Answer.taskAnswers": json.loads})
 
     if not include_accepted:
         df = df[df["ApprovalTime"].isna()]
 
-    hits = (df[df["RejectionTime"].isna()]
+    if not include_rejected:
+        df = df[df["RejectionTime"].isna()]
+
+    hits = (df
             .groupby(["HITId"] + [c for c in df.columns if c.startswith("Input.")])
             .agg({"Answer.taskAnswers": lambda lists: [x for list_ in lists for x in list_], "AssignmentId": list,
                   "WorkerId": list, "ApprovalTime": list})

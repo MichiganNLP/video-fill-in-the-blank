@@ -2,11 +2,15 @@
 import argparse
 import random
 import sys
+from collections import defaultdict
+from typing import Iterable
 
 import pandas as pd
 import pytorch_lightning as pl
 
-from lqam.annotations import MIN_ACCEPTABLE_ANSWERS_PER_QUESTION, REVIEW_SAMPLE_SIZE_PER_WORKER
+from lqam.annotations import AUTO_APPROVE_WORKER_ID_DENY_LIST, MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1, \
+    MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2, \
+    MIN_QUESTION_COUNT_FOR_THRESHOLD_2, REVIEW_SAMPLE_SIZE_PER_WORKER
 from lqam.annotations.postprocessing import compute_instances_by_worker_id, hits_to_instances, parse_hits
 from lqam.core.metrics import normalize_answer
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
@@ -18,7 +22,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("annotation_results_path_or_url", metavar="ANNOTATION_RESULTS_FILE_OR_URL", nargs="?",
                         default="-")
     parser.add_argument("--sample-size", type=int, default=REVIEW_SAMPLE_SIZE_PER_WORKER)
-    parser.add_argument("--min-good-answers-per-question", type=float, default=MIN_ACCEPTABLE_ANSWERS_PER_QUESTION)
     parser.add_argument("--seed", type=int, default=1337)
     args = parser.parse_args()
 
@@ -26,6 +29,20 @@ def parse_args() -> argparse.Namespace:
         else cached_path(args.annotation_results_path_or_url)
 
     return args
+
+
+def get_already_accepted_workers(annotation_results_path: str) -> Iterable[str]:
+    statuses_by_worker = defaultdict(set)
+
+    hits = parse_hits(annotation_results_path, include_rejected=True)
+
+    for hit in hits.values():
+        for worker_id, status in hit["statuses"].items():
+            statuses_by_worker[worker_id].add(status)
+
+    for worker_id, status_set in statuses_by_worker.items():
+        if "rejected" not in status_set and "accepted" in status_set:
+            yield worker_id
 
 
 def main() -> None:
@@ -37,21 +54,27 @@ def main() -> None:
     instances = hits_to_instances(hits)
     instances_by_worker_id = compute_instances_by_worker_id(instances, compute_np_answers=True)
 
-    # TODO: change it to accept all the instances from the workers that we previously accepted all from them.
-    # But a list of exceptions of workers to not auto-approve.
-    # A list of problematic hits. 3E9ZFLPWOXRVU3D5TC98SM0RRILIXK, and the ones in test.
+    q_count_by_worker = {worker_id: len(worker_instances)
+                         for worker_id, worker_instances in instances_by_worker_id.items()}
 
     for worker_id, worker_instances in list(instances_by_worker_id.items()):
+        q_count = q_count_by_worker[worker_id]
+
         np_answers_per_question = \
             sum(len(instance["np_answers"]) for instance in worker_instances) / len(worker_instances)
-        if np_answers_per_question < args.min_good_answers_per_question:  # FIXME: consider the 2 thresholds
+
+        if (q_count < MIN_QUESTION_COUNT_FOR_THRESHOLD_2
+            and np_answers_per_question < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1) \
+                or np_answers_per_question < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2:
             del instances_by_worker_id[worker_id]
 
     for worker_id in instances_by_worker_id:
         if len(instances_by_worker_id[worker_id]) > args.sample_size:
             instances_by_worker_id[worker_id] = random.sample(instances_by_worker_id[worker_id], args.sample_size)
 
-    # TODO: accept those with unavailable video reports.
+    worker_ids_to_auto_accept = {worker_id
+                                 for worker_id in get_already_accepted_workers(args.annotation_results_path)
+                                 if worker_id not in AUTO_APPROVE_WORKER_ID_DENY_LIST}
 
     df = pd.DataFrame([
         {
@@ -61,7 +84,9 @@ def main() -> None:
             "answer": answer,
             "reviewer": "",
             # We can already annotate some:
-            "correct?": "y" if normalize_answer(answer) == normalize_answer(instance["label"]) else "",
+            "correct?": "y" if (normalize_answer(answer) == normalize_answer(instance["label"])
+                                or ("unavailable" in answer.lower() and "video" in answer.lower())
+                                or worker_id in worker_ids_to_auto_accept) else "",
         }
         for worker_id, worker_instances in instances_by_worker_id.items()
         for instance in worker_instances
