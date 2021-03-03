@@ -12,9 +12,9 @@ from transformers import PreTrainedTokenizerBase
 
 from lqam.util.file_utils import cached_path
 
-URL_DATA_TEST = "https://drive.google.com/uc?id=1t-jrqvFZ4RvstXpMeoi5GkHIt4prk4-l&export=download"
-URL_DATA_VAL = "https://drive.google.com/uc?id=1rglAizpxanVDejDP6HuCM7UaXLxEQwnK&export=download"
-URL_DATA_TRAIN = "https://drive.google.com/uc?id=1ap1ifkLUPs3IzqN-xHh6PYc_VSOzlsWH&export=download"
+URL_DATA_TEST = "https://www.dropbox.com/s/2nr7kooprjti975/test.json?dl=1"
+URL_DATA_VAL = "https://www.dropbox.com/s/t1dpotaz2sjjtxk/val.json?dl=1"
+URL_DATA_TRAIN = "https://www.dropbox.com/s/lc3e1ave94hz9tu/train.json?dl=1"
 
 TYPE_BATCH = MutableMapping[str, Any]
 
