@@ -37,7 +37,7 @@ def get_already_accepted_workers(annotation_results_path: str) -> Iterable[str]:
     hits = parse_hits(annotation_results_path, include_rejected=True)
 
     for hit in hits.values():
-        for worker_id, status in hit["statuses"].items():
+        for worker_id, status in hit["status_by_worker"].items():
             statuses_by_worker[worker_id].add(status)
 
     for worker_id, status_set in statuses_by_worker.items():

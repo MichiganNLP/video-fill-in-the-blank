@@ -24,8 +24,8 @@ def main() -> None:
 
     formatted_instances = []
     for instance in tqdm(instances.values()):
-        answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"], instance["answers"],
-                                                                       instance["label"])
+        answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"],
+                                                                       instance["answers_by_worker"], instance["label"])
 
         np_answers = [[answer for answer, metrics in worker_answers.items() if metrics["np"]]
                       for worker_answers in answer_level_metrics.values()]

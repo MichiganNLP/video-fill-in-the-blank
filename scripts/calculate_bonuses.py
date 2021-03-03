@@ -35,7 +35,7 @@ def main() -> None:
     hits_by_id = parse_hits(args.input)
     instances_by_id = hits_to_instances(hits_by_id)
 
-    assert all(all(status == "approved" for status in instance["statuses"].values())
+    assert all(all(status == "approved" for status in instance["status_by_worker"].values())
                for instance in instances_by_id.values()), \
         "All assignments should have been reviewed already (approved or rejected)."
 
@@ -54,14 +54,15 @@ def main() -> None:
                            for assignment_id, correct_answer_count in correct_answers_by_assignment.items()}
 
     best_assignment_by_hit = {hit_id: max(((assignment_id, correct_answers_by_assignment[assignment_id])
-                                           for assignment_id in hit["assignment_ids"].values()), key=lambda t: t[1])[0]
+                                           for assignment_id in hit["assignment_id_by_worker"].values()),
+                                          key=lambda t: t[1])[0]
                               for hit_id, hit in hits_by_id.items()}
 
     bonus_type_2_amount = {assignment_id: PAY_PER_HIT_BONUS_TYPE_2 for assignment_id in best_assignment_by_hit.values()}
 
     assignments_by_worker = defaultdict(list)
     for hit in hits_by_id.values():
-        for worker_id, assignment_id in hit["assignment_ids"].items():
+        for worker_id, assignment_id in hit["assignment_id_by_worker"].items():
             assignments_by_worker[worker_id].append(assignment_id)
 
     pay_per_worker = {worker_id: sum(bonus_type_1_amount.get(assignment_id, 0)
@@ -82,7 +83,7 @@ def main() -> None:
 
     worker_by_assignment = {assignment_id: worker_id
                             for hit in hits_by_id.values()
-                            for worker_id, assignment_id in hit["assignment_ids"].items()}
+                            for worker_id, assignment_id in hit["assignment_id_by_worker"].items()}
 
     considered_assignment_ids = {assignment_id
                                  for assignment_id in worker_by_assignment

@@ -45,22 +45,22 @@ def main() -> None:
     ff1s_list = []
 
     for id_, instance in instances.items():
-        instance["answers"] = {worker_id: [format_answer(answer) for answer in answers]
-                               for worker_id, answers in instance["answers"].items()}
+        instance["answers_by_worker"] = {worker_id: [format_answer(answer) for answer in answers]
+                                         for worker_id, answers in instance["answers_by_worker"].items()}
 
-        df = pd.DataFrame(instance["answers"].values(),
-                          index=pd.Index(instance["answers"].keys(), name="Worker ID"))
+        df = pd.DataFrame(instance["answers_by_worker"].values(),
+                          index=pd.Index(instance["answers_by_worker"].keys(), name="Worker ID"))
         df.columns = [f"Ans. {j + 1}" for j in range(len(df.columns))]
         df[df.isna()] = ""
 
         pd.options.display.float_format = lambda x: f"{x: >3.0f}"
 
-        there_are_answers = any(worker_answers for worker_answers in instance["answers"].values())
+        there_are_answers = any(worker_answers for worker_answers in instance["answers_by_worker"].values())
 
         if args.compute_metrics and there_are_answers:
             ff1s, precisions, recalls, decision_scores, (
                 std_ff1, std_precision, std_recall, std_decision_score), ignored_workers = compute_annotation_metrics(
-                instance["answers"].values(), instance["label"], args.ignore_zero_scores)
+                instance["answers_by_worker"].values(), instance["label"], args.ignore_zero_scores)
             df.insert(0, "FF1", ff1s * 100)
             df.insert(1, "Pre", precisions * 100)
             df.insert(2, "Rec", recalls * 100)
@@ -72,12 +72,13 @@ def main() -> None:
             std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f}, Pre {std_precision * 100:.0f}, Rec"
                                       f" {std_recall * 100:.0f}, Dec {std_decision_score * 100:.0f})")
 
-            answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"], instance["answers"],
+            answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"],
+                                                                           instance["answers_by_worker"],
                                                                            instance["label"], ignored_workers)
 
             for worker_id, answer_stats in answer_level_metrics.items():
                 worker_stats[worker_id]["questions"] += 1
-                worker_stats[worker_id]["answers"] += len(answer_stats)
+                worker_stats[worker_id]["answers_by_worker"] += len(answer_stats)
                 worker_stats[worker_id]["total_ff1"] += next(iter(answer_stats.values()))["f1"]
                 worker_stats[worker_id]["total_f1"] += sum(m["f1"] for m in answer_stats.values())
                 worker_stats[worker_id]["total_em"] += sum(m["em"] for m in answer_stats.values())
@@ -121,7 +122,7 @@ Worker answers:
         print(f"HIT ID: {hit_id}")
 
         comments_map = {worker_id: answers["comments"]
-                        for worker_id, answers in hit["answers"].items()
+                        for worker_id, answers in hit["answers_by_worker"].items()
                         if answers["comments"]}
         print("Comments:" if comments_map else "No comments.")
         for worker_id, comment in comments_map.items():

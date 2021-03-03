@@ -58,17 +58,17 @@ def parse_hits(filepath_or_buffer: FilePathOrBuffer, include_accepted: bool = Tr
             .to_dict("records"))
 
     for hit in hits:
-        hit["answers"] = {worker_id: {**{f"question{i + 1}": q_answers
-                                         for i, q_answers in
-                                         enumerate(order_worker_answers_by_question(worker_answers))},
-                                      **{"comments": worker_answers.get("comments")}}
-                          for worker_id, worker_answers in zip(hit["WorkerId"], hit["Answer.taskAnswers"])}
+        hit["answers_by_worker"] = {worker_id: {**{f"question{i + 1}": q_answers
+                                                   for i, q_answers in
+                                                   enumerate(order_worker_answers_by_question(worker_answers))},
+                                                **{"comments": worker_answers.get("comments")}}
+                                    for worker_id, worker_answers in zip(hit["WorkerId"], hit["Answer.taskAnswers"])}
 
-        hit["assignment_ids"] = {worker_id: assignment_id
-                                 for worker_id, assignment_id in zip(hit["WorkerId"], hit["AssignmentId"])}
+        hit["assignment_id_by_worker"] = {worker_id: assignment_id
+                                          for worker_id, assignment_id in zip(hit["WorkerId"], hit["AssignmentId"])}
 
-        hit["statuses"] = {worker_id: "approved" if approval_time else "submitted"
-                           for worker_id, approval_time in zip(hit["WorkerId"], hit["ApprovalTime"])}
+        hit["status_by_worker"] = {worker_id: "approved" if approval_time else "submitted"
+                                   for worker_id, approval_time in zip(hit["WorkerId"], hit["ApprovalTime"])}
 
         del hit["Answer.taskAnswers"]
         del hit["AssignmentId"]
@@ -94,9 +94,10 @@ def hits_to_instances(hits: Mapping[str, Mapping[str, Any]]) -> Mapping[str, Mut
             "video_url": f"https://www.youtube.com/embed/{hit[f'Input.video{i}_id']}?start="
                          f"{hit[f'Input.video{i}_start_time']}&end={hit[f'Input.video{i}_end_time']}",
             "label": hit[f"Input.label{i}"],
-            "answers": {worker_id: answers.get(f"question{i}", []) for worker_id, answers in hit["answers"].items()},
-            "assignment_ids": hit["assignment_ids"],
-            "statuses": hit["statuses"],
+            "answers_by_worker": {worker_id: answers.get(f"question{i}", [])
+                                  for worker_id, answers in hit["answers_by_worker"].items()},
+            "assignment_id_by_worker": hit["assignment_id_by_worker"],
+            "status_by_worker": hit["status_by_worker"],
         }
         for hit_id, hit in hits.items()
         for i in range(1, hit["question_count"] + 1)
@@ -111,7 +112,7 @@ def compute_instances_by_worker_id(
     for instance in tqdm(instances.values(), desc="Computing the instances by worker"):
         if compute_np_answers:
             formatted_answers = {worker_id: [format_answer(answer) for answer in answers]
-                                 for worker_id, answers in instance["answers"].items()}
+                                 for worker_id, answers in instance["answers_by_worker"].items()}
 
             answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"], formatted_answers,
                                                                            instance["label"])
@@ -119,12 +120,13 @@ def compute_instances_by_worker_id(
             formatted_answers = None
             answer_level_metrics = None
 
-        for worker_id, answers in instance["answers"].items():
+        for worker_id, answers in instance["answers_by_worker"].items():
             worker_instance = {
-                **{k: v for k, v in instance.items() if k not in {"answers", "assignment_ids", "statuses"}},
+                **{k: v for k, v in instance.items() if k not in {"answers_by_worker", "assignment_id_by_worker",
+                                                                  "status_by_worker"}},
                 "answers": answers,
-                "assignment_id": instance["assignment_ids"][worker_id],
-                "status": instance["statuses"][worker_id],
+                "assignment_id": instance["assignment_id_by_worker"][worker_id],
+                "status": instance["status_by_worker"][worker_id],
             }
 
             if compute_np_answers:
