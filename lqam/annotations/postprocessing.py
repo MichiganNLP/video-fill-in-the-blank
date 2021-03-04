@@ -10,7 +10,7 @@ import pandas as pd
 from pandas._typing import FilePathOrBuffer  # noqa
 from tqdm.auto import tqdm
 
-from lqam.annotations.metrics import compute_answer_level_annotation_metrics
+from lqam.annotations.metrics import compute_np_value_by_answer
 from lqam.core.metrics import RE_MULTIPLE_SPACES
 
 RE_ANSWER_KEY = re.compile(r"^answer-(?P<question_index>\d+)-(?P<answer_index>\d+)$")
@@ -114,11 +114,10 @@ def compute_instances_by_worker_id(
             formatted_answers = {worker_id: [format_answer(answer) for answer in answers]
                                  for worker_id, answers in instance["answers_by_worker"].items()}
 
-            answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"], formatted_answers,
-                                                                           instance["label"])
+            np_value_by_answer = compute_np_value_by_answer(instance["question"], formatted_answers)
         else:
             formatted_answers = None
-            answer_level_metrics = None
+            np_value_by_answer = None
 
         for worker_id, answers in instance["answers_by_worker"].items():
             worker_instance = {
@@ -129,10 +128,10 @@ def compute_instances_by_worker_id(
                 "status": instance["status_by_worker"][worker_id],
             }
 
-            if compute_np_answers:
+            if np_value_by_answer is not None:
                 worker_instance["np_answers"] = [answer
                                                  for answer in formatted_answers[worker_id]
-                                                 if answer_level_metrics[worker_id][answer]["np"]]
+                                                 if np_value_by_answer[answer]]
 
             instances_by_worker_id[worker_id].append(worker_instance)
 

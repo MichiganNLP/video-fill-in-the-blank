@@ -103,6 +103,21 @@ def compute_annotation_metrics(
     return ff1s, precisions, recalls, decision_scores, std_answer_metrics, ignored_workers
 
 
+def compute_np_value_by_answer(question: str, answers_map: Mapping[str, Sequence[str]]) -> Mapping[str, bool]:
+    # Workers can add extra punctuation, and this messes up with the parsing. So we remove it.
+    # We could use `alignment_mode="contract"` if there's extra punctuation, however this doesn't prevent the parsing
+    # from failing. So we remove the punctuation altogether.
+    answers_flat = {(answer, strip_punctuation(answer))
+                    for worker_answers in answers_map.values()
+                    for answer in worker_answers}
+
+    question_with_answers = (question.replace("_____", clean_answer) for _, clean_answer in answers_flat)
+
+    return {answer: bool(clean_answer) and is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
+                                                                                 start + len(clean_answer)))
+            for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers))}
+
+
 def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[str, Sequence[str]],
                                             std_answer: str, ignored_workers: Optional[Sequence[bool]] = None
                                             ) -> Mapping[str, Mapping[str, Mapping[str, Any]]]:
@@ -136,20 +151,7 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
             results[worker_id][answer]["em"] = any(normalized_answer == other_normalized_answer
                                                    for other_normalized_answer in other_normalized_answers)
 
-    # Check if they are noun phrases:
-
-    # Workers can add extra punctuation, and this messes up with the parsing. So we remove it.
-    # We could use `alignment_mode="contract"` if there's extra punctuation, however this doesn't prevent the parsing
-    # from failing. So we remove the punctuation altogether.
-    answers_flat = {(answer, strip_punctuation(answer))
-                    for worker_answers in answers_map.values()
-                    for answer in worker_answers}
-
-    question_with_answers = (question.replace("_____", clean_answer) for _, clean_answer in answers_flat)
-
-    np_map = {answer: bool(clean_answer) and is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
-                                                                                   start + len(clean_answer)))
-              for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers))}
+    np_map = compute_np_value_by_answer(question, answers_map)
 
     for worker_id, worker_answers in answers_map.items():
         for answer in worker_answers:
