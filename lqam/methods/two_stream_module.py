@@ -3,8 +3,8 @@ from typing import Any, Mapping, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 from overrides import overrides
-from transformers import T5Config, T5ForConditionalGeneration
-from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions, Seq2SeqLMOutput, AutoModelForSeq2SeqLM
+from transformers import T5Config, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
+from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions, Seq2SeqLMOutput 
 from transformers.models.t5.modeling_t5 import T5Stack
 
 
@@ -18,12 +18,15 @@ def _combine_attention_masks(text_attention_mask: Optional[torch.Tensor] = None,
         return None
 
 
-class TextVisualEncoder(T5Stack):
+class TwoStreamEncoder(T5Stack):
     def __init__(self, t5stack: T5Stack, visual_size: int, hidden_size: int) -> None:
         super().__init__(t5stack.config)
-        self.embed_text = nn.Linear(hidden_size, self.embed_tokens.embedding_dim)
-        self.embed_video1 = nn.Linear(visual_size, self.embed_tokens.embedding_dim)
-        self.embed_video2 = nn.Linear(hidden_size, self.embed_tokens.embedding_dim)
+        self.text_stream = AutoModelForSeq2SeqLM.from_pretrained('t5-base').encoder
+        self.visual_stream = AutoModelForSeq2SeqLM.from_pretrained('t5-base').encoder
+
+        self.embed_text = nn.Linear(hidden_size, self.config.d_model)
+        self.embed_video1 = nn.Linear(visual_size, self.visual_stream.config.d_model)
+        self.embed_video2 = nn.Linear(hidden_size, self.config.d_model)
 
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: torch.Tensor,  # noqa
@@ -46,9 +49,7 @@ class TextVisualEncoder(T5Stack):
 class TwoStream(T5ForConditionalGeneration):
     def __init__(self, config: T5Config, visual_size: int) -> None:
         super().__init__(config)
-        self.text_stream = AutoModelForSeq2SeqLM.from_pretrained('t5-base')
-        self.visual_stream = AutoModelForSeq2SeqLM.from_pretrained('t5-base')
-        self.encoder = TextVisualEncoder(self.encoder, self.text_stream, self.visual_stream, visual_size, config.d_model)
+        self.encoder = TwoStreamEncoder(self.encoder, visual_size, config.d_model)
 
     @overrides
     def prepare_inputs_for_generation(self, input_ids: torch.Tensor, visual: Optional[torch.Tensor] = None,
