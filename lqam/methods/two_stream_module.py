@@ -32,10 +32,10 @@ class TwoStreamEncoder(T5Stack):
     def forward(self, text_token_ids: torch.Tensor, visual: torch.Tensor,  # noqa
                 attention_mask: Optional[torch.Tensor] = None, visual_attention_mask: Optional[torch.Tensor] = None,
                 **kwargs) -> Union[BaseModelOutputWithPastAndCrossAttentions, Tuple[torch.Tensor, ...]]:
-        text_feature = self.text_stream(text_token_ids,attention_mask=attention_mask).last_hidden_states
+        text_feature = self.text_stream(text_token_ids,attention_mask=attention_mask).last_hidden_state
         
         visual_embedding = self.embed_video1(visual)
-        video_feature = self.visual_stream(visual_embedding, attention_mask=visual_attention_mask).last_hidden_states
+        video_feature = self.visual_stream(visual_embedding, attention_mask=visual_attention_mask).last_hidden_state
         
         text_embedding = self.embed_text(text_feature)
         video_embedding = self.embed_video2(video_feature)
