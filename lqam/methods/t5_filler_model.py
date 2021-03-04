@@ -14,8 +14,7 @@ from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
 from lqam.core.noun_phrases import create_spacy_model
 from lqam.methods.dataset import TYPE_BATCH
 from lqam.methods.decoding import arg_noun_phrase, compute_answer_prob
-from lqam.methods.metrics import AlmostExactMatchAccuracy
-from lqam.methods.metrics import F1Scores
+from lqam.methods.metrics import ExactMatchAccuracyMany, F1ScoreMany
 from lqam.methods.t5_format_processing import compute_first_blank
 from lqam.util.iterable_utils import chunks
 
@@ -41,10 +40,10 @@ class T5FillerModel(pl.LightningModule):
         assert isinstance(t5_like_pretrained_model, tuple(MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.values()))
         self.t5_pretrained_model = t5_like_pretrained_model
         self.tokenizer = tokenizer
-        self.accuracy = AlmostExactMatchAccuracy()
-        self.accuracy_many = AlmostExactMatchAccuracy()
-        self.F1Scores = F1Scores()
-        self.F1Scores_labels = F1Scores()
+        self.accuracy = ExactMatchAccuracyMany()
+        self.accuracy_many = ExactMatchAccuracyMany()
+        self.f1_score = F1ScoreMany()
+        self.f1_score_many = F1ScoreMany()
         self.generate_kwargs = generate_kwargs or {}
 
         self.generate_kwargs.setdefault("return_dict_in_generate", True)
@@ -79,8 +78,8 @@ class T5FillerModel(pl.LightningModule):
     def on_epoch_start(self) -> None:
         self.accuracy.reset()
         self.accuracy_many.reset()
-        self.F1Scores.reset()
-        self.F1Scores_labels.reset()
+        self.f1_score.reset()
+        self.f1_score_many.reset()
 
     @overrides
     def forward(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: Optional[torch.Tensor] = None,
@@ -102,6 +101,7 @@ class T5FillerModel(pl.LightningModule):
         del batch["masked_caption"]
         del batch["label"]
         batch.pop("label_attention_mask", None)
+        batch.pop("additional_answers", None)
 
         loss = self(masked_caption_ids, masked_caption_attention_mask, label_ids, **batch)["loss"]
         self.log("loss", loss)
@@ -112,10 +112,9 @@ class T5FillerModel(pl.LightningModule):
 
     def _generative_step(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: torch.Tensor,
                          label_ids: torch.Tensor, masked_caption: Sequence[str], label: Sequence[str],
-                         log_prefix: str = "", **kwargs) -> None:
+                         additional_answers: Sequence[Sequence[str]], log_prefix: str = "", **kwargs) -> None:
         self.write_prediction("masked_caption", masked_caption)
 
-        additional_answers = kwargs.pop("additional_answers", None)
         del kwargs["label_attention_mask"]
 
         # --- Generate an answer from scratch ---
@@ -169,15 +168,18 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("generated_prob", generated_prob)
 
         accuracy = self.accuracy(generated, label)        
-        self.log(f"{log_prefix}accuracy_step", accuracy, prog_bar=True)
+        self.log(f"{log_prefix}accuracy_label_step", accuracy, prog_bar=True)
+
+        f1_score = self.f1_score(generated, label)
+        self.log(f"{log_prefix}f1_score_label_step", f1_score, prog_bar=True)
 
         if additional_answers is not None:
-            F1_scores = self.F1Scores(generated, label, additional_answers)
-            self.log(f"{log_prefix}F1_scores_step", F1_scores, prog_bar=True)
-            F1_scores_labels = self.F1Scores_labels(generated, label)
-            self.log(f"{log_prefix}F1_scores_labels_step", F1_scores_labels, prog_bar=True)
-            accuracy_with_additional_answers = self.accuracy_many(generated, label, additional_answers)
-            self.log(f"{log_prefix}accuracy_with_additional_answers_step", accuracy_with_additional_answers, prog_bar=True)
+            accuracy_many = self.accuracy_many(generated, label, additional_answers)
+            self.log(f"{log_prefix}accuracy_step", accuracy_many,
+                     prog_bar=True)
+
+            f1_score_many = self.f1_score_many(generated, label, additional_answers)
+            self.log(f"{log_prefix}f1_score_step", f1_score_many, prog_bar=True)
 
         # --- Compute the ground truth likelihood ---
 
@@ -208,10 +210,10 @@ class T5FillerModel(pl.LightningModule):
         self._generative_step(**batch, log_prefix="test_")
 
     def _on_epoch_end(self, log_prefix: str = "") -> None:
-        self.log(f"{log_prefix}accuracy", self.accuracy.compute(), prog_bar=True)
-        self.log(f"{log_prefix}F1_scores", self.F1Scores.compute(), prog_bar=True)
-        self.log(f"{log_prefix}F1_scores_labels", self.F1Scores_labels.compute(), prog_bar=True)
-        self.log(f"{log_prefix}accuracy_with_additional_answers", self.accuracy_many.compute(), prog_bar=True)
+        self.log(f"{log_prefix}accuracy_label", self.accuracy.compute(), prog_bar=True)
+        self.log(f"{log_prefix}f1_score_label", self.f1_score.compute(), prog_bar=True)
+        self.log(f"{log_prefix}accuracy", self.accuracy_many.compute(), prog_bar=True)
+        self.log(f"{log_prefix}f1_score", self.f1_score_many.compute(), prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
         self._on_epoch_end(log_prefix="val_")
