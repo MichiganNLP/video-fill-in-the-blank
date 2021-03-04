@@ -35,7 +35,7 @@ class TwoStreamEncoder(T5Stack):
         text_feature = self.text_stream(text_token_ids,attention_mask=attention_mask).last_hidden_state
         
         visual_embedding = self.embed_video1(visual)
-        video_feature = self.visual_stream(input_embeds=visual_embedding, attention_mask=visual_attention_mask).last_hidden_state
+        video_feature = self.visual_stream(inputs_embeds=visual_embedding, attention_mask=visual_attention_mask).last_hidden_state
         
         text_embedding = self.embed_text(text_feature)
         video_embedding = self.embed_video2(video_feature)
