@@ -23,7 +23,7 @@ class TwoStreamEncoder(T5Stack):
         super().__init__(t5stack.config)
         self.text_stream = AutoModelForSeq2SeqLM.from_pretrained('t5-base').encoder
         
-        visual_config = T5Config()
+        visual_config = T5Config.from_pretrained('t5-base')
         visual_config.num_layers = 1
         self.visual_stream = AutoModelForSeq2SeqLM.from_config(visual_config).encoder
 
