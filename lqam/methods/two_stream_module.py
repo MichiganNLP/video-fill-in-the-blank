@@ -3,7 +3,7 @@ from typing import Any, Mapping, Optional, Tuple, Union
 import torch
 import torch.nn as nn
 from overrides import overrides
-from transformers import T5Config, T5ForConditionalGeneration, AutoModelForSeq2SeqLM
+from transformers import T5Config, T5ForConditionalGeneration, AutoConfig, AutoModelForSeq2SeqLM
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions, Seq2SeqLMOutput 
 from transformers.models.t5.modeling_t5 import T5Stack
 
@@ -25,7 +25,7 @@ class TwoStreamEncoder(T5Stack):
         
         visual_config = T5Config()
         visual_config.num_layers = 1
-        self.visual_stream = AutoModelForSeq2SeqLM(visual_config).encoder
+        self.visual_stream = AutoModelForSeq2SeqLM.from_config(visual_config).encoder
 
         self.embed_video = nn.Linear(visual_size, visual_config.d_model)
 
