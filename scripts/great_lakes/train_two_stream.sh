@@ -10,4 +10,4 @@
 #SBATCH --time=5:00:00
 
 source scripts/great_lakes/init.source
-PYTHONPATH=. python -u scripts/run_model.py --use-visual --two-stream --train --gpus 1 --num-workers 3 --batch-size 64
+PYTHONPATH=. python -u scripts/run_model.py --use-visual --two-stream --train --gpus 1 --num-workers 3 --batch-size 64 --epochs 30
