@@ -22,11 +22,12 @@ class TwoStreamEncoder(T5Stack):
     def __init__(self, t5stack: T5Stack, visual_size: int, hidden_size: int) -> None:
         super().__init__(t5stack.config)
         self.text_stream = AutoModelForSeq2SeqLM.from_pretrained('t5-base').encoder
-        self.visual_stream = AutoModelForSeq2SeqLM.from_pretrained('t5-base').encoder
+        
+        visual_config = T5Config()
+        visual_config.num_layers = 1
+        self.visual_stream = AutoModelForSeq2SeqLM(visual_config).encoder
 
-        self.embed_text = nn.Linear(hidden_size, self.config.d_model)
-        self.embed_video1 = nn.Linear(visual_size, self.visual_stream.config.d_model)
-        self.embed_video2 = nn.Linear(hidden_size, self.config.d_model)
+        self.embed_video = nn.Linear(visual_size, visual_config.d_model)
 
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: torch.Tensor,  # noqa
@@ -34,12 +35,10 @@ class TwoStreamEncoder(T5Stack):
                 **kwargs) -> Union[BaseModelOutputWithPastAndCrossAttentions, Tuple[torch.Tensor, ...]]:
         text_feature = self.text_stream(text_token_ids,attention_mask=attention_mask).last_hidden_state
         
-        visual_embedding = self.embed_video1(visual)
+        visual_embedding = self.embed_video(visual)
         video_feature = self.visual_stream(inputs_embeds=visual_embedding, attention_mask=visual_attention_mask).last_hidden_state
         
-        text_embedding = self.embed_text(text_feature)
-        video_embedding = self.embed_video2(video_feature)
-        embedding = torch.cat([text_embedding, visual_embedding], dim=1)
+        embedding = torch.cat([text_feature, video_feature], dim=1)
 
         attention_mask = _combine_attention_masks(attention_mask, visual_attention_mask)
 
@@ -48,6 +47,7 @@ class TwoStreamEncoder(T5Stack):
 
 class TwoStream(T5ForConditionalGeneration):
     def __init__(self, config: T5Config, visual_size: int) -> None:
+        config.num_layers = 1
         super().__init__(config)
         self.encoder = TwoStreamEncoder(self.encoder, visual_size, config.d_model)
 
