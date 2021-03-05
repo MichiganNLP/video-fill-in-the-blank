@@ -1,6 +1,7 @@
+import itertools
 import re
 import string
-from typing import Iterable, Iterator, Set, Optional
+from typing import Iterable, Iterator, Optional, Set
 
 RE_A_AN_THE_OR_PUNCTUATION = re.compile(rf"\b(?:an?|the)\b|[{re.escape(string.punctuation)}]")
 RE_MULTIPLE_SPACES = re.compile(r"\s{2,}")
@@ -26,25 +27,29 @@ def compute_token_level_f1(answer1_tokens: Set[str], answer2_tokens: Set[str]) -
     return true_positives / (true_positives + (false_count_in_1 + false_count_in_2) / 2)
 
 
-def compute_token_level_f1_many(answer_tokens: Iterator[str], ground_truths_tokens: Iterable[Iterable[str]]) -> float:
-    answer_tokens = set(answer_tokens)
-    return max(compute_token_level_f1(answer_tokens, set(g)) for g in ground_truths_tokens)
+def compute_token_level_f1_many(predicted_answer_tokens: Iterable[str],
+                                ground_truth_tokens_iterable: Iterable[Iterable[str]]) -> float:
+    predicted_answer_tokens = set(predicted_answer_tokens)
+    return max(compute_token_level_f1(predicted_answer_tokens, set(ground_truth_tokens))
+               for ground_truth_tokens in ground_truth_tokens_iterable)
 
 
 def exact_match(unnormalized_answer1: str, unnormalized_answer2: str) -> bool:
     return normalize_answer(unnormalized_answer1) == normalize_answer(unnormalized_answer2)
 
-def exact_match_many(unnormalized_answer1: str, unnormalized_answer2_list: Iterator[str]) -> bool:
-    for answer in unnormalized_answer2_list:
-        if exact_match(unnormalized_answer1, answer):
-            return True
-    return False
 
-def flatten_additional_answers(additional_answers: Iterable[Iterable[str]]) -> Iterable[str]: 
-    return list(set([add_ans for worker_ans in additional_answers for add_ans in worker_ans]))
+def exact_match_many(unnormalized_predicted_answer: str, unnormalized_ground_truth_answers: Iterable[str]) -> bool:
+    return any(exact_match(unnormalized_predicted_answer, unnormalized_ground_truth_answer)
+               for unnormalized_ground_truth_answer in unnormalized_ground_truth_answers)
 
-def flatten_answers(labels: Iterable[str], additional_answers_list: Optional[Iterable[Iterable[Iterable[str]]]]) -> Iterable[Iterable[str]]:
-    if additional_answers_list is None:
-        return [[label] for label in labels]
-    else:
-        return [flatten_additional_answers(add_ans) + [label] for add_ans, label in zip(additional_answers_list, labels)] 
+
+def flatten_additional_answers(additional_answers: Iterable[Iterable[str]]) -> Set[str]:
+    return {answer for worker_answers in additional_answers for answer in worker_answers}
+
+
+def flatten_all_answers(
+        labels: Iterable[str], additional_answers_batch: Optional[Iterable[Iterable[Iterable[str]]]] = None
+) -> Iterable[Iterable[str]]:
+    additional_answers_batch = additional_answers_batch or itertools.repeat([])
+    return [flatten_additional_answers(additional_answers) | {label}
+            for additional_answers, label in zip(additional_answers_batch, labels)]
