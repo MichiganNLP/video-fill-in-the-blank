@@ -4,7 +4,6 @@ import json
 import random
 from typing import Any, Iterable, Mapping
 
-import pandas as pd
 from tqdm.auto import tqdm
 
 from lqam.core.noun_phrases import create_spacy_model
@@ -24,7 +23,7 @@ def _preprocess_caption(caption: str) -> str:
     return caption
 
 
-def generate_data(instances: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
+def generate_data(instances: Iterable[Mapping[str, Any]]) -> Iterable[Mapping[str, Any]]:
     spacy_model = create_spacy_model(prefer_gpu=True)
 
     instances = list(instances)
@@ -54,7 +53,7 @@ def generate_data(instances: Iterable[Mapping[str, Any]]) -> pd.DataFrame:
 
     assert next(docs, None) is None
 
-    return pd.DataFrame(selected_data)
+    return selected_data
 
 
 def parse_args() -> argparse.Namespace:
@@ -79,9 +78,7 @@ def main() -> None:
     with smart_open(args.input) as file:
         instances = json.load(file)
 
-    df = generate_data(instances)
-
-    print(df.to_csv(index=False), end="")
+    print(json.dumps(generate_data(instances)))
 
 
 if __name__ == "__main__":

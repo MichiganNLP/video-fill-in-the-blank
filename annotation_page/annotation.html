@@ -297,6 +297,9 @@
           come up with more answers, then just move on to the next blank because it's probably not worth it
           to spend a lot of time in each blank.
         </li>
+        <li>
+          The bonuses will be paid once all the annotations from all the workers has been submitted and reviewed.
+        </li>
       </ul>
 
       <div id="example"></div>
@@ -333,8 +336,7 @@
   // JS string interpolations clash with the Amazon Mechanical Turk template system, as they both use the syntax ${...}.
   // So we do a trick which is to put the simple string interpolation of variables inside a comma operator expression,
   // which always returns the last operand. For example, if we have to interpolate the variable "i" inside the backticks
-  // (`) then we do `${(0, i)}`. This is basically the minimum we can write. The parentheses are actually optional, but
-  // WebStorm complains otherwise. Note we put "0" but it could be any other expression.
+  // (`) then we do `${0, i}`. This is basically the minimum we can write as far as we know.
   // Complex expressions usually don't need this. I tried other variants, but it seems that AMT captures spaces and plus
   // signs as valid syntax. The ternary operator is another option (`${1 ? i : 0}`), though more verbose.
 
@@ -352,8 +354,8 @@
       })
       .map(escapeHtml)
       .map((q, i) => q.replace("_____",
-          `<input type="text" class="form-control answer-input" id="answer-input-${(0, i)}"
-                  name="answer-input-${(0, i)}"
+          `<input type="text" class="form-control answer-input" id="answer-input-${0, i}"
+                  name="answer-input-${0, i}"
                   placeholder="type an answer and hit Enter" ${i === 0 ? "disabled" : ""}>`));
   const startTimes = ["0", "${video1_start_time}", "${video2_start_time}", "${video3_start_time}",
     "${video4_start_time}", "${video5_start_time}"]
@@ -390,27 +392,27 @@
 
   function createInstanceElement(i, isExample, title, duration, question, showNextButton) {
     return $(`
-        <div class="instance" id="instance-${(0, i)}">
-          <h2 class="instance-title">${(0, title)}</h2>
-          <div class="video" id="video-${(0, i)}">
+        <div class="instance" id="instance-${0, i}">
+          <h2 class="instance-title">${0, title}</h2>
+          <div class="video" id="video-${0, i}">
             <p class="loading-video">Loading video…</p>
           </div>
           <div class="video-relates">
             <div class="btn-group video-buttons" role="group" aria-label="Video controls">
-              <button type="button" class="btn btn-dark video-button" id="rewind-${(0, i)}" data-toggle="tooltip"
+              <button type="button" class="btn btn-dark video-button" id="rewind-${0, i}" data-toggle="tooltip"
                       data-placement="bottom" title="Go back">-5s</button>
-              <button type="button" class="btn btn-dark video-button" id="slow-down-${(0, i)}" data-toggle="tooltip"
+              <button type="button" class="btn btn-dark video-button" id="slow-down-${0, i}" data-toggle="tooltip"
                       data-placement="bottom" title="Decrease speed">Speed&#8595</button>
-              <button type="button" class="btn btn-dark video-button" id="restart-video-${(0, i)}" data-toggle="tooltip"
+              <button type="button" class="btn btn-dark video-button" id="restart-video-${0, i}" data-toggle="tooltip"
                       data-placement="bottom" title="Replay">&#8634</button>
-              <button type="button" class="btn btn-dark video-button" id="speed-up-${(0, i)}" data-toggle="tooltip"
+              <button type="button" class="btn btn-dark video-button" id="speed-up-${0, i}" data-toggle="tooltip"
                       data-placement="bottom" title="Increase speed">Speed&#8593</button>
-              <button type="button" class="btn btn-dark video-button" id="forward-${(0, i)}" data-toggle="tooltip"
+              <button type="button" class="btn btn-dark video-button" id="forward-${0, i}" data-toggle="tooltip"
                       data-placement="bottom" title="Go forward">+5s</button>
             </div>
             <ul class="video-instructions">
               <li>
-                Please watch this <i>${(0, duration)}-second</i> video while you listen to its <b><u>audio</u></b> (you
+                Please watch this <i>${0, duration}-second</i> video while you listen to its <b><u>audio</u></b> (you
                 may need to adjust your <b>device volume</b>).
               </li>
               <li>
@@ -424,13 +426,13 @@
           <hr>
 
           <div class="form-group">
-            <label class="question-label" for="answer-input-${(0, i)}">Fill in the blank:</label>
-            <p class="question" id="question-${(0, i)}">${(0, question)}</p>
+            <label class="question-label" for="answer-input-${0, i}">Fill in the blank:</label>
+            <p class="question" id="question-${0, i}">${0, question}</p>
           </div>
 
-          <div class="answers" id="answers-${(0, i)}"><p>Your answers:</p></div>
+          <div class="answers" id="answers-${0, i}"><p>Your answers:</p></div>
 
-          <div class="alert alert-warning alert-answer" id="alert-${(0, i)}"></div>
+          <div class="alert alert-warning alert-answer" id="alert-${0, i}"></div>
 
           <ul class="answer-instructions">
             <li>
@@ -448,7 +450,7 @@
             <li>Fill in the boxes <b>in order</b> from the most natural to the least natural answer.</li>
           </ul>
 
-          ${showNextButton ? `<button type="button" class="btn btn-info" id="next-instance-${(0, i)}">
+          ${showNextButton ? `<button type="button" class="btn btn-info" id="next-instance-${0, i}">
                                 Go to the next Blank (or press 'Ctrl + Enter' from the text input)
                               </button>` : ""}
         </div>`);
@@ -457,15 +459,15 @@
   function createInstances() {
     questions.forEach((question, i) => {
       const isExample = i === 0;
-      const title = isExample ? "Example" : `Blank ${(0, i)}`;
+      const title = isExample ? "Example" : `Blank ${0, i}`;
       const duration = endTimes[i] - startTimes[i];
       const parentId = isExample ? "example" : "instances";
       const showNextButton = !isExample && i < questions.length - 1;
-      createInstanceElement(i, isExample, title, duration, question, showNextButton).appendTo(`#${(0, parentId)}`);
+      createInstanceElement(i, isExample, title, duration, question, showNextButton).appendTo(`#${0, parentId}`);
       if (showNextButton) {
-        $(`#next-instance-${(0, i)}`).click(() => {
-          window.location.href = `#instance-${(0, i + 1)}`;
-          $(`#answer-input-${(0, i + 1)}`).focus();
+        $(`#next-instance-${0, i}`).click(() => {
+          window.location.href = `#instance-${0, i + 1}`;
+          $(`#answer-input-${0, i + 1}`).focus();
         });
       }
     });
@@ -474,7 +476,7 @@
   // noinspection JSUnusedGlobalSymbols
   function onYouTubeIframeAPIReady() {
     // noinspection JSUnresolvedFunction,JSUnresolvedVariable,SpellCheckingInspection
-    players = videoIds.map((videoId, i) => new YT.Player(`video-${(0, i)}`, {
+    players = videoIds.map((videoId, i) => new YT.Player(`video-${0, i}`, {
       videoId: videoId,
       playerVars: {
         enablejsapi: 1,
@@ -496,7 +498,7 @@
     videoIds.forEach((_, i) => {
       $(".video-button").mouseup(e => $(e.target).blur());
 
-      $(`#restart-video-${(0, i)}`).click(() => {
+      $(`#restart-video-${0, i}`).click(() => {
         // noinspection JSUnresolvedFunction
         players[i].seekTo(startTimes[i], true);
         // noinspection JSUnresolvedFunction
@@ -504,15 +506,15 @@
       });
 
       // noinspection JSUnresolvedFunction
-      $(`#forward-${(0, i)}`)
+      $(`#forward-${0, i}`)
           .click(() => players[i].seekTo(Math.min(Math.max(endTimes[i] - 1, startTimes[i]),
               players[i].getCurrentTime() + 5), true));
 
       // noinspection JSUnresolvedFunction
-      $(`#rewind-${(0, i)}`)
+      $(`#rewind-${0, i}`)
           .click(() => players[i].seekTo(Math.max(players[i].getCurrentTime() - 5, startTimes[i]), true));
 
-      $(`#speed-up-${(0, i)}`).click(() => {
+      $(`#speed-up-${0, i}`).click(() => {
         if (videoSpeedIndices[i] < speeds.length - 1) {
           videoSpeedIndices[i]++;
           // noinspection JSUnresolvedFunction
@@ -520,7 +522,7 @@
         }
       });
 
-      $(`#slow-down-${(0, i)}`).click(() => {
+      $(`#slow-down-${0, i}`).click(() => {
         if (videoSpeedIndices[i] > 0) {
           videoSpeedIndices[i]--;
           // noinspection JSUnresolvedFunction
@@ -540,7 +542,7 @@
   }
 
   function countAnswers(i) {
-    return $(`#instance-${(0, i)} .answer`).length;
+    return $(`#instance-${0, i} .answer`).length;
   }
 
   function questionCompleted(i) {
@@ -551,7 +553,7 @@
     const completed = questions.map((_, i) => {
       const completed = questionCompleted(i);
       const message = completed ? "" : "Fill in at least 2 answers.";
-      document.getElementById(`answer-input-${(0, i)}`).setCustomValidity(message);
+      document.getElementById(`answer-input-${0, i}`).setCustomValidity(message);
       return completed;
     }).every(Boolean);
 
@@ -561,7 +563,7 @@
   }
 
   function checkValidationAlerts(i) {
-    const $errorMessage = $(`#alert-${(0, i)}`);
+    const $errorMessage = $(`#alert-${0, i}`);
     if (questionCompleted(i)) {
       $errorMessage.fadeOut("fast");
     } else {
@@ -583,12 +585,12 @@
   function createAnswerElement(i, answerIndex, answer, isEnabled) {
     return $(`
         <span class="badge badge-dark answer">
-          ${(0, answer)}
+          ${0, answer}
           <button type="button" class="close remove-answer" aria-label="Close" onclick="removeAnswer(this)"
                   ${isEnabled ? "" : "disabled"}>
             <span aria-hidden="true">&times;</span>
           </button>
-          <input type="hidden" name="answer-${(0, i)}-${(0, answerIndex)}" value="${answer.replaceAll('"', '\\"')}">
+          <input type="hidden" name="answer-${0, i}-${0, answerIndex}" value="${answer.replaceAll('"', '\\"')}">
         </span>`);
   }
 
@@ -607,7 +609,7 @@
       return false;
     }
     const answers = new Set(
-        $(`#answers-${(0, i)} input`)
+        $(`#answers-${0, i} input`)
             .toArray()
             .map($e => $e.value)
             .map(normalizeAnswerToLookForRepetitions)
@@ -633,7 +635,7 @@
       const answerCount = countAnswers(i);
       const isExample = i === 0;
       const isEnabled = !isExample;
-      createAnswerElement(i, answerCount + 1, answer, isEnabled).appendTo(`#answers-${(0, i)}`);
+      createAnswerElement(i, answerCount + 1, answer, isEnabled).appendTo(`#answers-${0, i}`);
       $input.val("");
       checkValidationAlerts(i);
       showInputValidity($input, true);  // In case it's entering an answer after having pressed Submit.
@@ -644,11 +646,11 @@
 
   function setUpInputListeners() {
     questions.forEach((_, i) => {
-      $(`#answer-input-${(0, i)}`).keydown(e => {
+      $(`#answer-input-${0, i}`).keydown(e => {
         if (e.keyCode === ENTER_KEY_CODE) {
           e.preventDefault();
           if (e.ctrlKey) {
-            const $nextBlank = $(`#next-instance-${(0, i)}`);
+            const $nextBlank = $(`#next-instance-${0, i}`);
             if ($nextBlank.length) {
               $nextBlank.click();
             }

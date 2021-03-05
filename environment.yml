@@ -11,12 +11,15 @@ dependencies:
     # There are some non-popular glibc packages available in Anaconda, but Python needs to be linked to it as well.
     # This is cumbersome, so we just use pip.
     - transformers==4.2.2
+  - conda-forge::awscli=1.18
   - boto3=1.16.29
   - botocore=1.19.29
-  - csvkit=1.0.5
   - cudatoolkit=11.0.221
   - conda-forge::cupy>=5.0.0b4,<9.0.0  # For spaCy.
   - conda-forge::cudnn=8.0.5
+  - jq=1.6
+  - jupyter=1.0.0
+  - matplotlib=3.3.2
   - numpy=1.18.1
   - conda-forge::overrides=3.1.0
   - pandas=1.1.3
@@ -25,6 +28,7 @@ dependencies:
   - pytorch=1.7.1
   - conda-forge::pytorch-lightning=1.1.6
   - conda-forge::rarfile=4.0
+  - seaborn=0.11.1
   - conda-forge::spacy=3.0.0
   - conda-forge::tensorboard=2.4.1
   - torchvision=0.8.2
