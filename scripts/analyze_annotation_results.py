@@ -161,7 +161,7 @@ Worker answers:
         ff1s_matrix = pad_sequence(ff1s_list, batch_first=True, padding_value=np.nan).numpy()
         ff1s_questions = np.nanmean(ff1s_matrix, axis=1)  # Because it's macro avg, we first avg each question.
 
-        print(f"Question-level workers' first answer macro avg. F1 (FF1): {100 * ff1s_questions.mean():.0f}%")
+        print(f"Question-level workers' first answer macro avg. F1 (FF1): {100 * ff1s_questions.mean():.1f}%")
 
         if worker_stats:
             total_stats = {k: sum(w_stats[k] for w_stats in worker_stats.values())
