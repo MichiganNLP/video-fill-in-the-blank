@@ -43,6 +43,7 @@ def main() -> None:
     worker_stats = defaultdict(lambda: defaultdict(int))
 
     ff1s_list = []
+    fems_list = []
 
     for id_, instance in instances.items():
         instance["answers_by_worker"] = {worker_id: [format_answer(answer) for answer in answers]
@@ -58,19 +59,23 @@ def main() -> None:
         there_are_answers = any(worker_answers for worker_answers in instance["answers_by_worker"].values())
 
         if args.compute_metrics and there_are_answers:
-            ff1s, precisions, recalls, decision_scores, (
-                std_ff1, std_precision, std_recall, std_decision_score), ignored_workers = compute_annotation_metrics(
-                instance["answers_by_worker"].values(), instance["label"], args.ignore_zero_scores)
+            ff1s, fems, precisions, recalls, decision_scores, (
+                std_ff1, std_fem, std_precision, std_recall, std_decision_score), ignored_workers = \
+                compute_annotation_metrics(instance["answers_by_worker"].values(), instance["label"],
+                                           args.ignore_zero_scores)
             df.insert(0, "FF1", ff1s * 100)
-            df.insert(1, "Pre", precisions * 100)
-            df.insert(2, "Rec", recalls * 100)
-            df.insert(3, "Dec", decision_scores * 100)
+            df.insert(1, "FEM", fems * 100)
+            df.insert(2, "Pre", precisions * 100)
+            df.insert(3, "Rec", recalls * 100)
+            df.insert(4, "Dec", decision_scores * 100)
 
-            aggregated_metrics_str = (f"\nAvg.: FF1 {ff1s.mean() * 100:.0f}, Pre {precisions.mean() * 100:.0f}, Rec"
-                                      f" {recalls.mean() * 100:.0f}, Dec {decision_scores.mean() * 100:.0f}")
+            aggregated_metrics_str = (f"\nAvg.: FF1 {ff1s.mean() * 100:.0f},  FEM {fems.mean() * 100:.0f}, Pre"
+                                      f" {precisions.mean() * 100:.0f}, Rec {recalls.mean() * 100:.0f}, Dec"
+                                      f" {decision_scores.mean() * 100:.0f}")
 
-            std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f}, Pre {std_precision * 100:.0f}, Rec"
-                                      f" {std_recall * 100:.0f}, Dec {std_decision_score * 100:.0f})")
+            std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f},  (FEM {std_fem * 100:.0f}, Pre"
+                                      f" {std_precision * 100:.0f}, Rec {std_recall * 100:.0f}, Dec"
+                                      f" {std_decision_score * 100:.0f})")
 
             answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"],
                                                                            instance["answers_by_worker"],
@@ -81,6 +86,7 @@ def main() -> None:
                 worker_stats[worker_id]["answers"] += len(answer_stats)
                 worker_stats[worker_id]["total_ff1"] += next(iter(answer_stats.values()))["f1"]
                 worker_stats[worker_id]["total_f1"] += sum(m["f1"] for m in answer_stats.values())
+                worker_stats[worker_id]["total_fem"] += next(iter(answer_stats.values()))["em"]
                 worker_stats[worker_id]["total_em"] += sum(m["em"] for m in answer_stats.values())
                 worker_stats[worker_id]["total_np"] += sum(m["np"] for m in answer_stats.values())
 
@@ -93,6 +99,7 @@ def main() -> None:
                 answer_level_metrics_str = f"\nAnswer-level metrics:\n{answer_df.to_string(index=False)}"
 
             ff1s_list.append(torch.from_numpy(ff1s))
+            fems_list.append(torch.from_numpy(fems))
         else:
             std_answer_metrics_str = ""
             aggregated_metrics_str = "\n\nWARNING: this question has no answers. Ignored for the metrics computation." \
@@ -141,6 +148,7 @@ Worker answers:
                 "A/Q": w_stats["answers"] / w_stats["questions"],
                 "FF1": 100 * w_stats["total_ff1"] / w_stats["questions"],
                 "F1": 100 * w_stats["total_f1"] / w_stats["answers"],
+                "FEM": 100 * w_stats["total_fem"] / w_stats["questions"],
                 "EM": 100 * w_stats["total_em"] / w_stats["answers"],
                 "NP?": 100 * w_stats["total_np"] / w_stats["answers"],
             }
@@ -161,7 +169,11 @@ Worker answers:
         ff1s_matrix = pad_sequence(ff1s_list, batch_first=True, padding_value=np.nan).numpy()
         ff1s_questions = np.nanmean(ff1s_matrix, axis=1)  # Because it's macro avg, we first avg each question.
 
+        fems_matrix = pad_sequence(fems_list, batch_first=True, padding_value=np.nan).numpy()
+        fems_questions = np.nanmean(fems_matrix, axis=1)
+
         print(f"Question-level workers' first answer macro avg. F1 (FF1): {100 * ff1s_questions.mean():.1f}%")
+        print(f"Question-level workers' first answer macro avg. EM (FEM): {100 * fems_questions.mean():.1f}%")
 
         if worker_stats:
             total_stats = {k: sum(w_stats[k] for w_stats in worker_stats.values())
