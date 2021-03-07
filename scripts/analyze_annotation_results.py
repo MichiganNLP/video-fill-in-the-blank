@@ -78,7 +78,7 @@ def main() -> None:
 
             for worker_id, answer_stats in answer_level_metrics.items():
                 worker_stats[worker_id]["questions"] += 1
-                worker_stats[worker_id]["answers_by_worker"] += len(answer_stats)
+                worker_stats[worker_id]["answers"] += len(answer_stats)
                 worker_stats[worker_id]["total_ff1"] += next(iter(answer_stats.values()))["f1"]
                 worker_stats[worker_id]["total_f1"] += sum(m["f1"] for m in answer_stats.values())
                 worker_stats[worker_id]["total_em"] += sum(m["em"] for m in answer_stats.values())
@@ -135,19 +135,17 @@ Worker answers:
         print("*** Worker-level metrics ***")
         print()
 
-        summary_worker_stats = {}
-        for worker_id in worker_stats:
-            summary_worker_stats[worker_id] = {
-                "Q": worker_stats[worker_id]["questions"],
-                "A/Q": worker_stats[worker_id]["answers"] / worker_stats[worker_id]["questions"],
-                "FF1": 100 * worker_stats[worker_id]["total_ff1"] / worker_stats[worker_id]["questions"],
-                "F1": 100 * worker_stats[worker_id]["total_f1"] / worker_stats[worker_id]["answers"],
-                "EM": 100 * worker_stats[worker_id]["total_em"] / worker_stats[worker_id]["answers"],
-                "NP?": 100 * worker_stats[worker_id]["total_np"] / worker_stats[worker_id]["answers"],
+        worker_df = pd.DataFrame.from_dict({
+            worker_id: {
+                "Q": w_stats["questions"],
+                "A/Q": w_stats["answers"] / w_stats["questions"],
+                "FF1": 100 * w_stats["total_ff1"] / w_stats["questions"],
+                "F1": 100 * w_stats["total_f1"] / w_stats["answers"],
+                "EM": 100 * w_stats["total_em"] / w_stats["answers"],
+                "NP?": 100 * w_stats["total_np"] / w_stats["answers"],
             }
-
-        worker_df = pd.DataFrame.from_dict(summary_worker_stats, orient="index").sort_values(["NP?", "EM", "F1"],
-                                                                                             ascending=False)
+            for worker_id, w_stats in worker_stats.items()
+        }, orient="index").sort_values(["NP?", "EM", "F1"], ascending=False)
         worker_df.index.name = "Worker ID"
         worker_df = worker_df.reset_index()
 
