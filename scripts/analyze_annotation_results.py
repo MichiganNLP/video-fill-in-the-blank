@@ -56,7 +56,7 @@ def main() -> None:
 
         pd.options.display.float_format = lambda x: f"{x: >3.0f}"
 
-        there_are_answers = any(worker_answers for worker_answers in instance["answers_by_worker"].values())
+        there_are_answers = any(instance["answers_by_worker"].values())
 
         if args.compute_metrics and there_are_answers:
             ff1s, fems, precisions, recalls, decision_scores, (
