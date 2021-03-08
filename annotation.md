@@ -86,6 +86,16 @@ this, for each rejected one, put the following reason in the "Reject" column:
 
 For the rest, put an "x" in the "Approve" column. Then upload it to AMT.
 
+## Generate the dataset from the annotations
+
+Once the review has been sent (and processed) by AMT, download the results again, and run:
+
+```bash
+./scripts/generate_dataset_from_annotations.py $ANNOTATION_RESULTS_CSV_FILE_OR_URL > $DATASET_JSON_FILE
+```
+
+You should replace the dataset file in the Dropbox folder with this new one.
+
 ## Pay the bonuses
 
 This should be done once all the instances have been annotated as for the bonus type 2 we need to have a HIT 
