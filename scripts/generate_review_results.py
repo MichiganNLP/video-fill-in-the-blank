@@ -61,8 +61,8 @@ def main() -> None:
         q_count = q_count_by_worker[worker_id]
 
         if correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1:
-            if q_count < MIN_QUESTION_COUNT_FOR_THRESHOLD_2 \
-                    and correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2:
+            if correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2 \
+                    or q_count < MIN_QUESTION_COUNT_FOR_THRESHOLD_2:
                 print(worker_id, correct_answers_per_considered_q, q_count)
             else:
                 print(f"WARNING: the worker {worker_id} should be approved but the worker isn't doing a great job. "
