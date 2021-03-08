@@ -6,16 +6,7 @@ from overrides import overrides
 from transformers import T5Config, T5ForConditionalGeneration, AutoConfig, AutoModelForSeq2SeqLM
 from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttentions, Seq2SeqLMOutput 
 from transformers.models.t5.modeling_t5 import T5Stack
-
-
-def _combine_attention_masks(text_attention_mask: Optional[torch.Tensor] = None,
-                             visual_attention_mask: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
-    if text_attention_mask is not None and visual_attention_mask is not None:
-        return torch.cat([text_attention_mask, visual_attention_mask], dim=1)
-    else:
-        assert text_attention_mask is None and visual_attention_mask is None, \
-            "Can't set the text or visual attention mask as one is empty and the other one isn't."
-        return None
+from lqam.methods.t5_visual_module import _combine_attention_masks
 
 
 class TwoStreamEncoder(T5Stack):
