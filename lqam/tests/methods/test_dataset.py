@@ -43,9 +43,15 @@ class TestQGenDataset(TestCase):
     def test_dataset_format_test(self):
         test_train_dataset = QGenDataset(URL_DATA_TEST, tokenizer=self.tokenizer)
         test_expected_first_item = {
-            "masked_caption": "A person carrying something on their hand is walking outside of the room while another "
-                              "person is reaching for _____.",
-            "label": "the hallway",
+            "masked_caption": "A man in an outside field is demonstrating _____ of throwing a javelin.",
+            "label": "the art",
+            "additional_answers": [
+                ["THE TECHNIQUE", "THE SKILL", "THE BEST WAY"], ["the technique", "the method"],
+                ["practice", "training", "instructions"], ["the way", "the technique"],
+                ["the art", "his style", "the correct way", "the regular way", "the finer points"],
+                ["the skill", "the technique"], ["the technique", "the way"], ["the form", "the position"],
+                ["technique", "method"],
+            ],
         }
         test_actual_first_item = test_train_dataset[0]
         self.assertEqual(test_expected_first_item, test_actual_first_item)
