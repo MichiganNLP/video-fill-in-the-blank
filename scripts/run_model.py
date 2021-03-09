@@ -87,7 +87,11 @@ def main() -> None:
 
     if args.use_visual:
         if args.two_stream:
-            t5_like_pretrained_model = TwoStream.from_pretrained(args.model, visual_size=args.visual_size)
+            class_ = TwoStream
+            class_._keys_to_ignore_on_load_unexpected = (TwoStream._keys_to_ignore_on_load_unexpected  # noqa
+                                                         + [r"encoder\.block\.[1-9]\d*\."])
+            t5_like_pretrained_model = class_.from_pretrained(args.model, visual_size=args.visual_size,
+                                                              pretrained_model_name=args.model, num_layers=1)
         else:
             t5_like_pretrained_model = T5AndVisual.from_pretrained(args.model, visual_size=args.visual_size)
     else:
