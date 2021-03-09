@@ -132,9 +132,11 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
     ignored_workers = ignored_workers or [False for _ in answers_map]
 
     # `frozenset` so it's immutable thus hashable.
-    answer_processed_map = {worker_id: [(answer, normalized_answer := normalize_answer(answer),
+    answer_processed_map = {worker_id: [(answer, normalized_answer,
                                          frozenset(tokenize_answer_to_compute_metrics(normalized_answer)))
-                                        for answer in worker_answers]
+                                        for answer in worker_answers
+                                        # There's some rare cases in which an answer is empty.
+                                        if (normalized_answer := normalize_answer(answer))]
                             for worker_id, worker_answers in answers_map.items()}
 
     std_answer_normalized = normalize_answer(std_answer)

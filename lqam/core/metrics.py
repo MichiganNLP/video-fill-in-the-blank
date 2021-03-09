@@ -19,8 +19,8 @@ def tokenize_answer_to_compute_metrics(normalized_answer: str) -> Iterator[str]:
     return normalized_answer.split()
 
 
-# TODO: how to deal with repeated words?
 def compute_token_level_f1(answer1_tokens: Set[str], answer2_tokens: Set[str]) -> float:
+    # Note it ignore the repeated words.
     true_positives = len(answer1_tokens & answer2_tokens)
     false_count_in_1 = len(answer1_tokens - answer2_tokens)
     false_count_in_2 = len(answer2_tokens - answer1_tokens)
