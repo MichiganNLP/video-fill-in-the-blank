@@ -139,6 +139,10 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
                                         if (normalized_answer := normalize_answer(answer))]
                             for worker_id, worker_answers in answers_map.items()}
 
+    # We apply the filtering we just did to the original answers map.
+    answers_map = {worker_id: [answer for answer, _, _ in worker_answers]
+                   for worker_id, worker_answers in answer_processed_map.items()}
+
     std_answer_normalized = normalize_answer(std_answer)
     std_answer = frozenset(tokenize_answer_to_compute_metrics(std_answer_normalized))
 
