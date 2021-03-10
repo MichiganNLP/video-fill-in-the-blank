@@ -21,17 +21,18 @@ def compute_decision_score(precision: float, recall: float) -> float:
 
 def _compute_annotation_metrics_once(
         answers: Sequence[Iterable[str]], std_answer: str, ignored_workers: Optional[Sequence[bool]] = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float]]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float, float]]:
     ignored_workers = ignored_workers or [False for _ in answers]
 
     ff1s = []
+    fems = []
     precisions = []
     recalls = []
     decision_scores = []
 
     for i, worker_question_answers in enumerate(answers):
         if ignored_workers[i]:
-            ff1 = precision = recall = 0
+            ff1 = fem = precision = recall = 0
         elif worker_question_answers:  # It could happen because of some weird issues with the annotation interface.
             other_workers_answers = (answers[j]
                                      for j in range(len(answers))
@@ -40,9 +41,12 @@ def _compute_annotation_metrics_once(
                              for other_worker_answers in other_workers_answers
                              for answer in other_worker_answers} | {std_answer}
 
-            first_answer_tokens = tokenize_answer_to_compute_metrics(next(iter(worker_question_answers)))
+            first_answer = next(iter(worker_question_answers))
+            first_answer_tokens = tokenize_answer_to_compute_metrics(first_answer)
             ff1 = compute_token_level_f1_many(first_answer_tokens, (tokenize_answer_to_compute_metrics(answer)
                                                                     for answer in other_answers))
+
+            fem = float(first_answer in other_answers)
 
             worker_question_answers_set = set(worker_question_answers)
 
@@ -50,9 +54,10 @@ def _compute_annotation_metrics_once(
             precision = true_positives / len(worker_question_answers_set)
             recall = true_positives / len(other_answers)
         else:
-            ff1 = precision = recall = np.nan
+            ff1 = fem = precision = recall = np.nan
 
         ff1s.append(ff1)
+        fems.append(fem)
         precisions.append(precision)
         recalls.append(recall)
         decision_scores.append(compute_decision_score(precision, recall))
@@ -67,17 +72,20 @@ def _compute_annotation_metrics_once(
     std_ff1 = compute_token_level_f1_many(std_answer_tokens, (tokenize_answer_to_compute_metrics(answer)
                                                               for answer in answers_flat))
 
-    std_precision = float(std_answer in answers_flat)
+    std_fem = float(std_answer in answers_flat)
+
+    std_precision = std_fem
     std_recall = sum(answer == std_answer for answer in answers_flat) / len(answers_flat)
     std_decision_score = compute_decision_score(std_precision, std_recall)
 
-    return np.stack(ff1s), np.stack(precisions), np.stack(recalls), np.stack(decision_scores), (
-        std_ff1, std_precision, std_recall, std_decision_score)
+    return np.stack(ff1s), np.stack(fems), np.stack(precisions), np.stack(recalls), np.stack(decision_scores), (
+        std_ff1, std_fem, std_precision, std_recall, std_decision_score)
 
 
 def compute_annotation_metrics(
         answers: Iterator[Iterable[str]], std_answer: str, ignore_zero_scores: bool = False
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float], Sequence[bool]]:
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float, float],
+           Sequence[bool]]:
     """Computes the metrics for an instance.
 
     If `ignore_zero_scores`, then it computes the scores again but ignores the workers whose decision score is 0.
@@ -90,17 +98,17 @@ def compute_annotation_metrics(
 
     std_answer = normalize_answer(std_answer)
 
-    ff1s, precisions, recalls, decision_scores, std_answer_metrics = _compute_annotation_metrics_once(answers,
-                                                                                                      std_answer)
+    ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics = _compute_annotation_metrics_once(answers,
+                                                                                                            std_answer)
 
     if ignore_zero_scores:
         ignored_workers = [d == 0 for d in decision_scores]
-        ff1s, precisions, recalls, decision_scores, std_answer_metrics = _compute_annotation_metrics_once(
+        ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics = _compute_annotation_metrics_once(
             answers, std_answer, ignored_workers)
     else:
         ignored_workers = [False for _ in answers]
 
-    return ff1s, precisions, recalls, decision_scores, std_answer_metrics, ignored_workers
+    return ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics, ignored_workers
 
 
 def compute_np_value_by_answer(question: str, answers_map: Mapping[str, Sequence[str]]) -> Mapping[str, bool]:
@@ -124,10 +132,16 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
     ignored_workers = ignored_workers or [False for _ in answers_map]
 
     # `frozenset` so it's immutable thus hashable.
-    answer_processed_map = {worker_id: [(answer, normalized_answer := normalize_answer(answer),
+    answer_processed_map = {worker_id: [(answer, normalized_answer,
                                          frozenset(tokenize_answer_to_compute_metrics(normalized_answer)))
-                                        for answer in worker_answers]
+                                        for answer in worker_answers
+                                        # There's some rare cases in which an answer is empty.
+                                        if (normalized_answer := normalize_answer(answer))]
                             for worker_id, worker_answers in answers_map.items()}
+
+    # We apply the filtering we just did to the original answers map.
+    answers_map = {worker_id: [answer for answer, _, _ in worker_answers]
+                   for worker_id, worker_answers in answer_processed_map.items()}
 
     std_answer_normalized = normalize_answer(std_answer)
     std_answer = frozenset(tokenize_answer_to_compute_metrics(std_answer_normalized))

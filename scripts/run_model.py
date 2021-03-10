@@ -12,6 +12,7 @@ from lqam.methods import dataset
 from lqam.methods.dataset import QGenDataModule
 from lqam.methods.t5_filler_model import T5FillerModel
 from lqam.methods.t5_visual_module import T5AndVisual
+from lqam.methods.two_stream_module import TwoStream
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 
 
@@ -46,6 +47,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--no-repeat-ngram-size", type=int)
     parser.add_argument("--only-noun-phrases", action="store_true")
     parser.add_argument("--use-visual", action="store_true")
+    parser.add_argument("--two-stream", action="store_true")
 
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--no-benchmark", dest="benchmark", action="store_false")
@@ -84,7 +86,14 @@ def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained(args.model)
 
     if args.use_visual:
-        t5_like_pretrained_model = T5AndVisual.from_pretrained(args.model, visual_size=args.visual_size)
+        if args.two_stream:
+            class_ = TwoStream
+            class_._keys_to_ignore_on_load_unexpected = (TwoStream._keys_to_ignore_on_load_unexpected  # noqa
+                                                         + [r"encoder\.block\.[1-9]\d*\."])
+            t5_like_pretrained_model = class_.from_pretrained(args.model, visual_size=args.visual_size,
+                                                              pretrained_model_name=args.model, num_layers=1)
+        else:
+            t5_like_pretrained_model = T5AndVisual.from_pretrained(args.model, visual_size=args.visual_size)
     else:
         t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
 

@@ -60,13 +60,14 @@ def main() -> None:
     for worker_id, correct_answers_per_considered_q in correct_answers_per_considered_q_by_worker.items():
         q_count = q_count_by_worker[worker_id]
 
-        if q_count < MIN_QUESTION_COUNT_FOR_THRESHOLD_2 \
-                and correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1:
-            if correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2:
+        if correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1:
+            if correct_answers_per_considered_q < MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2 \
+                    or q_count < MIN_QUESTION_COUNT_FOR_THRESHOLD_2:
                 print(worker_id, correct_answers_per_considered_q, q_count)
             else:
-                print(f"WARNING: the worker {worker_id} passes the conditions but is in between the 2 thresholds ("
-                      f"{correct_answers_per_considered_q}, {q_count}). The worker isn't doing a great job.")
+                print(f"WARNING: the worker {worker_id} should be approved but the worker isn't doing a great job. "
+                      f"The worker is in between the 2 thresholds ({correct_answers_per_considered_q}, {q_count}) "
+                      f"and annotated at least than {MIN_QUESTION_COUNT_FOR_THRESHOLD_2} questions.")
 
 
 if __name__ == "__main__":
