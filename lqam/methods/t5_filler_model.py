@@ -55,7 +55,8 @@ class T5FillerModel(pl.LightningModule):
         assert isinstance(t5_like_pretrained_model, tuple(MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.values()))
         self.t5_pretrained_model = t5_like_pretrained_model
         # We monkey-patch this method to fix a HuggingFace's transformers library bug.
-        # See https://stackoverflow.com/a/2982/1165181
+        # See https://github.com/huggingface/transformers/pull/10638
+        # See https://stackoverflow.com/a/2982/1165181 for some details on the workaround.
         t5_like_pretrained_model._get_logits_processor = types.MethodType(_patched_get_logits_processor,
                                                                           t5_like_pretrained_model)
         self.tokenizer = tokenizer
