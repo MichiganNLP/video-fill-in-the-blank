@@ -8,6 +8,8 @@
 #SBATCH --time=12:00:00
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
+#SBATCH --output=textonly_eval.out
+#SBATCH --error=textonly_eval.err
 
 source scripts/great_lakes/init.source
 
@@ -31,10 +33,25 @@ t5_3b_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --mod
 echo "evaluating ${t5_3b_greedy_command}"
 eval "${t5_3b_greedy_command}"
 
+t5_v1_1_small_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=google/t5-v1_1-small \
+--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=1024"
+echo "evaluating ${t5_v1_1_small_greedy_command}"
+eval "${t5_v1_1_small_greedy_command}"
+
 t5_v1_1_base_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=google/t5-v1_1-base \
 --generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=512"
 echo "evaluating ${t5_v1_1_base_greedy_command}"
 eval "${t5_v1_1_base_greedy_command}"
+
+t5_v1_1_large_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=google/t5-v1_1-large \
+--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=256"
+echo "evaluating ${t5_v1_1_large_greedy_command}"
+eval "${t5_v1_1_large_greedy_command}"
+
+t5_v1_1_xl_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=google/t5-v1_1-xl \
+--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=16"
+echo "evaluating ${t5_v1_1_xl_greedy_command}"
+eval "${t5_v1_1_xl_greedy_command}"
 
 #t5_11b_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=t5-11b \
 #--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=8"
