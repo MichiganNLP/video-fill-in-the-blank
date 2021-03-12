@@ -9,11 +9,30 @@
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 
-source scripts/great_lakes/init.source
+#source scripts/great_lakes/init.source
+
+model_path=''
+
+print_usage() {
+  printf "Usage: using flag '-p MODEL_PATH' to load your model for testing"
+}
+
+while getopts 'p:' flag; do
+  case "${flag}" in
+    p) model_path="${OPTARG}" ;;
+    *) print_usage
+       exit 1 ;;
+  esac
+done
+
+if [ -z "$1" ]
+  then
+    print_usage
+    exit 1
+fi
 
 echo evaluting beam search
-command="python -m scripts.run_model --gpus=1 --max-length=10 --num-workers=4 --checkpoint_path \
-/home/liunan/LifeQA-methodology/lightning_logs/version_18010388/checkpoints/epoch=7-step=2167.ckpt"
+command="python -m scripts.run_model --gpus=1 --max-length=10 --num-workers=4 --checkpoint_path $model_path"
 
 for beam_size in 2 4 8; do
   for only_noun_phrase in 0 1; do
@@ -30,7 +49,7 @@ for beam_size in 2 4 8; do
           curr_command+=" --no-repeat-ngram-size=2"
         fi
         echo "evaluating $curr_command"
-#        eval "$curr_command"
+        eval "$curr_command"
       done
     done
   done
