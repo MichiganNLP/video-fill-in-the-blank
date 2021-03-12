@@ -89,21 +89,21 @@ def main() -> None:
     else:
         t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
 
+    generate_kwargs = {"max_length": args.max_length,
+                       "num_beams": args.beam_size,
+                       "early_stopping": args.generation_early_stopping,
+                       "no_repeat_ngram_size": args.no_repeat_ngram_size}
+
     if args.checkpoint_path:
         filler = T5FillerModel.load_from_checkpoint(t5_like_pretrained_model=t5_like_pretrained_model,
                                                     tokenizer=tokenizer,
                                                     checkpoint_path=args.checkpoint_path,
-                                                    generate_kwargs={"max_length": args.max_length,
-                                                                     "num_beams": args.beam_size,
-                                                                     "early_stopping": args.generation_early_stopping,
-                                                                     "no_repeat_ngram_size": args.no_repeat_ngram_size})
+                                                    generate_kwargs=generate_kwargs)
     else:
         filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
                                only_noun_phrases=args.only_noun_phrases, lr=args.lr, lr_scheduler=args.lr_scheduler,
                                weight_decay=args.weight_decay,
-                               generate_kwargs={"max_length": args.max_length, "num_beams": args.beam_size,
-                                                "early_stopping": args.generation_early_stopping,
-                                                "no_repeat_ngram_size": args.no_repeat_ngram_size})
+                               generate_kwargs=generate_kwargs)
 
     trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.trainer_default_root_dir, fast_dev_run=args.fast_dev_run,
                          max_epochs=args.epochs, benchmark=args.benchmark, deterministic=args.deterministic,
