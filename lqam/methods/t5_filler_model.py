@@ -1,13 +1,17 @@
 import inspect
+import types
 from typing import Any, Iterable, Literal, Mapping, Optional, Sequence, Tuple, Union
 
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
 from pytorch_lightning.utilities.parsing import get_init_args
+from torch.nn import functional as F
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler  # noqa
-from transformers import AdamW, MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, PreTrainedModel, PreTrainedTokenizerBase, \
+from transformers import AdamW, LogitsProcessor, LogitsProcessorList, MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, \
+    PreTrainedModel, \
+    PreTrainedTokenizerBase, \
     get_linear_schedule_with_warmup
 from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
 
@@ -17,6 +21,17 @@ from lqam.methods.decoding import arg_noun_phrase, compute_answer_prob
 from lqam.methods.metrics import ExactMatchAccuracyMany, F1ScoreMany
 from lqam.methods.t5_format_processing import compute_first_blank
 from lqam.util.iterable_utils import chunks
+
+
+class _LogSoftmaxLogitsProcessor(LogitsProcessor):
+    def __call__(self, input_ids: torch.LongTensor, scores: torch.Tensor) -> torch.Tensor:
+        return F.log_softmax(scores, dim=-1)
+
+
+def _patched_get_logits_processor(self, *args, **kwargs) -> LogitsProcessorList:  # noqa
+    output: LogitsProcessorList = super(self.__class__, self)._get_logits_processor(*args, **kwargs)  # noqa
+    output.append(_LogSoftmaxLogitsProcessor())
+    return output
 
 
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
@@ -39,6 +54,11 @@ class T5FillerModel(pl.LightningModule):
         # It just needs to be pretrained like T5 and support conditional generation.
         assert isinstance(t5_like_pretrained_model, tuple(MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.values()))
         self.t5_pretrained_model = t5_like_pretrained_model
+        # We monkey-patch this method to fix a HuggingFace's transformers library bug.
+        # See https://github.com/huggingface/transformers/pull/10638
+        # See https://stackoverflow.com/a/2982/1165181 for some details on the workaround.
+        t5_like_pretrained_model._get_logits_processor = types.MethodType(_patched_get_logits_processor,
+                                                                          t5_like_pretrained_model)
         self.tokenizer = tokenizer
         self.accuracy = ExactMatchAccuracyMany()
         self.accuracy_many = ExactMatchAccuracyMany()
@@ -167,7 +187,7 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("generated", generated)
         self.write_prediction("generated_prob", generated_prob)
 
-        accuracy = self.accuracy(generated, label)        
+        accuracy = self.accuracy(generated, label)
         self.log(f"{log_prefix}accuracy_label_step", accuracy, prog_bar=True)
 
         f1_score = self.f1_score(generated, label)
