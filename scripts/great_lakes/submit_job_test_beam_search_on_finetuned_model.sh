@@ -9,7 +9,7 @@
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 
-#source scripts/great_lakes/init.source
+source scripts/great_lakes/init.source
 
 model_path=''
 
