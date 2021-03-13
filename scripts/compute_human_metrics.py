@@ -29,9 +29,9 @@ def main() -> None:
     data_module = QGenDataModule(batch_size=None)
     data_loader = data_module.val_dataloader()
 
-    val_instance_map = {(instance["video_id"], instance["video_start_time"], instance["video_end_time"],
-                         instance["masked_caption"]): instance
-                        for instance in data_loader}
+    dataset_instance_map = {(instance["video_id"], instance["video_start_time"], instance["video_end_time"],
+                             instance["masked_caption"]): instance
+                            for instance in data_loader}
 
     accuracy_by_worker = defaultdict(lambda: ExactMatchAccuracyMany())
     accuracy_many_by_worker = defaultdict(lambda: ExactMatchAccuracyMany())
@@ -42,7 +42,7 @@ def main() -> None:
 
     for instance in hits_to_instances(hits).values():
         key = instance["video_id"], instance["video_start_time"], instance["video_end_time"], instance["question"]
-        if instance_in_val := val_instance_map.get(key):  # FIXME: there's 1 missing in val.
+        if instance_in_val := dataset_instance_map.get(key):  # FIXME: there's 1 missing in val.
             label = instance_in_val["label"]
             additional_answers = instance_in_val["additional_answers"]
 
@@ -55,10 +55,10 @@ def main() -> None:
 
     workers = len(accuracy_by_worker)
 
-    print(f"val_accuracy_label", sum(m.compute().item() for m in accuracy_by_worker.values()) / workers)
-    print(f"val_f1_score_label", sum(m.compute().item() for m in accuracy_many_by_worker.values()) / workers)
-    print(f"val_accuracy", sum(m.compute().item() for m in f1_score_by_worker.values()) / workers)
-    print(f"val_f1_score", sum(m.compute().item() for m in f1_score_many_by_worker.values()) / workers)
+    print(f"EM label: {sum(m.compute().item() for m in accuracy_by_worker.values()) / workers * 100:.1f}%")
+    print(f"F1 label: {sum(m.compute().item() for m in accuracy_many_by_worker.values()) / workers * 100:.1f}%")
+    print(f"EM: {sum(m.compute().item() for m in f1_score_by_worker.values()) / workers * 100:.1f}%")
+    print(f"F1: {sum(m.compute().item() for m in f1_score_many_by_worker.values()) / workers * 100:.1f}%")
 
 
 if __name__ == "__main__":
