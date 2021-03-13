@@ -8,52 +8,26 @@
 #SBATCH --time=12:00:00
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
-#SBATCH --output=textonly_eval.out
-#SBATCH --error=textonly_eval.err
 
 source scripts/great_lakes/init.source
 
-t5_small_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=t5-small \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=1204"
-echo "evaluating ${t5_small_greedy_command}"
-eval "${t5_small_greedy_command}"
+t5=(t5-small t5-base t5-large t5-3b)
+t5_google=(t5-v1_1-small t5-v1_1-base t5-v1_1-large t5-v1_1-xl)
+batch_sizes=(1024 512 256 16)
 
-t5_base_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=t5-base \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=512"
-echo "evaluating ${t5_base_greedy_command}"
-eval "${t5_base_greedy_command}"
+command="python -m scripts.run_model --gpus=1 --max-length=10 \
+--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4"
 
-t5_large_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=t5-large \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=256"
-echo "evaluating ${t5_large_greedy_command}"
-eval "${t5_large_greedy_command}"
+for i in "${!t5[@]}"; do
+    curr_command=$command
+    curr_command+=" --model=${t5[i]} --batch-size=${batch_sizes[i]}"
+    echo "evaluating $curr_command"
+    eval "$curr_command"
+done
 
-t5_3b_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=t5-3b \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=16"
-echo "evaluating ${t5_3b_greedy_command}"
-eval "${t5_3b_greedy_command}"
-
-t5_v1_1_small_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=google/t5-v1_1-small \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=1024"
-echo "evaluating ${t5_v1_1_small_greedy_command}"
-eval "${t5_v1_1_small_greedy_command}"
-
-t5_v1_1_base_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=google/t5-v1_1-base \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=512"
-echo "evaluating ${t5_v1_1_base_greedy_command}"
-eval "${t5_v1_1_base_greedy_command}"
-
-t5_v1_1_large_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=google/t5-v1_1-large \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=256"
-echo "evaluating ${t5_v1_1_large_greedy_command}"
-eval "${t5_v1_1_large_greedy_command}"
-
-t5_v1_1_xl_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=google/t5-v1_1-xl \
---generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=16"
-echo "evaluating ${t5_v1_1_xl_greedy_command}"
-eval "${t5_v1_1_xl_greedy_command}"
-
-#t5_11b_greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=t5-11b \
-#--generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=8"
-#echo "evaluating ${t5_11b_greedy_command}"
-#eval "${t5_11b_greedy_command}"
+for i in "${!t5_google[@]}"; do
+    curr_command=$command
+    curr_command+=" --model=${t5_google[i]} --batch-size=${batch_sizes[i]}"
+    echo "evaluating $curr_command"
+    eval "$curr_command"
+done
