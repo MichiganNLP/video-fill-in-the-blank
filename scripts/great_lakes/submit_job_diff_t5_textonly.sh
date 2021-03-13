@@ -11,8 +11,8 @@
 
 source scripts/great_lakes/init.source
 
-t5=(t5-small t5-base t5-large t5-3b)
-t5_google=(t5-v1_1-small t5-v1_1-base t5-v1_1-large t5-v1_1-xl)
+t5=(t5-small t5-base t5-large t5-3b t5-11b)
+t5_google=(google/t5-v1_1-small google/t5-v1_1-base google/t5-v1_1-large google/t5-v1_1-xl google/t5-v1_1-xxl)
 batch_sizes=(1024 512 256 16)
 
 command="python -m scripts.run_model --gpus=1 --max-length=10 \
