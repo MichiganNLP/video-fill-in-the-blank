@@ -53,12 +53,12 @@ def main() -> None:
                 f1_score_by_worker[worker_id]([first_worker_answer], [label])
                 f1_score_many_by_worker[worker_id]([first_worker_answer], [label], [additional_answers])
 
-    workers = len(accuracy_by_worker)
+    worker_count = len(accuracy_by_worker)
 
-    print(f"EM label: {sum(m.compute().item() for m in accuracy_by_worker.values()) / workers * 100:.1f}%")
-    print(f"F1 label: {sum(m.compute().item() for m in accuracy_many_by_worker.values()) / workers * 100:.1f}%")
-    print(f"EM: {sum(m.compute().item() for m in f1_score_by_worker.values()) / workers * 100:.1f}%")
-    print(f"F1: {sum(m.compute().item() for m in f1_score_many_by_worker.values()) / workers * 100:.1f}%")
+    print(f"EM label: {sum(m.compute().item() for m in accuracy_by_worker.values()) / worker_count * 100:.1f}%")
+    print(f"F1 label: {sum(m.compute().item() for m in accuracy_many_by_worker.values()) / worker_count * 100:.1f}%")
+    print(f"EM: {sum(m.compute().item() for m in f1_score_by_worker.values()) / worker_count * 100:.1f}%")
+    print(f"F1: {sum(m.compute().item() for m in f1_score_many_by_worker.values()) / worker_count * 100:.1f}%")
 
 
 if __name__ == "__main__":
