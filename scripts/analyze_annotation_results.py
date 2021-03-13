@@ -73,7 +73,7 @@ def main() -> None:
                                       f" {precisions.mean() * 100:.0f}, Rec {recalls.mean() * 100:.0f}, Dec"
                                       f" {decision_scores.mean() * 100:.0f}")
 
-            std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f},  (FEM {std_fem * 100:.0f}, Pre"
+            std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f},  FEM {std_fem * 100:.0f}, Pre"
                                       f" {std_precision * 100:.0f}, Rec {std_recall * 100:.0f}, Dec"
                                       f" {std_decision_score * 100:.0f})")
 
