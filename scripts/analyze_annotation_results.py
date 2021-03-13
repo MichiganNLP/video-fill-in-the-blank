@@ -172,16 +172,22 @@ Worker answers:
         fems_matrix = pad_sequence(fems_list, batch_first=True, padding_value=np.nan).numpy()
         fems_questions = np.nanmean(fems_matrix, axis=1)
 
-        print(f"Question-level workers' first answer macro avg. F1 (FF1): {100 * ff1s_questions.mean():.1f}%")
-        print(f"Question-level workers' first answer macro avg. EM (FEM): {100 * fems_questions.mean():.1f}%")
+        print(f"Question-level workers' first answer macro avg. F1 (FF1): {100 * ff1s_questions.mean():.1f}% (+/- {100 * ff1s_questions.std()})")
+        print(f"Question-level workers' first answer macro avg. EM (FEM): {100 * fems_questions.mean():.1f}% (+/- {100 * fems_questions.std()})")
 
         if worker_stats:
             total_stats = {k: sum(w_stats[k] for w_stats in worker_stats.values())
                            for k in next(iter(worker_stats.values()))}
-
+            F1_mean = total_stats['total_f1'] / total_stats['answers']
+            EM_mean = total_stats['total_em'] / total_stats['answers']
+            F1_stdev = np.std([w_stats['total_f1']/w_stats['answers'] for w_stats in worker_stats.values()])
+            EM_stdev = np.std([w_stats['total_em']/w_stats['answers'] for w_stats in worker_stats.values()])
+#             F1_stdev = (1/total_stats['total_f1'] * sum([(w_stats['total_f1'] - F1_mean)**2 for w_stats in worker_stats.values()])**2)**.5
+#             EM_stdev = (1/total_stats['total_em'] * sum([(w_stats['total_em'] - EM_mean)**2 for w_stats in worker_stats.values()])**2)**.5
+            
             print(f"Avg. answers per question: {total_stats['answers'] / total_stats['questions']:.2f}")
-            print(f"Answer-level avg. F1 Score: {100 * total_stats['total_f1'] / total_stats['answers']:.0f}%")
-            print(f"Answer-level avg. Exact Match (EM): {100 * total_stats['total_em'] / total_stats['answers']:.0f}%")
+            print(f"Answer-level avg. F1 Score: {100 * F1_mean:.0f}% (+/- {100 * F1_stdev})")
+            print(f"Answer-level avg. Exact Match (EM): {100 * EM_mean:.0f}% (+/- {100 * EM_stdev})")
             print(f"Answer-level avg. Noun Phrases (NP): {100 * total_stats['total_np'] / total_stats['answers']:.0f}%")
 
 
