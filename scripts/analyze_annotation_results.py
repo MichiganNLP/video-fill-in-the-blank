@@ -180,9 +180,9 @@ Worker answers:
                            for k in next(iter(worker_stats.values()))}
 
             print(f"Avg. answers per question: {total_stats['answers'] / total_stats['questions']:.2f}")
-            print(f"Answer-level avg. F1 Score: {100 * total_stats['total_f1'] / total_stats['answers']:.0f}%")
-            print(f"Answer-level avg. Exact Match (EM): {100 * total_stats['total_em'] / total_stats['answers']:.0f}%")
-            print(f"Answer-level avg. Noun Phrases (NP): {100 * total_stats['total_np'] / total_stats['answers']:.0f}%")
+            print(f"Answer-level avg. F1 Score: {100 * total_stats['total_f1'] / total_stats['answers']:.1f}%")
+            print(f"Answer-level avg. Exact Match (EM): {100 * total_stats['total_em'] / total_stats['answers']:.1f}%")
+            print(f"Answer-level avg. Noun Phrases (NP): {100 * total_stats['total_np'] / total_stats['answers']:.1f}%")
 
 
 if __name__ == "__main__":
