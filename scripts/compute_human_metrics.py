@@ -23,7 +23,7 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def main():
+def main() -> None:
     args = parse_args()
 
     data_module = QGenDataModule(batch_size=None)
@@ -42,7 +42,6 @@ def main():
 
     for instance in hits_to_instances(hits).values():
         key = instance["video_id"], instance["video_start_time"], instance["video_end_time"], instance["question"]
-
         if instance_in_val := val_instance_map.get(key):  # FIXME: there's 1 missing in val.
             label = instance_in_val["label"]
             additional_answers = instance_in_val["additional_answers"]
