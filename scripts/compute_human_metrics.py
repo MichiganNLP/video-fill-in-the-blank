@@ -46,12 +46,12 @@ def main() -> None:
             label = instance_in_val["label"]
             additional_answers = instance_in_val["additional_answers"]
 
-            for worker_id, answers in instance["answers_by_worker"].items():
-                answer = answers[0]
-                accuracy_by_worker[worker_id]([answer], [label])
-                accuracy_many_by_worker[worker_id]([answer], [label], [additional_answers])
-                f1_score_by_worker[worker_id]([answer], [label])
-                f1_score_many_by_worker[worker_id]([answer], [label], [additional_answers])
+            for worker_id, worker_answers in instance["answers_by_worker"].items():
+                first_worker_answer = worker_answers[0]
+                accuracy_by_worker[worker_id]([first_worker_answer], [label])
+                accuracy_many_by_worker[worker_id]([first_worker_answer], [label], [additional_answers])
+                f1_score_by_worker[worker_id]([first_worker_answer], [label])
+                f1_score_many_by_worker[worker_id]([first_worker_answer], [label], [additional_answers])
 
     workers = len(accuracy_by_worker)
 
