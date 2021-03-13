@@ -29,7 +29,7 @@ class F1ScoreMany(pl.metrics.Metric):
         self.total += len(labels)
 
     @overrides
-    def compute(self) -> float:
+    def compute(self) -> torch.Tensor:
         return self.score_sum / self.total
 
 
@@ -48,5 +48,5 @@ class ExactMatchAccuracyMany(pl.metrics.Metric):
         self.total += len(labels)
 
     @overrides
-    def compute(self) -> float:
+    def compute(self) -> torch.Tensor:
         return self.correct / self.total
