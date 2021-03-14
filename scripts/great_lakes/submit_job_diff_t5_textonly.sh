@@ -3,7 +3,7 @@
 #SBATCH --job-name=text_only
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=20
-#SBATCH --mem=32G
+#SBATCH --mem=128G
 #SBATCH --gres=gpu:1
 #SBATCH --time=12:00:00
 #SBATCH --account=mihalcea1
@@ -11,8 +11,8 @@
 
 source scripts/great_lakes/init.source
 
-t5=(t5-small t5-base t5-large t5-3b t5-11b)
-t5_google=(google/t5-v1_1-small google/t5-v1_1-base google/t5-v1_1-large google/t5-v1_1-xl google/t5-v1_1-xxl)
+t5=(t5-small t5-base t5-large t5-3b)
+t5_google=(google/t5-v1_1-small google/t5-v1_1-base google/t5-v1_1-large google/t5-v1_1-xl)
 batch_sizes=(1024 512 256 16)
 
 command="python -m scripts.run_model --gpus=1 --max-length=10 \
