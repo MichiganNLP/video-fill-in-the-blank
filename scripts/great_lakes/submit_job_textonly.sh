@@ -11,13 +11,13 @@
 
 source scripts/great_lakes/init.source
 
-greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 \
+greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=t5-base \
   --generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=512"
 echo "evaluating ${greedy_command}"
 eval "${greedy_command}"
 
 echo evaluting beam search
-command="python -m scripts.run_model --gpus=1 --max-length=10 --num-workers=4"
+command="python -m scripts.run_model --gpus=1 --max-length=10 --num-workers=4 --model=t5-base"
 for beam_size in 2 4 8; do
   for only_noun_phrase in 0 1; do
     for early_stopping in 0 1; do
