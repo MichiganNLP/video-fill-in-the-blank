@@ -5,13 +5,13 @@ dependencies:
   - pip:
     - moviepy==1.0.3
     - python-youtube==0.6.4
+    - sentencepiece==0.1.95  # For the "google/t5-v1_1-" models.
     # We could use the Anaconda channel "HuggingFace".
     # However, `tokenizers` was compiled with glibc 2.18, while Great Lakes has 2.17.
     # See https://github.com/huggingface/tokenizers/issues/585
     # There are some non-popular glibc packages available in Anaconda, but Python needs to be linked to it as well.
     # This is cumbersome, so we just use pip.
     - transformers==4.2.2
-    - sentencepiece==0.1.95
   - conda-forge::awscli=1.18
   - boto3=1.16.29
   - botocore=1.19.29

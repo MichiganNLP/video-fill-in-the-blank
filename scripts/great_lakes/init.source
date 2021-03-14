@@ -8,6 +8,8 @@ echo Sourcing
 conda activate lqam
 echo Sourced
 
+export PYTHONPATH=.
+
 export http_proxy="http://proxy.arc-ts.umich.edu:3128/"
 export https_proxy="${http_proxy}"
 export ftp_proxy="${http_proxy}"

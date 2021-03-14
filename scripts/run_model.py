@@ -41,7 +41,7 @@ def _parse_args() -> argparse.Namespace:
     # I guess we can check the options from the URL below, though I'm not sure if that's the exact filter tag.
     parser.add_argument("--model", default="t5-base",
                         help="pipeline model. Check the options in https://huggingface.co/models?filter=seq2seq")
-    parser.add_argument("--checkpoint_path", type=str)
+    parser.add_argument("--checkpoint-path", type=str)
     parser.add_argument("--max-length", type=int, default=10)
     parser.add_argument("--beam-size", type=int, default=1)
     parser.add_argument("--generation-early-stopping", action="store_true")
