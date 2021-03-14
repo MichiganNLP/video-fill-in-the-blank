@@ -1,23 +1,39 @@
 #!/usr/bin/env bash
 
-#SBATCH --job-name=text_only
+#SBATCH --job-name=text_only_ft
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=20
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --gres=gpu:1
-#SBATCH --time=12:00:00
+#SBATCH --time=8:00:00
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 
 source scripts/great_lakes/init.source
 
-greedy_command="python -m scripts.run_model --gpus=1 --max-length=10 --model=t5-base \
-  --generation-early-stopping --no-repeat-ngram-size=2 --num-workers=4 --batch-size=512"
-echo "evaluating ${greedy_command}"
-eval "${greedy_command}"
+model_path=''
+
+print_usage() {
+  printf "Usage: using flag '-p MODEL_PATH' to load your model for testing"
+}
+
+while getopts 'p:' flag; do
+  case "${flag}" in
+    p) model_path="${OPTARG}" ;;
+    *) print_usage
+       exit 1 ;;
+  esac
+done
+
+if [ -z "$1" ]
+  then
+    print_usage
+    exit 1
+fi
 
 echo evaluting beam search
-command="python -m scripts.run_model --gpus=1 --max-length=10 --num-workers=4 --model=t5-base"
+command="python -m scripts.run_model --gpus=1 --max-length=10 --num-workers=4 --checkpoint_path $model_path"
+
 for beam_size in 2 4 8; do
   for only_noun_phrase in 0 1; do
     for early_stopping in 0 1; do
