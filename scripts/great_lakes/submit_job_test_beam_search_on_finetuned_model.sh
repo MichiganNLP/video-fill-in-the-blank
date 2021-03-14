@@ -3,7 +3,7 @@
 #SBATCH --job-name=text_only_ft
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --cpus-per-task=20
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=8:00:00
 #SBATCH --account=mihalcea1
