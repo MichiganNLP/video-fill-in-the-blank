@@ -98,11 +98,6 @@ def main() -> None:
     else:
         t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
 
-    generate_kwargs = {"max_length": args.max_length,
-                       "num_beams": args.beam_size,
-                       "early_stopping": args.generation_early_stopping,
-                       "no_repeat_ngram_size": args.no_repeat_ngram_size}
-
     filler_kwargs = {
         "t5_like_pretrained_model": t5_like_pretrained_model,
         "tokenizer": tokenizer,
@@ -110,7 +105,13 @@ def main() -> None:
         "lr": args.lr,
         "lr_scheduler": args.lr_scheduler,
         "weight_decay": args.weight_decay,
-        "generate_kwargs": generate_kwargs}
+        "generate_kwargs": {
+            "max_length": args.max_length,
+            "num_beams": args.beam_size,
+            "early_stopping": args.generation_early_stopping,
+            "no_repeat_ngram_size": args.no_repeat_ngram_size,
+        },
+    }
 
     if args.checkpoint_path:
         filler = T5FillerModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path, **filler_kwargs)
