@@ -17,8 +17,8 @@ from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
 
 from lqam.core.noun_phrases import create_spacy_model
 from lqam.methods.dataset import TYPE_BATCH
-from lqam.methods.decoding import arg_noun_phrase, compute_answer_prob
-from lqam.methods.metrics import ExactMatchAccuracyMany, F1ScoreMany
+from lqam.methods.decoding import arg_noun_phrase, compute_answer_prob, compute_answer_probs
+from lqam.methods.metrics import Average, ExactMatchAccuracyMany, F1ScoreMany, Perplexity
 from lqam.methods.t5_format_processing import compute_first_blank
 from lqam.util.iterable_utils import chunks
 
@@ -64,6 +64,8 @@ class T5FillerModel(pl.LightningModule):
         self.accuracy_many = ExactMatchAccuracyMany()
         self.f1_score = F1ScoreMany()
         self.f1_score_many = F1ScoreMany()
+        self.ground_truth_prob = Average()
+        self.perplexity = Perplexity()
         self.generate_kwargs = generate_kwargs or {}
 
         self.generate_kwargs.setdefault("return_dict_in_generate", True)
@@ -100,6 +102,8 @@ class T5FillerModel(pl.LightningModule):
         self.accuracy_many.reset()
         self.f1_score.reset()
         self.f1_score_many.reset()
+        self.ground_truth_prob.reset()
+        self.perplexity.reset()
 
     @overrides
     def forward(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: Optional[torch.Tensor] = None,
@@ -189,8 +193,9 @@ class T5FillerModel(pl.LightningModule):
         # The end of the blank is marked by the next extra token.
         # The end of the generation stream was defined on how the model was trained.
         # It's irrelevant when computing the joint probability.
-        generated_prob = compute_answer_prob(generated_logits, generated_ids, self.t5_pretrained_model.config,
-                                             ignore_eos_token=True)
+        generated_probs = compute_answer_probs(generated_logits, generated_ids, self.t5_pretrained_model.config,
+                                               ignore_eos_token=True)
+        generated_prob = compute_answer_prob(generated_probs)
 
         self.write_prediction("generated", generated)
         self.write_prediction("generated_prob", generated_prob)
@@ -225,9 +230,16 @@ class T5FillerModel(pl.LightningModule):
         label_output = self(masked_caption_ids, masked_caption_attention_mask, label_ids.clone(), **kwargs)
         self.log(f"{log_prefix}loss", label_output.loss, prog_bar=True)
 
-        label_prob = compute_answer_prob(label_output.logits, label_ids, self.t5_pretrained_model.config,
-                                         ignore_eos_token=True)
+        label_probs = compute_answer_probs(label_output.logits, label_ids, self.t5_pretrained_model.config,
+                                           ignore_eos_token=True)
+        label_prob = compute_answer_prob(label_probs)
         self.write_prediction("ground_truth_prob", label_prob)
+
+        self.log(f"{log_prefix}ground_truth_prob_step", self.ground_truth_prob(label_prob), prog_bar=True)
+
+        perplexity_mask = ((label_ids != self.t5_pretrained_model.config.pad_token_id)
+                           & (label_ids != self.t5_pretrained_model.config.eos_token_id))
+        self.log(f"{log_prefix}perplexity_step", self.perplexity(label_probs, perplexity_mask), prog_bar=True)
 
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
@@ -242,6 +254,8 @@ class T5FillerModel(pl.LightningModule):
         self.log(f"{log_prefix}f1_score_label", self.f1_score.compute(), prog_bar=True)
         self.log(f"{log_prefix}accuracy", self.accuracy_many.compute(), prog_bar=True)
         self.log(f"{log_prefix}f1_score", self.f1_score_many.compute(), prog_bar=True)
+        self.log(f"{log_prefix}ground_truth_prob", self.ground_truth_prob.compute(), prog_bar=True)
+        self.log(f"{log_prefix}perplexity", self.perplexity.compute(), prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
         self._on_epoch_end(log_prefix="val_")
