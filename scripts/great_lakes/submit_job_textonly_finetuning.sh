@@ -10,5 +10,4 @@
 #SBATCH --partition=gpu
 
 source scripts/great_lakes/init.source
-python -m scripts.run_model --gpus 1 --generation-early-stopping --no-repeat-ngram-size 2 \
-  --num-workers 4 --train --batch-size 96 --epochs 50 "$*"
+python -u scripts/run_model.py --gpus 1 --num-workers 4 --train --batch-size 96 --epochs 50 "$*"

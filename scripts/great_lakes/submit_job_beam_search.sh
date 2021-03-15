@@ -12,7 +12,9 @@
 source scripts/great_lakes/init.source
 
 greedy_batch_size=${1:-512}
-command="python -m scripts.run_model --gpus 1 --num-workers 4 ${*:2}"
+command="python -u scripts/run_model.py --gpus 1 --num-workers 4 ${*:2}"
+
+$command --batch-size "$greedy_batch_size" --no-repeat-ngram-size 2
 
 set -x
 
