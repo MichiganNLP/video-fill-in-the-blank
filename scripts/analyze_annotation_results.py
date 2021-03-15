@@ -73,7 +73,7 @@ def main() -> None:
                                       f" {precisions.mean() * 100:.0f}, Rec {recalls.mean() * 100:.0f}, Dec"
                                       f" {decision_scores.mean() * 100:.0f}")
 
-            std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f},  (FEM {std_fem * 100:.0f}, Pre"
+            std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f},  FEM {std_fem * 100:.0f}, Pre"
                                       f" {std_precision * 100:.0f}, Rec {std_recall * 100:.0f}, Dec"
                                       f" {std_decision_score * 100:.0f})")
 
@@ -182,13 +182,11 @@ Worker answers:
             EM_mean = total_stats['total_em'] / total_stats['answers']
             F1_stdev = np.std([w_stats['total_f1']/w_stats['answers'] for w_stats in worker_stats.values()])
             EM_stdev = np.std([w_stats['total_em']/w_stats['answers'] for w_stats in worker_stats.values()])
-#             F1_stdev = (1/total_stats['total_f1'] * sum([(w_stats['total_f1'] - F1_mean)**2 for w_stats in worker_stats.values()])**2)**.5
-#             EM_stdev = (1/total_stats['total_em'] * sum([(w_stats['total_em'] - EM_mean)**2 for w_stats in worker_stats.values()])**2)**.5
             
             print(f"Avg. answers per question: {total_stats['answers'] / total_stats['questions']:.2f}")
-            print(f"Answer-level avg. F1 Score: {100 * F1_mean:.0f}% (+/- {100 * F1_stdev})")
-            print(f"Answer-level avg. Exact Match (EM): {100 * EM_mean:.0f}% (+/- {100 * EM_stdev})")
-            print(f"Answer-level avg. Noun Phrases (NP): {100 * total_stats['total_np'] / total_stats['answers']:.0f}%")
+            print(f"Answer-level avg. F1 Score: {100 * F1_mean:.1f}% (+/- {100 * F1_stdev:.1f})")
+            print(f"Answer-level avg. Exact Match (EM): {100 * EM_mean:.1f}% (+/- {100 * EM_stdev:.1f})")
+            print(f"Answer-level avg. Noun Phrases (NP): {100 * total_stats['total_np'] / total_stats['answers']:.1f}%")
 
 
 if __name__ == "__main__":

@@ -27,7 +27,7 @@ def get_mask_from_sequence_lengths(lengths: torch.Tensor) -> torch.Tensor:
 
 
 class QGenDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase, t5_format: bool = True,
+    def __init__(self, data_path: str, tokenizer: Optional[PreTrainedTokenizerBase] = None, t5_format: bool = True,
                  visual_data_dir: Optional[str] = None) -> None:
         super().__init__()
         with open(cached_path(data_path)) as file:
@@ -42,6 +42,9 @@ class QGenDataset(Dataset):
         output = {
             "masked_caption": instance["masked_caption"],
             "label": instance["label"],
+            "video_id": instance["video_id"],
+            "video_start_time": instance["video_start_time"],
+            "video_end_time": instance["video_end_time"],
         }
 
         if "additional_answers" in instance:
@@ -58,37 +61,36 @@ class QGenDataset(Dataset):
         return len(self.instances)
 
     def collate_fn(self, instances: Iterable[TYPE_BATCH]) -> TYPE_BATCH:
-        batch = {}
+        keys = next(iter(instances), {})
+        batch = {k: [instance[k] for instance in instances] for k in keys}
 
         for k in ["masked_caption", "label"]:
-            stack = [instance[k] for instance in instances]
-            batch[k] = stack
+            stack = batch[k]
 
-            if self.t5_format:
-                if k == "label":
-                    to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
-                elif k == "masked_caption":
-                    to_tokenize = [s.replace("_____", "<extra_id_0>") for s in stack]
+            if self.tokenizer:
+                if self.t5_format:
+                    if k == "label":
+                        to_tokenize = [f"<extra_id_0> {s} <extra_id_1>" for s in stack]
+                    elif k == "masked_caption":
+                        to_tokenize = [s.replace("_____", "<extra_id_0>") for s in stack]
+                    else:
+                        to_tokenize = stack
                 else:
                     to_tokenize = stack
-            else:
-                to_tokenize = stack
 
-            # We tokenize in batches, in parallel. Probably there's a little gain than each worker tokenizing
-            # separately each item in a batch because the padding is known a priori and there may be other parallel
-            # optimizations. And it's more elegant. Still, it's likely marginal. Though now the workers aren't serial
-            # anymore, so we shouldn't use as many workers as CPU cores but just a small number so the compute
-            # devices aren't starving but not large so they never compete a lot with each other (esp. at the
-            # beginning, where the pipeline of workers is starting).
-            tokenization_output = self.tokenizer(to_tokenize, padding="longest", truncation=True, return_tensors="pt")
-            batch[f"{k}_ids"] = tokenization_output["input_ids"]
-            batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
+                # We tokenize in batches, in parallel. Probably there's a little gain than each worker tokenizing
+                # separately each item in a batch because the padding is known a priori and there may be other parallel
+                # optimizations. And it's more elegant. Still, it's likely marginal. Though now the workers aren't
+                # serial anymore, so we shouldn't use as many workers as CPU cores but just a small number so the
+                # compute devices aren't starving but not large so they never compete a lot with each other (esp. at the
+                # beginning, where the pipeline of workers is starting).
+                tokenization_output = self.tokenizer(to_tokenize, padding="longest", truncation=True,
+                                                     return_tensors="pt")
+                batch[f"{k}_ids"] = tokenization_output["input_ids"]
+                batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
 
-        if "additional_answers" in next(iter(instances)):
-            batch["additional_answers"] = [instance["additional_answers"] for instance in instances]
-
-        if "visual" in next(iter(instances), {}):
-            visual_list = [instance["visual"] for instance in instances]
+        if "visual" in keys:
+            visual_list = batch["visual"]
             batch["visual"] = pad_sequence(visual_list, batch_first=True)
 
             lengths = torch.as_tensor([visual_instance.size(0) for visual_instance in visual_list])
@@ -98,9 +100,10 @@ class QGenDataset(Dataset):
 
 
 class QGenDataModule(pl.LightningDataModule):  # noqa
-    def __init__(self, tokenizer: PreTrainedTokenizerBase, batch_size: int = 32, eval_batch_size: Optional[int] = None,
-                 num_workers: int = 0, train_data_path: str = URL_DATA_TRAIN, val_data_path: str = URL_DATA_VAL,
-                 test_data_path: str = URL_DATA_TEST, visual_data_dir: Optional[str] = None):
+    def __init__(self, tokenizer: Optional[PreTrainedTokenizerBase] = None, batch_size: Optional[int] = 32,
+                 eval_batch_size: Optional[int] = None, num_workers: int = 0, train_data_path: str = URL_DATA_TRAIN,
+                 val_data_path: str = URL_DATA_VAL, test_data_path: str = URL_DATA_TEST,
+                 visual_data_dir: Optional[str] = None) -> None:
         super().__init__()
         self.tokenizer = tokenizer
         self.num_workers = num_workers
@@ -115,7 +118,7 @@ class QGenDataModule(pl.LightningDataModule):  # noqa
         dataset = QGenDataset(data_path, tokenizer=self.tokenizer, visual_data_dir=self.visual_data_dir)
         # TODO: bucket-batching could make training faster, and consume less memory.
         return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
-                          pin_memory=True, collate_fn=dataset.collate_fn)
+                          pin_memory=True, collate_fn=None if batch_size is None else dataset.collate_fn)
 
     @overrides
     def train_dataloader(self) -> DataLoader:

@@ -118,6 +118,9 @@ class T5FillerModel(pl.LightningModule):
         masked_caption_attention_mask = batch.pop("masked_caption_attention_mask", None)
         label_ids = batch.pop("label_ids")
 
+        del batch["video_id"]
+        del batch["video_start_time"]
+        del batch["video_end_time"]
         del batch["masked_caption"]
         del batch["label"]
         batch.pop("label_attention_mask", None)
@@ -132,7 +135,12 @@ class T5FillerModel(pl.LightningModule):
 
     def _generative_step(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: torch.Tensor,
                          label_ids: torch.Tensor, masked_caption: Sequence[str], label: Sequence[str],
-                         additional_answers: Sequence[Sequence[str]], log_prefix: str = "", **kwargs) -> None:
+                         additional_answers: Sequence[Sequence[str]], video_id: Optional[str],
+                         video_start_time: Optional[int], video_end_time: Optional[int], log_prefix: str = "",
+                         **kwargs) -> None:
+        self.write_prediction("video_id", video_id)
+        self.write_prediction("video_start_time", video_start_time)
+        self.write_prediction("video_end_time", video_end_time)
         self.write_prediction("masked_caption", masked_caption)
 
         del kwargs["label_attention_mask"]
