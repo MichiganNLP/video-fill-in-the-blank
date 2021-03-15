@@ -14,9 +14,9 @@ source scripts/great_lakes/init.source
 set -x
 
 python -m scripts.run_model --gpus 1 --generation-early-stopping --no-repeat-ngram-size 2 --num-workers 4 \
-  --batch-size 512
+  --batch-size 512 "$*"
 
-command="python -m scripts.run_model --gpus 1 --num-workers 4"
+command="python -m scripts.run_model --gpus 1 --num-workers 4 $*"
 for beam_size in 2 4 8; do
   for only_noun_phrase in 0 1; do
     for early_stopping in 0 1; do
