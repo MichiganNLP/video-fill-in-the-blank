@@ -10,4 +10,4 @@
 #SBATCH --time=5:00:00
 
 source scripts/great_lakes/init.source
-python -u scripts/run_model.py --use-visual --train --gpus 1 --num-workers 3 --batch-size 64 "$*"
+python -u scripts/run_model.py --use-visual --train --gpus 1 --num-workers 4 --batch-size 64 "$*"
