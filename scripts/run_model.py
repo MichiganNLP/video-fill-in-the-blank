@@ -39,7 +39,7 @@ def _parse_args() -> argparse.Namespace:
     # Also, note you still can't easily get the user-uploaded models, as they're resolved dynamically.
     # So we can't provide model name choices.
     # I guess we can check the options from the URL below, though I'm not sure if that's the exact filter tag.
-    parser.add_argument("--model", default="t5-base",
+    parser.add_argument("--model", default="google/t5-v1_1-base",
                         help="pipeline model. Check the options in https://huggingface.co/models?filter=seq2seq")
     parser.add_argument("--checkpoint-path", type=str)
     parser.add_argument("--max-length", type=int, default=10)
