@@ -12,7 +12,7 @@ def _combine_attention_masks(text_attention_mask: Optional[torch.Tensor] = None,
                              visual_attention_mask: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
     if text_attention_mask is not None and visual_attention_mask is not None:
         text_batch_size = text_attention_mask.shape[0]
-        visual_batch_size = visual_batch_size.shape[0]
+        visual_batch_size = visual_attention_mask.shape[0]
         beam_size = text_batch_size / visual_batch_size
         if beam_size > 1:
             visual_attention_mask = visual_attention_mask.repeat(beam_size, 1)
