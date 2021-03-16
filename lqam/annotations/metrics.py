@@ -94,7 +94,7 @@ def compute_annotation_metrics(
 
     assert len(answers) > 1
 
-    answers = [[normalize_answer(answer) for answer in worker_answers] for worker_answers in answers]
+    answers = [[n for answer in worker_answers if (n := normalize_answer(answer))] for worker_answers in answers]
 
     std_answer = normalize_answer(std_answer)
 
