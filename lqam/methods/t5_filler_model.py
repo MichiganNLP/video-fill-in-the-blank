@@ -150,9 +150,6 @@ class T5FillerModel(pl.LightningModule):
         # Note the mask for the `label_ids` is created by `generate` based on where the padding tokens are. So we
         # don't need to provide it.
 
-        if 'visual_attention_mask' in kwargs and self.generate_kwargs["num_beams"] > 1:
-            kwargs['visual_attention_mask'] = kwargs['visual_attention_mask'].repeat(self.generate_kwargs["num_beams"], 1)
-
         generated_output = self.t5_pretrained_model.generate(masked_caption_ids,
                                                              attention_mask=masked_caption_attention_mask,
                                                              **self.generate_kwargs, **kwargs)
