@@ -45,7 +45,7 @@ class MostSimilarModule():
         for word in word_list:
             if word in self.glove_vectors:
                 vectors.append(self.glove_vectors[word])
-            elif word == '____':
+            elif word == '_____':
                 continue
             else:
                 vectors.append(torch.zeros(1, vector_size))
