@@ -137,10 +137,13 @@ class ComputeMetrics():
             self.f1_cat[i].reset()
             self.em_label_cat[i].reset()
             self.f1_label_cat[i].reset()
+        self.gt_prob.reset()
         self.perplexity.reset()
 
     def update(self, preds: Sequence[str], video_ids: Sequence[str], labels: Sequence[str],
-                 additional_answers_batch: Optional[Sequence[Sequence[Sequence[str]]]]=None) -> None:
+                 additional_answers_batch: Sequence[Sequence[Sequence[str]]],
+                 label_prob: torch.Tensor,
+                 label_probs: torch.Tensor, perplexity_mask: torch.Tensor) -> None:
         self.em(preds, labels, additional_answers_batch)
         self.f1_score(preds, labels, additional_answers_batch)
         self.em_label(preds, labels)
@@ -153,6 +156,9 @@ class ComputeMetrics():
             self.em_label_cat[category]([preds[i]], [labels[i]])
             self.f1_label_cat[category]([preds[i]], [labels[i]])
 
+        self.gt_prob(label_prob)
+        self.perplexity(label_probs, perplexity_mask)
+
     def compute(self):
         em = self.em.compute()
         f1_score = self.f1_score.compute()
@@ -163,6 +169,9 @@ class ComputeMetrics():
         f1_cat = [self.f1_cat[i].compute() for i in range(11)]
         em_label_cat = [self.em_label_cat[i].compute() for i in range(11)]
         f1_label_cat = [self.f1_label_cat[i].compute() for i in range(11)]
+
+        gt_prob = self.gt_prob.compute()
+        perplexity = self.perplexity.compute()
         
-        return em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat
+        return em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat, gt_prob, perplexity
 

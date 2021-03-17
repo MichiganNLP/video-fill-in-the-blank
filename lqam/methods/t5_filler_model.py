@@ -248,9 +248,9 @@ class T5FillerModel(pl.LightningModule):
         self.log(f"{log_prefix}perplexity_step", self.perplexity(label_probs, perplexity_mask), prog_bar=True)
 
         if log_prefix == 'val_':
-            self.compute_metrics_val.update(generated, video_id, label, additional_answers)
+            self.compute_metrics_val.update(generated, video_id, label, additional_answers, label_prob, label_probs, perplexity_mask)
         else:
-            self.compute_metrics_test.update(generated, video_id, label, additional_answers)
+            self.compute_metrics_test.update(generated, video_id, label, additional_answers, label_prob, label_probs, perplexity_mask)
 
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
@@ -262,10 +262,10 @@ class T5FillerModel(pl.LightningModule):
 
     def _on_epoch_end(self, log_prefix: str = "") -> None:
         if log_prefix == 'val_':
-            em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat = self.compute_metrics_val.compute()
+            em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat, gt_prob, perplexity = self.compute_metrics_val.compute()
         else:
-            em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat = self.compute_metrics_test.compute()
-        print(em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat)
+            em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat, gt_prob, perplexity = self.compute_metrics_test.compute()
+        print(em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat, gt_prob, perplexity)
         
         self.log(f"{log_prefix}accuracy_label", self.accuracy.compute(), prog_bar=True)
         self.log(f"{log_prefix}f1_score_label", self.f1_score.compute(), prog_bar=True)
