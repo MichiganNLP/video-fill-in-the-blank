@@ -18,7 +18,7 @@ from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
 from lqam.core.noun_phrases import create_spacy_model
 from lqam.methods.dataset import TYPE_BATCH
 from lqam.methods.decoding import arg_noun_phrase, compute_answer_prob, compute_answer_probs
-from lqam.methods.metrics import Average, ExactMatchAccuracyMany, F1ScoreMany, Perplexity
+from lqam.methods.metrics import AllMetrics
 from lqam.methods.t5_format_processing import compute_first_blank
 from lqam.util.iterable_utils import chunks
 
@@ -60,12 +60,7 @@ class T5FillerModel(pl.LightningModule):
         t5_like_pretrained_model._get_logits_processor = types.MethodType(_patched_get_logits_processor,
                                                                           t5_like_pretrained_model)
         self.tokenizer = tokenizer
-        self.accuracy = ExactMatchAccuracyMany()
-        self.accuracy_many = ExactMatchAccuracyMany()
-        self.f1_score = F1ScoreMany()
-        self.f1_score_many = F1ScoreMany()
-        self.ground_truth_prob = Average()
-        self.perplexity = Perplexity()
+        self.all_metrics = AllMetrics()
         self.generate_kwargs = generate_kwargs or {}
 
         self.generate_kwargs.setdefault("return_dict_in_generate", True)
@@ -98,12 +93,7 @@ class T5FillerModel(pl.LightningModule):
 
     @overrides
     def on_epoch_start(self) -> None:
-        self.accuracy.reset()
-        self.accuracy_many.reset()
-        self.f1_score.reset()
-        self.f1_score_many.reset()
-        self.ground_truth_prob.reset()
-        self.perplexity.reset()
+        self.all_metrics.reset()
 
     @overrides
     def forward(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: Optional[torch.Tensor] = None,
@@ -139,9 +129,9 @@ class T5FillerModel(pl.LightningModule):
 
     def _generative_step(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: torch.Tensor,
                          label_ids: torch.Tensor, masked_caption: Sequence[str], label: Sequence[str],
-                         additional_answers: Sequence[Sequence[str]], video_id: Optional[str],
-                         video_start_time: Optional[int], video_end_time: Optional[int], log_prefix: str = "",
-                         **kwargs) -> None:
+                         additional_answers: Sequence[Sequence[str]], video_id: Optional[Sequence[str]],
+                         video_start_time: Optional[Sequence[int]], video_end_time: Optional[Sequence[int]],
+                         log_prefix: str = "", **kwargs) -> None:
         self.write_prediction("video_id", video_id)
         self.write_prediction("video_start_time", video_start_time)
         self.write_prediction("video_end_time", video_end_time)
@@ -200,20 +190,6 @@ class T5FillerModel(pl.LightningModule):
         self.write_prediction("generated", generated)
         self.write_prediction("generated_prob", generated_prob)
 
-        accuracy = self.accuracy(generated, label)
-        self.log(f"{log_prefix}accuracy_label_step", accuracy, prog_bar=True)
-
-        f1_score = self.f1_score(generated, label)
-        self.log(f"{log_prefix}f1_score_label_step", f1_score, prog_bar=True)
-
-        if additional_answers is not None:
-            accuracy_many = self.accuracy_many(generated, label, additional_answers)
-            self.log(f"{log_prefix}accuracy_step", accuracy_many,
-                     prog_bar=True)
-
-            f1_score_many = self.f1_score_many(generated, label, additional_answers)
-            self.log(f"{log_prefix}f1_score_step", f1_score_many, prog_bar=True)
-
         # --- Compute the ground truth likelihood ---
 
         self.write_prediction("ground_truth", label)
@@ -235,11 +211,13 @@ class T5FillerModel(pl.LightningModule):
         label_prob = compute_answer_prob(label_probs)
         self.write_prediction("ground_truth_prob", label_prob)
 
-        self.log(f"{log_prefix}ground_truth_prob_step", self.ground_truth_prob(label_prob), prog_bar=True)
-
         perplexity_mask = ((label_ids != self.t5_pretrained_model.config.pad_token_id)
                            & (label_ids != self.t5_pretrained_model.config.eos_token_id))
-        self.log(f"{log_prefix}perplexity_step", self.perplexity(label_probs, perplexity_mask), prog_bar=True)
+
+        for k, v in self.all_metrics(video_id, label, additional_answers, generated, label_prob,
+                                     label_probs, perplexity_mask).items():  # noqa
+            if k in {"accuracy", "f1_score", "ground_truth_prob", "perplexity"}:
+                self.log(f"{log_prefix}{k}_step", v, prog_bar=True)
 
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
@@ -250,12 +228,8 @@ class T5FillerModel(pl.LightningModule):
         self._generative_step(**batch, log_prefix="test_")
 
     def _on_epoch_end(self, log_prefix: str = "") -> None:
-        self.log(f"{log_prefix}accuracy_label", self.accuracy.compute(), prog_bar=True)
-        self.log(f"{log_prefix}f1_score_label", self.f1_score.compute(), prog_bar=True)
-        self.log(f"{log_prefix}accuracy", self.accuracy_many.compute(), prog_bar=True)
-        self.log(f"{log_prefix}f1_score", self.f1_score_many.compute(), prog_bar=True)
-        self.log(f"{log_prefix}ground_truth_prob", self.ground_truth_prob.compute(), prog_bar=True)
-        self.log(f"{log_prefix}perplexity", self.perplexity.compute(), prog_bar=True)
+        for k, v in self.all_metrics.compute().items():
+            self.log(f"{log_prefix}{k}", v, prog_bar=k in {"accuracy", "f1_score", "ground_truth_prob"})
 
     def on_validation_epoch_end(self) -> None:
         self._on_epoch_end(log_prefix="val_")
