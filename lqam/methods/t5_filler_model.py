@@ -261,7 +261,7 @@ class T5FillerModel(pl.LightningModule):
         self._generative_step(**batch, log_prefix="test_")
 
     def _on_epoch_end(self, log_prefix: str = "") -> None:
-        if log_prefix == 'val':
+        if log_prefix == 'val_':
             em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat = self.compute_metrics_val.compute()
         else:
             em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat = self.compute_metrics_test.compute()
