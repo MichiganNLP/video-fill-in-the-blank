@@ -15,13 +15,12 @@ from lqam.methods.t5_visual_module import T5AndVisual
 from lqam.methods.two_stream_module import TwoStream
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 
-
 def _parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults(description="Train and evaluate the T5-based baselines.")
 
     parser.add_argument("--train-data-path", default=dataset.URL_DATA_TRAIN)
     parser.add_argument("--val-data-path", default=dataset.URL_DATA_VAL)
-    parser.add_argument("--test-data-path", default=dataset.URL_DATA_VAL)  # TODO: change to test.
+    parser.add_argument("--test-data-path", default=dataset.URL_DATA_TEST)
     parser.add_argument("--visual-data-dir", default="data/I3D_video_features")
 
     parser.add_argument("--batch-size", type=int, default=32)
@@ -41,6 +40,7 @@ def _parse_args() -> argparse.Namespace:
     # I guess we can check the options from the URL below, though I'm not sure if that's the exact filter tag.
     parser.add_argument("--model", default="t5-base",
                         help="pipeline model. Check the options in https://huggingface.co/models?filter=seq2seq")
+    parser.add_argument("--checkpoint-path", type=str)
     parser.add_argument("--max-length", type=int, default=10)
     parser.add_argument("--beam-size", type=int, default=1)
     parser.add_argument("--generation-early-stopping", action="store_true")
@@ -58,6 +58,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--trainer-default-root-dir")
 
     parser.add_argument("--train", action="store_true")
+    parser.add_argument("--test", action="store_true")
     parser.add_argument("--fast-dev-run", action="store_true")
     parser.add_argument("--profiler", choices=PROFILERS)
     parser.add_argument("--epochs", default=10, type=int)
@@ -97,22 +98,36 @@ def main() -> None:
     else:
         t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
 
-    filler = T5FillerModel(t5_like_pretrained_model=t5_like_pretrained_model, tokenizer=tokenizer,
-                           only_noun_phrases=args.only_noun_phrases, lr=args.lr, lr_scheduler=args.lr_scheduler,
-                           weight_decay=args.weight_decay,
-                           generate_kwargs={"max_length": args.max_length, "num_beams": args.beam_size,
-                                            "early_stopping": args.generation_early_stopping,
-                                            "no_repeat_ngram_size": args.no_repeat_ngram_size})
+    filler_kwargs = {
+        "t5_like_pretrained_model": t5_like_pretrained_model,
+        "tokenizer": tokenizer,
+        "only_noun_phrases": args.only_noun_phrases,
+        "lr": args.lr,
+        "lr_scheduler": args.lr_scheduler,
+        "weight_decay": args.weight_decay,
+        "generate_kwargs": {
+            "max_length": args.max_length,
+            "num_beams": args.beam_size,
+            "early_stopping": args.generation_early_stopping,
+            "no_repeat_ngram_size": args.no_repeat_ngram_size,
+        },
+    }
+
+    if args.checkpoint_path:
+        filler = T5FillerModel.load_from_checkpoint(checkpoint_path=args.checkpoint_path, **filler_kwargs)
+    else:
+        filler = T5FillerModel(**filler_kwargs)
 
     trainer = pl.Trainer(gpus=args.gpus, default_root_dir=args.trainer_default_root_dir, fast_dev_run=args.fast_dev_run,
                          max_epochs=args.epochs, benchmark=args.benchmark, deterministic=args.deterministic,
                          profiler=args.profiler)
 
     visual_data_dir = args.visual_data_dir if args.use_visual else None
+    test_data_path = args.test_data_path if args.test else args.val_data_path
 
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers,
                                  train_data_path=args.train_data_path, val_data_path=args.val_data_path,
-                                 test_data_path=args.test_data_path, visual_data_dir=visual_data_dir)
+                                 test_data_path=test_data_path, visual_data_dir=visual_data_dir)
 
     if args.train:
         trainer.fit(filler, datamodule=data_module)

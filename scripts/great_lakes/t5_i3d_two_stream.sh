@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#SBATCH --job-name=t5_i3d
+#SBATCH --job-name=two_stream
 #SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 #SBATCH --mail-type=BEGIN,END,FAIL
@@ -10,4 +10,4 @@
 #SBATCH --time=5:00:00
 
 source scripts/great_lakes/init.source
-PYTHONPATH=. python -u scripts/run_model.py --use-visual --train --gpus 1 --num-workers 3 --batch-size 64
+python -u scripts/run_model.py --use-visual --two-stream --train --gpus 1 --num-workers 4 --batch-size 64 "$*"

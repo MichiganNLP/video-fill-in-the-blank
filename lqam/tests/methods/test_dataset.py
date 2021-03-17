@@ -14,6 +14,9 @@ class TestQGenDataset(TestCase):
     def test_dataset_format_train(self):
         train_dataset = QGenDataset(URL_DATA_TRAIN, tokenizer=self.tokenizer)
         train_expected_first_item = {
+            "video_id": "Ptf_2VRj-V0",
+            "video_start_time": 122,
+            "video_end_time": 132,
             "masked_caption": "_____ wearing harnesses using ropes to climb up a rock slope.",
             "label": "People",
         }
@@ -23,6 +26,9 @@ class TestQGenDataset(TestCase):
     def test_dataset_format_val(self):
         val_dataset = QGenDataset(URL_DATA_VAL, tokenizer=self.tokenizer)
         val_expected_first_item = {
+            "video_id": "cfBtVPEwqIo",
+            "video_start_time": 5,
+            "video_end_time": 15,
             "masked_caption": "In a gym with someone spotting him, a man is lifting _____ performing squats in a squat "
                               "rack.",
             "label": "weights",
@@ -43,6 +49,9 @@ class TestQGenDataset(TestCase):
     def test_dataset_format_test(self):
         test_train_dataset = QGenDataset(URL_DATA_TEST, tokenizer=self.tokenizer)
         test_expected_first_item = {
+            "video_id": "U2KnwEJkcXg",
+            "video_start_time": 37,
+            "video_end_time": 47,
             "masked_caption": "A man in an outside field is demonstrating _____ of throwing a javelin.",
             "label": "the art",
             "additional_answers": [
