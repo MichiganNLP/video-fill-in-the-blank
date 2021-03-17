@@ -107,7 +107,7 @@ class Perplexity(pl.metrics.Metric):
         return torch.exp2(-nanmean(torch.log2(answer_probs), dim=1)).mean()
 
 class ComputeMetrics():
-    def __init__(self, category_file_path: str, *args, **kwargs) -> None:
+    def __init__(self, category_file_path: str, compute_prob: bool = True, *args, **kwargs) -> None:
 
         self.em = ExactMatchAccuracyMany()
         self.f1_score = F1ScoreMany()
@@ -120,8 +120,10 @@ class ComputeMetrics():
         self.em_label_cat = [ExactMatchAccuracyMany() for i in range(11)]
         self.f1_label_cat = [F1ScoreMany() for i in range(11)]
 
-        self.gt_prob = Average()
-        self.perplexity = Perplexity()
+        self.compute_prob = compute_prob
+        if self.compute_prob:
+            self.gt_prob = Average()
+            self.perplexity = Perplexity()
 
     def preprocess_category(self, category_file_path):
         cat_df = pd.read_csv(cached_path(category_file_path), sep="\t")
@@ -143,13 +145,16 @@ class ComputeMetrics():
             self.f1_cat[i].reset()
             self.em_label_cat[i].reset()
             self.f1_label_cat[i].reset()
-        self.gt_prob.reset()
-        self.perplexity.reset()
+        
+        if self.compute_prob:
+            self.gt_prob.reset()
+            self.perplexity.reset()
 
     def update(self, preds: Sequence[str], video_ids: Sequence[str], labels: Sequence[str],
                  additional_answers_batch: Sequence[Sequence[Sequence[str]]],
-                 label_prob: torch.Tensor,
-                 label_probs: torch.Tensor, perplexity_mask: torch.Tensor) -> None:
+                 label_prob: Optional[torch.Tensor]=None,
+                 label_probs: Optional[torch.Tensor]=None,
+                 perplexity_mask: Optional[torch.Tensor]=None) -> None:
         em = self.em(preds, labels, additional_answers_batch)
         f1_score = self.f1_score(preds, labels, additional_answers_batch)
         em_label = self.em_label(preds, labels)
@@ -166,10 +171,14 @@ class ComputeMetrics():
             self.em_label_cat[category]([preds[i]], [labels[i]])
             self.f1_label_cat[category]([preds[i]], [labels[i]])
 
-        gt_prob = self.gt_prob(label_prob)
-        perplexity = self.perplexity(label_probs, perplexity_mask)
+        out = [em, f1_score, em_label, f1_score_label]
 
-        return em, f1_score, em_label, f1_score_label, gt_prob, perplexity
+        if self.compute_prob:
+            gt_prob = self.gt_prob(label_prob)
+            perplexity = self.perplexity(label_probs, perplexity_mask)
+            out.extend([gt_prob, perplexity])
+
+        return out
 
     def compute(self):
         em = self.em.compute()
@@ -182,8 +191,12 @@ class ComputeMetrics():
         em_label_cat = [self.em_label_cat[i].compute() for i in range(11)]
         f1_label_cat = [self.f1_label_cat[i].compute() for i in range(11)]
 
-        gt_prob = self.gt_prob.compute()
-        perplexity = self.perplexity.compute()
+        out = [em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat]
         
-        return em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat, gt_prob, perplexity
+        if self.compute_prob:
+            gt_prob = self.gt_prob.compute()
+            perplexity = self.perplexity.compute()
+            out.extend([gt_prob, perplexity])
+        
+        return out
 
