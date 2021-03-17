@@ -3,7 +3,7 @@ import torch.nn as nn
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
 from lqam.methods.dataset import QGenDataModule
-from lqam.methods.metrics import ExactMatchAccuracyMany, F1ScoreMany
+from lqam.methods.metrics import ExactMatchAccuracyMany, F1ScoreMany, ComputeMetrics
 import pandas as pd
 
 import argparse
@@ -15,12 +15,10 @@ class MostFreqModule():
     def __init__(self, model, output_path):
         self.most_freq_ans = ''
 
-        self.accuracy = ExactMatchAccuracyMany()
-        self.f1score = F1ScoreMany()
-        self.accuracy_many = ExactMatchAccuracyMany()
-        self.f1score_many = F1ScoreMany()
-        self.output_path = output_path 
-        
+        self.output_path = output_path
+
+        self.val_metric = ComputeMetrics(dataset.URL_VAL_LABEL_CATEGORY, compute_prob=False)
+        self.test_metric = ComputeMetrics(dataset.URL_TEST_LABEL_CATEGORY, compute_prob=False)        
 
     def train(self, train_data_loader):
         freq = {}
@@ -41,35 +39,32 @@ class MostFreqModule():
 
         self.most_freq_ans = most_freq_ans       
 
-    def val_test_step(self, data_loader):
-        self.accuracy.reset()
-        self.f1score.reset()
-        self.accuracy_many.reset()
-        self.f1score_many.reset()
+    def val_test_step(self, data_loader, metric):
+        metric.reset()
         pred = []
         for data in data_loader:
             masked_caption = data['masked_caption']
+            video_id = data['video_id']
             label = data['label']
             additional_answers = data['additional_answers']
 
-
-            self.accuracy([self.most_freq_ans], label)
-            self.f1score([self.most_freq_ans], label)
-            self.accuracy_many([self.most_freq_ans], label, additional_answers)
-            self.f1score_many([self.most_freq_ans], label, additional_answers)
+            metric.update([self.most_freq_ans], video_id, label, additional_answers)
             pred.append([masked_caption[0], self.most_freq_ans, label[0]])
 
-        accuracy = self.accuracy.compute()
-        f1score = self.f1score.compute()
-        accuracy_many = self.accuracy_many.compute()
-        f1score_many = self.f1score_many.compute()
-        return pred, accuracy, f1score, accuracy_many, f1score_many
+        em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat = metric.compute()
+        return pred, em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat
                 
-    def output(self, prefix, pred, accuracy, f1score, accuracy_many, f1score_many):
-        print(f'{prefix}_accuracy:', accuracy.item())
-        print(f'{prefix}_f1score:', f1score.item())
-        print(f'{prefix}_accuracy_many:', accuracy_many.item())
-        print(f'{prefix}_f1score_many:', f1score_many.item())
+    def output(self, prefix, pred, em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat):
+        print(f'{prefix}_accuracy:', em.item())
+        print(f'{prefix}_f1score:', f1_score.item())
+        print(f'{prefix}_accuracy_many:', em_label.item())
+        print(f'{prefix}_f1score_many:', f1_score_label.item())
+        for i in range(11):
+            print(f'{prefix}_accuracy_category{i}:', em_cat[i].item())
+            print(f'{prefix}_f1score_category{i}:', f1_cat[i].item())
+            print(f'{prefix}_accuracy_many_category{i}:', em_label_cat[i].item())
+            print(f'{prefix}_f1score_many_category{i}:', f1_label_cat[i].item())
+
         # if prefix == 'test':
         #     df = pd.DataFrame(pred, columns=['masked_caption', 'generated', 'ground_truth'])
         #     df.to_csv(self.output_path, index=False)
@@ -82,13 +77,15 @@ class MostFreqModule():
 
 
     def val(self, val_data_loader):
-        pred, accuracy, f1score, accuracy_many, f1score_many = self.val_test_step(val_data_loader)
-        self.output('val', pred, accuracy, f1score, accuracy_many, f1score_many)
+        pred, em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat =\
+             self.val_test_step(val_data_loader, self.val_metric)
+        self.output('val', pred, em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat)
 
 
     def test(self, test_data_loader):
-        pred, accuracy, f1score, accuracy_many, f1score_many = self.val_test_step(test_data_loader)
-        self.output('test', pred, accuracy, f1score, accuracy_many, f1score_many)
+        pred, em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat =\
+             self.val_test_step(test_data_loader, self.test_metric)
+        self.output('test', pred, em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat)
 
     @staticmethod
     def _pandas_float_format(x: float) -> str:
