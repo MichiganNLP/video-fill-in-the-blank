@@ -248,9 +248,9 @@ class T5FillerModel(pl.LightningModule):
         self.log(f"{log_prefix}perplexity_step", self.perplexity(label_probs, perplexity_mask), prog_bar=True)
 
         if log_prefix == 'val_':
-            self.compute_metrics_val(generated, video_id, label, additional_answers)
+            self.compute_metrics_val.update(generated, video_id, label, additional_answers)
         else:
-            self.compute_metrics_test(generated, video_id, label, additional_answers)
+            self.compute_metrics_test.update(generated, video_id, label, additional_answers)
 
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:

@@ -100,9 +100,8 @@ class Perplexity(pl.metrics.Metric):
 
         return torch.exp2(-nanmean(torch.log2(answer_probs), dim=1)).mean()
 
-class ComputeMetrics(pl.metrics.Metric):
+class ComputeMetrics():
     def __init__(self, category_file_path: str, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
 
         self.em = ExactMatchAccuracyMany()
         self.f1_score = F1ScoreMany()
@@ -127,8 +126,6 @@ class ComputeMetrics(pl.metrics.Metric):
 
         return output
 
-    # Do we need to do this?
-    @overrides
     def reset(self):
         self.em.reset()
         self.f1_score.reset()
@@ -142,7 +139,6 @@ class ComputeMetrics(pl.metrics.Metric):
             self.f1_label_cat[i].reset()
         self.perplexity.reset()
 
-    @overrides
     def update(self, preds: Sequence[str], video_ids: Sequence[str], labels: Sequence[str],
                  additional_answers_batch: Optional[Sequence[Sequence[Sequence[str]]]]=None) -> None:
         self.em(preds, labels, additional_answers_batch)
@@ -157,7 +153,6 @@ class ComputeMetrics(pl.metrics.Metric):
             self.em_label_cat[category]([preds[i]], [labels[i]])
             self.f1_label_cat[category]([preds[i]], [labels[i]])
 
-    @overrides
     def compute(self):
         em = self.em.compute()
         f1_score = self.f1_score.compute()
