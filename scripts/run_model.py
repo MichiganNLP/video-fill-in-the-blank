@@ -22,8 +22,6 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--val-data-path", default=dataset.URL_DATA_VAL)
     parser.add_argument("--test-data-path", default=dataset.URL_DATA_TEST)
     parser.add_argument("--visual-data-dir", default="data/I3D_video_features")
-    parser.add_argument("--val-label-category-path", default=dataset.URL_VAL_LABEL_CATEGORY)
-    parser.add_argument("--test-label-category-path", default=dataset.URL_TEST_LABEL_CATEGORY)
 
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", "-j", type=int, default=0,
@@ -100,8 +98,6 @@ def main() -> None:
     else:
         t5_like_pretrained_model = AutoModelForSeq2SeqLM.from_pretrained(args.model)
 
-    test_label_category_path = args.test_label_category_path if args.test else args.val_label_category_path
-
     filler_kwargs = {
         "t5_like_pretrained_model": t5_like_pretrained_model,
         "tokenizer": tokenizer,
@@ -109,8 +105,6 @@ def main() -> None:
         "lr": args.lr,
         "lr_scheduler": args.lr_scheduler,
         "weight_decay": args.weight_decay,
-        "val_label_category_path": args.val_label_category_path,
-        "test_label_category_path": test_label_category_path,
         "generate_kwargs": {
             "max_length": args.max_length,
             "num_beams": args.beam_size,
@@ -130,7 +124,6 @@ def main() -> None:
 
     visual_data_dir = args.visual_data_dir if args.use_visual else None
     test_data_path = args.test_data_path if args.test else args.val_data_path
-    
 
     data_module = QGenDataModule(tokenizer=tokenizer, batch_size=args.batch_size, num_workers=args.num_workers,
                                  train_data_path=args.train_data_path, val_data_path=args.val_data_path,

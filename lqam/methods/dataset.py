@@ -1,8 +1,10 @@
+import itertools
 import json
 from pathlib import Path
-from typing import Any, Iterable, MutableMapping, Optional
+from typing import Any, Iterable, Mapping, MutableMapping, Optional
 
 import numpy as np
+import pandas as pd
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
@@ -16,10 +18,23 @@ URL_DATA_TEST = "https://www.dropbox.com/s/2nr7kooprjti975/test.json?dl=1"
 URL_DATA_VAL = "https://www.dropbox.com/s/t1dpotaz2sjjtxk/val.json?dl=1"
 URL_DATA_TRAIN = "https://www.dropbox.com/s/lc3e1ave94hz9tu/train.json?dl=1"
 
-URL_VAL_LABEL_CATEGORY = "https://www.dropbox.com/s/3zxz9jtivg7oedr/val_label_categories.tsv?dl=1"
-URL_TEST_LABEL_CATEGORY = "https://www.dropbox.com/s/77koxiu59q2w0vl/test_label_categories.tsv?dl=1"
+URL_VAL_LABEL_CATEGORIES = "https://www.dropbox.com/s/3zxz9jtivg7oedr/val_label_categories.tsv?dl=1"
+URL_TEST_LABEL_CATEGORIES = "https://www.dropbox.com/s/77koxiu59q2w0vl/test_label_categories.tsv?dl=1"
+
+N_CATEGORIES = 11  # 10 plus the error one.
 
 TYPE_BATCH = MutableMapping[str, Any]
+
+
+def _load_label_categories_from_path(path: str) -> pd.DataFrame:
+    return pd.read_csv(cached_path(path), sep="\t")
+
+
+def load_label_categories() -> Mapping[str, int]:
+    val_cat_df = _load_label_categories_from_path(URL_VAL_LABEL_CATEGORIES)
+    test_cat_df = _load_label_categories_from_path(URL_TEST_LABEL_CATEGORIES)
+    return {row["video_id"]: row["category"] for _, row in itertools.chain(val_cat_df.iterrows(),
+                                                                           test_cat_df.iterrows())}
 
 
 # From https://stackoverflow.com/a/53403392/1165181

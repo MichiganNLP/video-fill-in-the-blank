@@ -1,14 +1,13 @@
-from typing import Iterable, Iterator, Optional, Sequence
+from typing import Iterable, Iterator, Mapping, MutableMapping, Optional, Sequence, Union
 
 import pytorch_lightning as pl
 import torch
 from overrides import overrides
 from torch.nn.utils.rnn import pad_sequence
-import pandas as pd
 
-from lqam.util.file_utils import cached_path
 from lqam.core.metrics import compute_token_level_f1_many, exact_match_many, flatten_all_answers, \
     tokenize_answer_to_compute_metrics
+from lqam.methods.dataset import N_CATEGORIES, load_label_categories
 
 
 class F1ScoreMany(pl.metrics.Metric):
@@ -33,10 +32,7 @@ class F1ScoreMany(pl.metrics.Metric):
 
     @overrides
     def compute(self) -> torch.Tensor:
-        if self.total == 0:
-            return -1
-        else:
-            return self.score_sum / self.total
+        return self.score_sum / self.total
 
 
 class ExactMatchAccuracyMany(pl.metrics.Metric):
@@ -55,10 +51,7 @@ class ExactMatchAccuracyMany(pl.metrics.Metric):
 
     @overrides
     def compute(self) -> torch.Tensor:
-        if self.total == 0:
-            return -1
-        else:
-            return self.correct / self.total
+        return self.correct / self.total
 
 
 class Average(pl.metrics.Metric):
@@ -106,97 +99,66 @@ class Perplexity(pl.metrics.Metric):
 
         return torch.exp2(-nanmean(torch.log2(answer_probs), dim=1)).mean()
 
-class ComputeMetrics():
-    def __init__(self, category_file_path: str, compute_prob: bool = True, *args, **kwargs) -> None:
 
-        self.em = ExactMatchAccuracyMany()
-        self.f1_score = F1ScoreMany()
-        self.em_label = ExactMatchAccuracyMany()
-        self.f1_score_label = F1ScoreMany()
-        
-        self.label_category = self.preprocess_category(category_file_path)
-        self.em_cat = [ExactMatchAccuracyMany() for i in range(11)]
-        self.f1_cat = [F1ScoreMany() for i in range(11)]
-        self.em_label_cat = [ExactMatchAccuracyMany() for i in range(11)]
-        self.f1_label_cat = [F1ScoreMany() for i in range(11)]
+class AllMetrics:
+    def __init__(self, compute_prob: bool = True) -> None:
+        self.label_categories = load_label_categories()
+        self.metrics: MutableMapping[str, Union[pl.metrics.Metric, Iterable[pl.metrics.Metric]]] = {
+            "accuracy": ExactMatchAccuracyMany(),
+            "f1_score": F1ScoreMany(),
+            "accuracy_label": ExactMatchAccuracyMany(),
+            "f1_score_label": F1ScoreMany(),
+            "accuracy_cat": [ExactMatchAccuracyMany() for _ in range(N_CATEGORIES)],
+            "f1_score_cat": [F1ScoreMany() for _ in range(N_CATEGORIES)],
+            "accuracy_label_cat": [ExactMatchAccuracyMany() for _ in range(N_CATEGORIES)],
+            "f1_score_label_cat": [F1ScoreMany() for _ in range(N_CATEGORIES)],
+        }
 
-        self.compute_prob = compute_prob
-        if self.compute_prob:
-            self.gt_prob = Average()
-            self.perplexity = Perplexity()
+        if compute_prob:
+            self.metrics["ground_truth_prob"] = Average()
+            self.metrics["perplexity"] = Perplexity()
 
-    def preprocess_category(self, category_file_path):
-        cat_df = pd.read_csv(cached_path(category_file_path), sep="\t")
+    def reset(self):
+        for metrics in self.metrics.values():
+            if isinstance(metrics, pl.metrics.Metric):
+                metrics.reset()
+            else:
+                for metric in metrics:
+                    metric.reset()
 
-        output = {}
-        for idx, row in cat_df.iterrows():
-            output[row['video_id']] = row['category']
+    def __call__(self, video_ids: Sequence[str], labels: Sequence[str],
+                 additional_answers_batch: Sequence[Sequence[Sequence[str]]], preds: Sequence[str],
+                 label_prob: Optional[torch.Tensor] = None, label_probs: Optional[torch.Tensor] = None,
+                 perplexity_mask: Optional[torch.Tensor] = None) -> Mapping[str, torch.Tensor]:
+        output = {
+            "accuracy": self.metrics["accuracy"](preds, labels, additional_answers_batch),
+            "f1_score": self.metrics["f1_score"](preds, labels, additional_answers_batch),
+            "accuracy_label": self.metrics["accuracy_label"](preds, labels),
+            "f1_score_label": self.metrics["f1_score_label"](preds, labels),
+        }
+
+        for video_id, label, pred, additional_answers in zip(video_ids, labels, preds, additional_answers_batch):
+            cat = self.label_categories.get(video_id, N_CATEGORIES - 1)
+            output[f"accuracy_cat_{cat}"] = self.metrics["accuracy_cat"][cat]([pred], [label], [additional_answers])
+            output[f"f1_score_cat_{cat}"] = self.metrics["f1_score_cat"][cat]([pred], [label], [additional_answers])
+            output[f"accuracy_label_cat_{cat}"] = self.metrics["accuracy_label_cat"][cat]([pred], [label])
+            output[f"f1_score_label_cat_{cat}"] = self.metrics["f1_score_label_cat"][cat]([pred], [label])
+
+        if ground_truth_prob_metric := self.metrics.get("ground_truth_prob"):
+            assert label_prob is not None
+            output["ground_truth_prob"] = ground_truth_prob_metric(label_prob)
+
+        if perplexity_metric := self.metrics.get("perplexity"):
+            assert label_probs is not None and perplexity_mask is not None
+            output["perplexity"] = perplexity_metric(label_probs, perplexity_mask)
 
         return output
 
-    def reset(self):
-        self.em.reset()
-        self.f1_score.reset()
-        self.em_label.reset()
-        self.f1_score_label.reset()
-        
-        for i in range(11):
-            self.em_cat[i].reset()
-            self.f1_cat[i].reset()
-            self.em_label_cat[i].reset()
-            self.f1_label_cat[i].reset()
-        
-        if self.compute_prob:
-            self.gt_prob.reset()
-            self.perplexity.reset()
-
-    def update(self, preds: Sequence[str], video_ids: Sequence[str], labels: Sequence[str],
-                 additional_answers_batch: Sequence[Sequence[Sequence[str]]],
-                 label_prob: Optional[torch.Tensor]=None,
-                 label_probs: Optional[torch.Tensor]=None,
-                 perplexity_mask: Optional[torch.Tensor]=None) -> None:
-        em = self.em(preds, labels, additional_answers_batch)
-        f1_score = self.f1_score(preds, labels, additional_answers_batch)
-        em_label = self.em_label(preds, labels)
-        f1_score_label = self.f1_score_label(preds, labels)
-
-        for i in range(len(preds)):
-            if video_ids[i] in self.label_category:
-                category = self.label_category[video_ids[i]]
-            # work-around for missing instances in older version of val
+    def compute(self) -> Mapping[str, torch.Tensor]:
+        output = {}
+        for name, metrics in self.metrics.items():
+            if isinstance(metrics, pl.metrics.Metric):
+                output[name] = metrics.compute()
             else:
-                category = 10
-            self.em_cat[category]([preds[i]], [labels[i]], [additional_answers_batch[i]])
-            self.f1_cat[category]([preds[i]], [labels[i]], [additional_answers_batch[i]])
-            self.em_label_cat[category]([preds[i]], [labels[i]])
-            self.f1_label_cat[category]([preds[i]], [labels[i]])
-
-        out = [em, f1_score, em_label, f1_score_label]
-
-        if self.compute_prob:
-            gt_prob = self.gt_prob(label_prob)
-            perplexity = self.perplexity(label_probs, perplexity_mask)
-            out.extend([gt_prob, perplexity])
-
-        return out
-
-    def compute(self):
-        em = self.em.compute()
-        f1_score = self.f1_score.compute()
-        em_label = self.em_label.compute()
-        f1_score_label = self.f1_score_label.compute()
-
-        em_cat = [self.em_cat[i].compute() for i in range(11)]
-        f1_cat = [self.f1_cat[i].compute() for i in range(11)]
-        em_label_cat = [self.em_label_cat[i].compute() for i in range(11)]
-        f1_label_cat = [self.f1_label_cat[i].compute() for i in range(11)]
-
-        out = [em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat]
-        
-        if self.compute_prob:
-            gt_prob = self.gt_prob.compute()
-            perplexity = self.perplexity.compute()
-            out.extend([gt_prob, perplexity])
-        
-        return out
-
+                output.update({f"{name}_{i}": metric.compute() for i, metric in enumerate(metrics)})
+        return output
