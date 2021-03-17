@@ -33,7 +33,10 @@ class F1ScoreMany(pl.metrics.Metric):
 
     @overrides
     def compute(self) -> torch.Tensor:
-        return self.score_sum / self.total
+        if self.total == 0:
+            return -1
+        else:
+            return self.score_sum / self.total
 
 
 class ExactMatchAccuracyMany(pl.metrics.Metric):
@@ -52,7 +55,10 @@ class ExactMatchAccuracyMany(pl.metrics.Metric):
 
     @overrides
     def compute(self) -> torch.Tensor:
-        return self.correct / self.total
+        if self.total == 0:
+            return -1
+        else:
+            return self.correct / self.total
 
 
 class Average(pl.metrics.Metric):
@@ -144,20 +150,26 @@ class ComputeMetrics():
                  additional_answers_batch: Sequence[Sequence[Sequence[str]]],
                  label_prob: torch.Tensor,
                  label_probs: torch.Tensor, perplexity_mask: torch.Tensor) -> None:
-        self.em(preds, labels, additional_answers_batch)
-        self.f1_score(preds, labels, additional_answers_batch)
-        self.em_label(preds, labels)
-        self.f1_score_label(preds, labels)
+        em = self.em(preds, labels, additional_answers_batch)
+        f1_score = self.f1_score(preds, labels, additional_answers_batch)
+        em_label = self.em_label(preds, labels)
+        f1_score_label = self.f1_score_label(preds, labels)
 
         for i in range(len(preds)):
-            category = self.label_category[video_ids[i]]
+            if video_ids[i] in self.label_category:
+                category = self.label_category[video_ids[i]]
+            # work-around for missing instances in older version of val
+            else:
+                category = 10
             self.em_cat[category]([preds[i]], [labels[i]], [additional_answers_batch[i]])
             self.f1_cat[category]([preds[i]], [labels[i]], [additional_answers_batch[i]])
             self.em_label_cat[category]([preds[i]], [labels[i]])
             self.f1_label_cat[category]([preds[i]], [labels[i]])
 
-        self.gt_prob(label_prob)
-        self.perplexity(label_probs, perplexity_mask)
+        gt_prob = self.gt_prob(label_prob)
+        perplexity = self.perplexity(label_probs, perplexity_mask)
+
+        return em, f1_score, em_label, f1_score_label, gt_prob, perplexity
 
     def compute(self):
         em = self.em.compute()

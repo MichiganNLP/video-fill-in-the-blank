@@ -22,8 +22,6 @@ from lqam.methods.metrics import Average, ExactMatchAccuracyMany, F1ScoreMany, P
 from lqam.methods.t5_format_processing import compute_first_blank
 from lqam.util.iterable_utils import chunks
 
-from lqam.methods.dataset import URL_VAL_LABEL_CATEGORY, URL_TEST_LABEL_CATEGORY
-
 class _LogSoftmaxLogitsProcessor(LogitsProcessor):
     def __call__(self, input_ids: torch.LongTensor, scores: torch.Tensor) -> torch.Tensor:
         return F.log_softmax(scores, dim=-1)
@@ -38,6 +36,7 @@ def _patched_get_logits_processor(self, *args, **kwargs) -> LogitsProcessorList:
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
 class T5FillerModel(pl.LightningModule):
     def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
+                 val_label_category_path: str, test_label_category_path: str,
                  only_noun_phrases: bool = False, generate_kwargs: Optional[Mapping[str, Any]] = None,
                  lr: float = 1e-3, weight_decay: float = 0,  # noqa
                  lr_scheduler: Optional[Literal["linear_with_warmup"]] = "linear_with_warmup") -> None:  # noqa
@@ -61,14 +60,8 @@ class T5FillerModel(pl.LightningModule):
         t5_like_pretrained_model._get_logits_processor = types.MethodType(_patched_get_logits_processor,
                                                                           t5_like_pretrained_model)
         self.tokenizer = tokenizer
-        self.accuracy = ExactMatchAccuracyMany()
-        self.accuracy_many = ExactMatchAccuracyMany()
-        self.f1_score = F1ScoreMany()
-        self.f1_score_many = F1ScoreMany()
-        self.ground_truth_prob = Average()
-        self.perplexity = Perplexity()
-        self.compute_metrics_val = ComputeMetrics(URL_VAL_LABEL_CATEGORY)
-        self.compute_metrics_test = ComputeMetrics(URL_TEST_LABEL_CATEGORY)
+        self.compute_metrics_val = ComputeMetrics(val_label_category_path)
+        self.compute_metrics_test = ComputeMetrics(test_label_category_path)
         self.generate_kwargs = generate_kwargs or {}
 
         self.generate_kwargs.setdefault("return_dict_in_generate", True)
@@ -100,14 +93,7 @@ class T5FillerModel(pl.LightningModule):
         self.all_token_ids = torch.arange(self.t5_pretrained_model.config.vocab_size)
 
     @overrides
-    def on_epoch_start(self) -> None:
-        self.accuracy.reset()
-        self.accuracy_many.reset()
-        self.f1_score.reset()
-        self.f1_score_many.reset()
-        self.ground_truth_prob.reset()
-        self.perplexity.reset()
-        
+    def on_epoch_start(self) -> None:        
         self.compute_metrics_val.reset()
         self.compute_metrics_test.reset()
 
@@ -204,21 +190,7 @@ class T5FillerModel(pl.LightningModule):
         generated_prob = compute_answer_prob(generated_probs)
 
         self.write_prediction("generated", generated)
-        self.write_prediction("generated_prob", generated_prob)
-
-        accuracy = self.accuracy(generated, label)
-        self.log(f"{log_prefix}accuracy_label_step", accuracy, prog_bar=True)
-
-        f1_score = self.f1_score(generated, label)
-        self.log(f"{log_prefix}f1_score_label_step", f1_score, prog_bar=True)
-
-        if additional_answers is not None:
-            accuracy_many = self.accuracy_many(generated, label, additional_answers)
-            self.log(f"{log_prefix}accuracy_step", accuracy_many,
-                     prog_bar=True)
-
-            f1_score_many = self.f1_score_many(generated, label, additional_answers)
-            self.log(f"{log_prefix}f1_score_step", f1_score_many, prog_bar=True)
+        self.write_prediction("generated_prob", generated_prob)        
 
         # --- Compute the ground truth likelihood ---
 
@@ -239,18 +211,26 @@ class T5FillerModel(pl.LightningModule):
         label_probs = compute_answer_probs(label_output.logits, label_ids, self.t5_pretrained_model.config,
                                            ignore_eos_token=True)
         label_prob = compute_answer_prob(label_probs)
-        self.write_prediction("ground_truth_prob", label_prob)
-
-        self.log(f"{log_prefix}ground_truth_prob_step", self.ground_truth_prob(label_prob), prog_bar=True)
+        self.write_prediction("ground_truth_prob", label_prob)        
 
         perplexity_mask = ((label_ids != self.t5_pretrained_model.config.pad_token_id)
-                           & (label_ids != self.t5_pretrained_model.config.eos_token_id))
-        self.log(f"{log_prefix}perplexity_step", self.perplexity(label_probs, perplexity_mask), prog_bar=True)
+                           & (label_ids != self.t5_pretrained_model.config.eos_token_id))        
 
         if log_prefix == 'val_':
-            self.compute_metrics_val.update(generated, video_id, label, additional_answers, label_prob, label_probs, perplexity_mask)
+            em, f1_score, em_label, f1_score_label, gt_prob, perplexity = \
+                self.compute_metrics_val.update(generated, video_id, label, additional_answers, label_prob, label_probs, perplexity_mask)
         else:
-            self.compute_metrics_test.update(generated, video_id, label, additional_answers, label_prob, label_probs, perplexity_mask)
+            em, f1_score, em_label, f1_score_label, gt_prob, perplexity = \
+                self.compute_metrics_test.update(generated, video_id, label, additional_answers, label_prob, label_probs, perplexity_mask)
+
+        
+        self.log(f"{log_prefix}accuracy_label_step", em_label, prog_bar=True)
+        self.log(f"{log_prefix}f1_score_label_step", f1_score_label, prog_bar=True)
+        self.log(f"{log_prefix}accuracy_step", em, prog_bar=True)
+        self.log(f"{log_prefix}f1_score_step", f1_score, prog_bar=True)        
+        self.log(f"{log_prefix}ground_truth_prob_step", gt_prob, prog_bar=True)    
+        self.log(f"{log_prefix}perplexity_step", perplexity, prog_bar=True)
+
 
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
@@ -265,14 +245,18 @@ class T5FillerModel(pl.LightningModule):
             em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat, gt_prob, perplexity = self.compute_metrics_val.compute()
         else:
             em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat, gt_prob, perplexity = self.compute_metrics_test.compute()
-        print(em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat, gt_prob, perplexity)
         
-        self.log(f"{log_prefix}accuracy_label", self.accuracy.compute(), prog_bar=True)
-        self.log(f"{log_prefix}f1_score_label", self.f1_score.compute(), prog_bar=True)
-        self.log(f"{log_prefix}accuracy", self.accuracy_many.compute(), prog_bar=True)
-        self.log(f"{log_prefix}f1_score", self.f1_score_many.compute(), prog_bar=True)
-        self.log(f"{log_prefix}ground_truth_prob", self.ground_truth_prob.compute(), prog_bar=True)
-        self.log(f"{log_prefix}perplexity", self.perplexity.compute(), prog_bar=True)
+        self.log(f"{log_prefix}accuracy_label", em_label, prog_bar=True)
+        self.log(f"{log_prefix}f1_score_label", f1_score_label, prog_bar=True)
+        self.log(f"{log_prefix}accuracy", em, prog_bar=True)
+        self.log(f"{log_prefix}f1_score", f1_score, prog_bar=True)
+        self.log(f"{log_prefix}ground_truth_prob", gt_prob, prog_bar=True)
+        self.log(f"{log_prefix}perplexity", perplexity, prog_bar=True)
+        for i in range(11):
+            self.log(f"{log_prefix}accuracy_category{i}", em_cat[i], prog_bar=True)
+            self.log(f"{log_prefix}f1_score_category{i}", f1_cat[i], prog_bar=True)
+            self.log(f"{log_prefix}accuracy_label_category{i}", em_label_cat[i], prog_bar=True)
+            self.log(f"{log_prefix}f1_score_label_category{i}", f1_label_cat[i], prog_bar=True)
 
     def on_validation_epoch_end(self) -> None:
         self._on_epoch_end(log_prefix="val_")
