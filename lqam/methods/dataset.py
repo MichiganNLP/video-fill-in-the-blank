@@ -16,6 +16,9 @@ URL_DATA_TEST = "https://www.dropbox.com/s/2nr7kooprjti975/test.json?dl=1"
 URL_DATA_VAL = "https://www.dropbox.com/s/t1dpotaz2sjjtxk/val.json?dl=1"
 URL_DATA_TRAIN = "https://www.dropbox.com/s/lc3e1ave94hz9tu/train.json?dl=1"
 
+URL_VAL_LABEL_CATEGORY = "https://www.dropbox.com/s/3zxz9jtivg7oedr/val_label_categories.tsv?dl=1"
+URL_TEST_LABEL_CATEGORY = "https://www.dropbox.com/s/77koxiu59q2w0vl/test_label_categories.tsv?dl=1"
+
 TYPE_BATCH = MutableMapping[str, Any]
 
 

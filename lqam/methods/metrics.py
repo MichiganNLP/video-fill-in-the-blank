@@ -4,7 +4,9 @@ import pytorch_lightning as pl
 import torch
 from overrides import overrides
 from torch.nn.utils.rnn import pad_sequence
+import pandas as pd
 
+from lqam.util.file_utils import cached_path
 from lqam.core.metrics import compute_token_level_f1_many, exact_match_many, flatten_all_answers, \
     tokenize_answer_to_compute_metrics
 
@@ -97,3 +99,75 @@ class Perplexity(pl.metrics.Metric):
         answer_probs[~mask] = float("NaN")
 
         return torch.exp2(-nanmean(torch.log2(answer_probs), dim=1)).mean()
+
+class ComputeMetrics(pl.metrics.Metric):
+    def __init__(self, category_file_path: str, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+
+        self.em = ExactMatchAccuracyMany()
+        self.f1_score = F1ScoreMany()
+        self.em_label = ExactMatchAccuracyMany()
+        self.f1_score_label = F1ScoreMany()
+        
+        self.label_category = self.preprocess_category(category_file_path)
+        self.em_cat = [ExactMatchAccuracyMany() for i in range(11)]
+        self.f1_cat = [F1ScoreMany() for i in range(11)]
+        self.em_label_cat = [ExactMatchAccuracyMany() for i in range(11)]
+        self.f1_label_cat = [F1ScoreMany() for i in range(11)]
+
+        self.gt_prob = Average()
+        self.perplexity = Perplexity()
+
+    def preprocess_category(self, category_file_path):
+        cat_df = pd.read_csv(cached_path(category_file_path), sep="\t")
+
+        output = {}
+        for idx, row in cat_df.iterrows():
+            output[row['video_id']] = row['category']
+
+        return output
+
+    # Do we need to do this?
+    @overrides
+    def reset(self):
+        self.em.reset()
+        self.f1_score.reset()
+        self.em_label.reset()
+        self.f1_score_label.reset()
+        
+        for i in range(11):
+            self.em_cat[i].reset()
+            self.f1_cat[i].reset()
+            self.em_label_cat[i].reset()
+            self.f1_label_cat[i].reset()
+        self.perplexity.reset()
+
+    @overrides
+    def update(self, preds: Sequence[str], video_ids: Sequence[str], labels: Sequence[str],
+                 additional_answers_batch: Optional[Sequence[Sequence[Sequence[str]]]]=None) -> None:
+        self.em(preds, labels, additional_answers_batch)
+        self.f1_score(preds, labels, additional_answers_batch)
+        self.em_label(preds, labels)
+        self.f1_score_label(preds, labels)
+
+        for i in range(len(preds)):
+            category = self.label_category[video_ids[i]]
+            self.em_cat[category]([preds[i]], [labels[i]], [additional_answers_batch[i]])
+            self.f1_cat[category]([preds[i]], [labels[i]], [additional_answers_batch[i]])
+            self.em_label_cat[category]([preds[i]], [labels[i]])
+            self.f1_label_cat[category]([preds[i]], [labels[i]])
+
+    @overrides
+    def compute(self):
+        em = self.em.compute()
+        f1_score = self.f1_score.compute()
+        em_label = self.em_label.compute()
+        f1_score_label = self.f1_score_label.compute()
+
+        em_cat = [self.em_cat[i].compute() for i in range(11)]
+        f1_cat = [self.f1_cat[i].compute() for i in range(11)]
+        em_label_cat = [self.em_label_cat[i].compute() for i in range(11)]
+        f1_label_cat = [self.f1_label_cat[i].compute() for i in range(11)]
+        
+        return em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat
+

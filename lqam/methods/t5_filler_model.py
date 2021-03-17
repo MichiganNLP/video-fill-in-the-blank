@@ -18,10 +18,11 @@ from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
 from lqam.core.noun_phrases import create_spacy_model
 from lqam.methods.dataset import TYPE_BATCH
 from lqam.methods.decoding import arg_noun_phrase, compute_answer_prob, compute_answer_probs
-from lqam.methods.metrics import Average, ExactMatchAccuracyMany, F1ScoreMany, Perplexity
+from lqam.methods.metrics import Average, ExactMatchAccuracyMany, F1ScoreMany, Perplexity, ComputeMetrics
 from lqam.methods.t5_format_processing import compute_first_blank
 from lqam.util.iterable_utils import chunks
 
+from lqam.methods.dataset import URL_VAL_LABEL_CATEGORY, URL_TEST_LABEL_CATEGORY
 
 class _LogSoftmaxLogitsProcessor(LogitsProcessor):
     def __call__(self, input_ids: torch.LongTensor, scores: torch.Tensor) -> torch.Tensor:
@@ -66,6 +67,8 @@ class T5FillerModel(pl.LightningModule):
         self.f1_score_many = F1ScoreMany()
         self.ground_truth_prob = Average()
         self.perplexity = Perplexity()
+        self.compute_metrics_val = ComputeMetrics(URL_VAL_LABEL_CATEGORY)
+        self.compute_metrics_test = ComputeMetrics(URL_TEST_LABEL_CATEGORY)
         self.generate_kwargs = generate_kwargs or {}
 
         self.generate_kwargs.setdefault("return_dict_in_generate", True)
@@ -104,6 +107,9 @@ class T5FillerModel(pl.LightningModule):
         self.f1_score_many.reset()
         self.ground_truth_prob.reset()
         self.perplexity.reset()
+        
+        self.compute_metrics_val.reset()
+        self.compute_metrics_test.reset()
 
     @overrides
     def forward(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: Optional[torch.Tensor] = None,
@@ -241,6 +247,11 @@ class T5FillerModel(pl.LightningModule):
                            & (label_ids != self.t5_pretrained_model.config.eos_token_id))
         self.log(f"{log_prefix}perplexity_step", self.perplexity(label_probs, perplexity_mask), prog_bar=True)
 
+        if log_prefix == 'val_':
+            self.compute_metrics_val(generated, video_id, label, additional_answers)
+        else:
+            self.compute_metrics_test(generated, video_id, label, additional_answers)
+
     @overrides
     def validation_step(self, batch: TYPE_BATCH, batch_idx: int = 0) -> None:
         self._generative_step(**batch, log_prefix="val_")
@@ -250,6 +261,12 @@ class T5FillerModel(pl.LightningModule):
         self._generative_step(**batch, log_prefix="test_")
 
     def _on_epoch_end(self, log_prefix: str = "") -> None:
+        if log_prefix == 'val':
+            em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat = self.compute_metrics_val.compute()
+        else:
+            em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat = self.compute_metrics_test.compute()
+        print(em, f1_score, em_label, f1_score_label, em_cat, f1_cat, em_label_cat, f1_label_cat)
+        
         self.log(f"{log_prefix}accuracy_label", self.accuracy.compute(), prog_bar=True)
         self.log(f"{log_prefix}f1_score_label", self.f1_score.compute(), prog_bar=True)
         self.log(f"{log_prefix}accuracy", self.accuracy_many.compute(), prog_bar=True)
