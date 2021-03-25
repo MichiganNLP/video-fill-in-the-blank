@@ -55,22 +55,14 @@ def main() -> None:
         there_are_answers = any(instance["answers_by_worker"].values())
 
         if args.compute_metrics and there_are_answers:
-            ff1s, fems, precisions, recalls, decision_scores, (
-                std_ff1, std_fem, std_precision, std_recall, std_decision_score) = \
+            ff1s, fems, (std_ff1, std_fem) = \
                 compute_annotation_metrics(instance["answers_by_worker"].values(), instance["label"])
             df.insert(0, "FF1", ff1s * 100)
             df.insert(1, "FEM", fems * 100)
-            df.insert(2, "Pre", precisions * 100)
-            df.insert(3, "Rec", recalls * 100)
-            df.insert(4, "Dec", decision_scores * 100)
 
-            aggregated_metrics_str = (f"\nAvg.: FF1 {ff1s.mean() * 100:.0f}, FEM {fems.mean() * 100:.0f}, Pre"
-                                      f" {precisions.mean() * 100:.0f}, Rec {recalls.mean() * 100:.0f}, Dec"
-                                      f" {decision_scores.mean() * 100:.0f}")
+            aggregated_metrics_str = f"\nAvg.: FF1 {ff1s.mean() * 100:.0f}, FEM {fems.mean() * 100:.0f}"
 
-            std_answer_metrics_str = (f" (FF1 {std_ff1 * 100:.0f}, FEM {std_fem * 100:.0f}, Pre"
-                                      f" {std_precision * 100:.0f}, Rec {std_recall * 100:.0f}, Dec"
-                                      f" {std_decision_score * 100:.0f})")
+            std_answer_metrics_str = f" (FF1 {std_ff1 * 100:.0f}, FEM {std_fem * 100:.0f}"
 
             answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"],
                                                                            instance["answers_by_worker"],

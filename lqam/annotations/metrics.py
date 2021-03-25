@@ -1,6 +1,6 @@
 import string
 from collections import defaultdict
-from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence, Tuple
+from typing import Any, Iterable, Iterator, Mapping, Sequence, Tuple
 
 import numpy as np
 
@@ -15,28 +15,14 @@ def strip_punctuation(s: str) -> str:
     return s.translate(str.maketrans("", "", string.punctuation)).strip()
 
 
-def compute_decision_score(precision: float, recall: float) -> float:
-    return recall + 0.67 * precision
-
-
-def _compute_annotation_metrics_once(
-        answers: Sequence[Iterable[str]], std_answer: str, ignored_workers: Optional[Sequence[bool]] = None
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float, float]]:
-    ignored_workers = ignored_workers or [False for _ in answers]
-
+def _compute_annotation_metrics_once(answers: Sequence[Iterable[str]],
+                                     std_answer: str) -> Tuple[np.ndarray, np.ndarray, Tuple[float, float]]:
     ff1s = []
     fems = []
-    precisions = []
-    recalls = []
-    decision_scores = []
 
     for i, worker_question_answers in enumerate(answers):
-        if ignored_workers[i]:
-            ff1 = fem = precision = recall = 0
-        elif worker_question_answers:  # It could happen because of some weird issues with the annotation interface.
-            other_workers_answers = (answers[j]
-                                     for j in range(len(answers))
-                                     if j != i and not ignored_workers[j])
+        if worker_question_answers:  # It could happen because of some weird issues with the annotation interface.
+            other_workers_answers = (answers[j] for j in range(len(answers)) if j != i)
             other_answers = {answer
                              for other_worker_answers in other_workers_answers
                              for answer in other_worker_answers} | {std_answer}
@@ -47,26 +33,14 @@ def _compute_annotation_metrics_once(
                                                                     for answer in other_answers))
 
             fem = float(first_answer in other_answers)
-
-            worker_question_answers_set = set(worker_question_answers)
-
-            true_positives = len(worker_question_answers_set & other_answers)
-            precision = true_positives / len(worker_question_answers_set)
-            recall = true_positives / len(other_answers)
         else:
-            ff1 = fem = precision = recall = np.nan
+            ff1 = fem = np.nan
 
         ff1s.append(ff1)
         fems.append(fem)
-        precisions.append(precision)
-        recalls.append(recall)
-        decision_scores.append(compute_decision_score(precision, recall))
 
     # Not a set because we want to keep the counts.
-    answers_flat = [answer
-                    for worker_answers, is_worker_ignored in zip(answers, ignored_workers)
-                    if not is_worker_ignored
-                    for answer in worker_answers]
+    answers_flat = [answer for worker_answers in answers for answer in worker_answers]
 
     std_answer_tokens = tokenize_answer_to_compute_metrics(std_answer)
     std_ff1 = compute_token_level_f1_many(std_answer_tokens, (tokenize_answer_to_compute_metrics(answer)
@@ -74,17 +48,11 @@ def _compute_annotation_metrics_once(
 
     std_fem = float(std_answer in answers_flat)
 
-    std_precision = std_fem
-    std_recall = sum(answer == std_answer for answer in answers_flat) / len(answers_flat)
-    std_decision_score = compute_decision_score(std_precision, std_recall)
-
-    return np.stack(ff1s), np.stack(fems), np.stack(precisions), np.stack(recalls), np.stack(decision_scores), (
-        std_ff1, std_fem, std_precision, std_recall, std_decision_score)
+    return np.stack(ff1s), np.stack(fems), (std_ff1, std_fem)
 
 
-def compute_annotation_metrics(
-        answers: Iterator[Iterable[str]], std_answer: str
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float, float]]:
+def compute_annotation_metrics(answers: Iterator[Iterable[str]],
+                               std_answer: str) -> Tuple[np.ndarray, np.ndarray, Tuple[float, float]]:
     """Computes the metrics for an instance.
 
     If `ignore_zero_scores`, then it computes the scores again but ignores the workers whose decision score is 0.
@@ -97,10 +65,9 @@ def compute_annotation_metrics(
 
     std_answer = normalize_answer(std_answer)
 
-    ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics = _compute_annotation_metrics_once(answers,
-                                                                                                            std_answer)
+    ff1s, fems, std_answer_metrics = _compute_annotation_metrics_once(answers, std_answer)
 
-    return ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics
+    return ff1s, fems, std_answer_metrics
 
 
 def compute_np_value_by_answer(question: str, answers_map: Mapping[str, Sequence[str]]) -> Mapping[str, bool]:
