@@ -74,6 +74,7 @@ def compute_np_value_by_answer(question: str, answers_map: Mapping[str, Sequence
     # Workers can add extra punctuation, and this messes up with the parsing. So we remove it.
     # We could use `alignment_mode="contract"` if there's extra punctuation, however this doesn't prevent the parsing
     # from failing. So we remove the punctuation altogether.
+    # We don't completely normalize because it may perform slightly worse when checking NPs.
     answers_flat = {(answer, strip_punctuation(answer))
                     for worker_answers in answers_map.values()
                     for answer in worker_answers}
