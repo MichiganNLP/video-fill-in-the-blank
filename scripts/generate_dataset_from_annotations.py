@@ -4,7 +4,7 @@ import json
 
 from tqdm.auto import tqdm
 
-from lqam.annotations.metrics import compute_answer_level_annotation_metrics
+from lqam.annotations.metrics import compute_answer_level_metrics
 from lqam.annotations.postprocessing import hits_to_instances, parse_hits
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
@@ -24,8 +24,8 @@ def main() -> None:
 
     formatted_instances = []
     for instance in tqdm(instances.values()):
-        answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"],
-                                                                       instance["answers_by_worker"], instance["label"])
+        answer_level_metrics = compute_answer_level_metrics(instance["question"],
+                                                            instance["answers_by_worker"], instance["label"])
 
         np_answers = [[answer for answer, metrics in worker_answers.items() if metrics["np"]]
                       for worker_answers in answer_level_metrics.values()]

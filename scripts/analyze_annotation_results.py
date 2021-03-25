@@ -9,7 +9,7 @@ import pandas as pd
 import torch
 from torch.nn.utils.rnn import pad_sequence
 
-from lqam.annotations.metrics import compute_annotation_metrics, compute_answer_level_annotation_metrics
+from lqam.annotations.metrics import compute_answer_level_metrics
 from lqam.annotations.postprocessing import format_answer, hits_to_instances, parse_hits
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
@@ -19,9 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults()
     parser.add_argument("annotation_results_path_or_url", metavar="ANNOTATION_RESULTS_FILE_OR_URL", nargs="?",
                         default="-")
-
     parser.add_argument("--compute-metrics", action="store_true")
-
     args = parser.parse_args()
 
     args.input = sys.stdin if args.annotation_results_path_or_url == "-" \
@@ -41,7 +39,7 @@ def main() -> None:
     ff1s_list = []
     fems_list = []
 
-    for id_, instance in instances.items():
+    for instance_id, instance in instances.items():
         instance["answers_by_worker"] = {worker_id: [format_answer(answer) for answer in answers]
                                          for worker_id, answers in instance["answers_by_worker"].items()}
 
@@ -55,30 +53,39 @@ def main() -> None:
         there_are_answers = any(instance["answers_by_worker"].values())
 
         if args.compute_metrics and there_are_answers:
-            ff1s, fems, (std_ff1, std_fem) = \
-                compute_annotation_metrics(instance["answers_by_worker"].values(), instance["label"])
+            # TODO: filter those that are unavailable? I'd be good for some stats to be computed after filtering.
+
+            worker_answer_metrics = compute_answer_level_metrics(instance["question"], instance["answers_by_worker"],
+                                                                 instance["label"])
+
+            worker_first_answer_metrics = [
+                # There could be a missing worker if all their answers are empty after normalizing.
+                next(iter(worker_answer_metrics.get(worker_id, {"": defaultdict(lambda: np.nan)}).values()))
+                for worker_id in instance["answers_by_worker"]
+            ]
+            ff1s = np.asarray([metrics["f1"] for metrics in worker_first_answer_metrics])
+            fems = np.asarray([metrics["em"] for metrics in worker_first_answer_metrics])
+
             df.insert(0, "FF1", ff1s * 100)
-            df.insert(1, "FEM", fems * 100)
+            df.insert(1, "FEM", fems)
 
-            aggregated_metrics_str = f"\nAvg.: FF1 {ff1s.mean() * 100:.0f}, FEM {fems.mean() * 100:.0f}"
+            aggregated_metrics_str = f"\nAvg.: FF1 {np.nanmean(ff1s) * 100:.0f}, FEM {np.nanmean(fems) * 100:.0f}"
 
-            std_answer_metrics_str = f" (FF1 {std_ff1 * 100:.0f}, FEM {std_fem * 100:.0f}"
+            std_answer_metrics = next(iter(worker_answer_metrics["std_answer"].values()))
+            std_answer_metrics_str = (f" (FF1 {std_answer_metrics['f1'] * 100:.0f},"
+                                      f" FEM {std_answer_metrics['em'] * 100:.0f})")
 
-            answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"],
-                                                                           instance["answers_by_worker"],
-                                                                           instance["label"])
-
-            for worker_id, answer_stats in answer_level_metrics.items():
+            for worker_id, answer_metrics in worker_answer_metrics.items():
                 worker_stats[worker_id]["questions"] += 1
-                worker_stats[worker_id]["answers"] += len(answer_stats)
-                worker_stats[worker_id]["total_ff1"] += next(iter(answer_stats.values()))["f1"]
-                worker_stats[worker_id]["total_f1"] += sum(m["f1"] for m in answer_stats.values())
-                worker_stats[worker_id]["total_fem"] += next(iter(answer_stats.values()))["em"]
-                worker_stats[worker_id]["total_em"] += sum(m["em"] for m in answer_stats.values())
-                worker_stats[worker_id]["total_np"] += sum(m["np"] for m in answer_stats.values())
+                worker_stats[worker_id]["answers"] += len(answer_metrics)
+                worker_stats[worker_id]["total_ff1"] += next(iter(answer_metrics.values()))["f1"]
+                worker_stats[worker_id]["total_f1"] += sum(m["f1"] for m in answer_metrics.values())
+                worker_stats[worker_id]["total_fem"] += next(iter(answer_metrics.values()))["em"]
+                worker_stats[worker_id]["total_em"] += sum(m["em"] for m in answer_metrics.values())
+                worker_stats[worker_id]["total_np"] += sum(m["np"] for m in answer_metrics.values())
 
             answer_df = pd.DataFrame(((w, a, m["f1"] * 100, m["em"], m["np"])
-                                      for w, aa in answer_level_metrics.items()
+                                      for w, aa in worker_answer_metrics.items()
                                       for a, m in aa.items()),
                                      columns=["Worker ID", "Answer", "F1", "EM", "NP?"])
 
@@ -100,7 +107,7 @@ def main() -> None:
             formatted_question_answers = df.to_string(index=False)
 
         print(f"""\
-ID: {id_}
+ID: {instance_id}
 Question: {instance["question"]}
 Video URL: {instance["video_url"]}
 Std. answer: {instance[f"label"]}{std_answer_metrics_str}
@@ -151,6 +158,8 @@ Worker answers:
         print()
         print("*** Aggregated metrics ***")
         print()
+
+        print(f"Questions: {len(ff1s_list)}")
 
         # Note the questions may have a different number of workers because it may be an unfinished annotation.
         ff1s_matrix = pad_sequence(ff1s_list, batch_first=True, padding_value=np.nan).numpy()
