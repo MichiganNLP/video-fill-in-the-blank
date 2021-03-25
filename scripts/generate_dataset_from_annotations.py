@@ -24,8 +24,8 @@ def main() -> None:
 
     formatted_instances = []
     for instance in tqdm(instances.values()):
-        answer_level_metrics = compute_answer_level_metrics(instance["question"],
-                                                            instance["answers_by_worker"], instance["label"])
+        answer_level_metrics = compute_answer_level_metrics(instance["question"], instance["answers_by_worker"],
+                                                            instance["label"])
 
         np_answers = [[answer for answer, metrics in worker_answers.items() if metrics["np"]]
                       for worker_answers in answer_level_metrics.values()]
@@ -33,7 +33,7 @@ def main() -> None:
 
         if not any("unavailable" in answer.lower() and "video" in answer.lower()
                    for worker_answers in np_answers
-                   for answer in worker_answers):  # TODO: we should re-check that these videos aren't actually avail.
+                   for answer in worker_answers):
             formatted_instances.append({
                 "video_id": instance["video_id"],
                 "video_start_time": instance["video_start_time"],

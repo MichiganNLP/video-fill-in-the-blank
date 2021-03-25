@@ -47,6 +47,12 @@ def compute_answer_level_metrics(question: str, answers_map: Mapping[str, Iterab
 
     results = defaultdict(lambda: defaultdict(dict))
 
+    np_map = compute_np_value_by_answer(question, answers_map)
+
+    for worker_id, worker_answers in answers_map.items():
+        for answer in worker_answers:
+            results[worker_id][answer]["np"] = np_map[answer]
+
     for worker_id, worker_answers in answer_processed_map.items():
         other_workers_answers = [other_worker_answers
                                  for other_worker_id, other_worker_answers in answer_processed_map.items()
@@ -62,11 +68,5 @@ def compute_answer_level_metrics(question: str, answers_map: Mapping[str, Iterab
             results[worker_id][answer]["f1"] = compute_token_level_f1_many(tokens, other_workers_answer_tokens)
             results[worker_id][answer]["em"] = any(normalized_answer == other_normalized_answer
                                                    for other_normalized_answer in other_normalized_answers)
-
-    np_map = compute_np_value_by_answer(question, answers_map)
-
-    for worker_id, worker_answers in answers_map.items():
-        for answer in worker_answers:
-            results[worker_id][answer]["np"] = np_map[answer]
 
     return results

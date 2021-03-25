@@ -34,10 +34,8 @@ def main() -> None:
     hits = parse_hits(args.input)
     instances = hits_to_instances(hits)
 
+    metric_value_list = defaultdict(list)
     worker_stats = defaultdict(lambda: defaultdict(int))
-
-    ff1s_list = []
-    fems_list = []
 
     for instance_id, instance in instances.items():
         instance["answers_by_worker"] = {worker_id: [format_answer(answer) for answer in answers]
@@ -58,22 +56,30 @@ def main() -> None:
             worker_answer_metrics = compute_answer_level_metrics(instance["question"], instance["answers_by_worker"],
                                                                  instance["label"])
 
+            metric_keys = next(iter(next(iter(worker_answer_metrics.values())).values()))
+
             worker_first_answer_metrics = [
                 # There could be a missing worker if all their answers are empty after normalizing.
                 next(iter(worker_answer_metrics.get(worker_id, {"": defaultdict(lambda: np.nan)}).values()))
                 for worker_id in instance["answers_by_worker"]
             ]
-            ff1s = np.asarray([metrics["f1"] for metrics in worker_first_answer_metrics])
-            fems = np.asarray([metrics["em"] for metrics in worker_first_answer_metrics])
 
-            df.insert(0, "FF1", ff1s * 100)
-            df.insert(1, "FEM", fems)
+            worker_first_answer_metric_arrays = {
+                k: np.asarray([metrics[k] for metrics in worker_first_answer_metrics])
+                for k in metric_keys
+            }
 
-            aggregated_metrics_str = f"\nAvg.: FF1 {np.nanmean(ff1s) * 100:.0f}, FEM {np.nanmean(fems) * 100:.0f}"
+            df.insert(0, "FF1", worker_first_answer_metric_arrays["f1"] * 100)
+            df.insert(1, "FEM", worker_first_answer_metric_arrays["em"])
+
+            ff1_mean = np.nanmean(worker_first_answer_metric_arrays["f1"])
+            fem_mean = np.nanmean(worker_first_answer_metric_arrays["em"])
+
+            aggregated_metrics_str = f"\nAvg.: FF1 {ff1_mean * 100:.0f}, FEM {fem_mean * 100:.0f}"
 
             std_answer_metrics = next(iter(worker_answer_metrics["std_answer"].values()))
-            std_answer_metrics_str = (f" (FF1 {std_answer_metrics['f1'] * 100:.0f},"
-                                      f" FEM {std_answer_metrics['em'] * 100:.0f})")
+            std_answer_metrics_str = (f" (F1 {std_answer_metrics['f1'] * 100:.0f},"
+                                      f" EM {std_answer_metrics['em']})")
 
             for worker_id, answer_metrics in worker_answer_metrics.items():
                 worker_stats[worker_id]["questions"] += 1
@@ -84,16 +90,16 @@ def main() -> None:
                 worker_stats[worker_id]["total_em"] += sum(m["em"] for m in answer_metrics.values())
                 worker_stats[worker_id]["total_np"] += sum(m["np"] for m in answer_metrics.values())
 
-            answer_df = pd.DataFrame(((w, a, m["f1"] * 100, m["em"], m["np"])
-                                      for w, aa in worker_answer_metrics.items()
-                                      for a, m in aa.items()),
+            answer_df = pd.DataFrame(((worker_id, answer, m["f1"] * 100, m["em"], m["np"])
+                                      for worker_id, answer_metrics in worker_answer_metrics.items()
+                                      for answer, m in answer_metrics.items()),
                                      columns=["Worker ID", "Answer", "F1", "EM", "NP?"])
 
             with pd.option_context("display.max_rows", None, "display.max_columns", None, "display.width", 0):
                 answer_level_metrics_str = f"\nAnswer-level metrics:\n{answer_df.to_string(index=False)}"
 
-            ff1s_list.append(torch.from_numpy(ff1s))
-            fems_list.append(torch.from_numpy(fems))
+            for k, v in worker_first_answer_metric_arrays.items():
+                metric_value_list[k].append(torch.from_numpy(v))
         else:
             std_answer_metrics_str = ""
             aggregated_metrics_str = "\n\nWARNING: this question has no answers. Ignored for the metrics computation." \
@@ -159,13 +165,13 @@ Worker answers:
         print("*** Aggregated metrics ***")
         print()
 
-        print(f"Questions: {len(ff1s_list)}")
+        print(f"Questions: {len(next(iter(metric_value_list.values())))}")
 
         # Note the questions may have a different number of workers because it may be an unfinished annotation.
-        ff1s_matrix = pad_sequence(ff1s_list, batch_first=True, padding_value=np.nan).numpy()
+        ff1s_matrix = pad_sequence(metric_value_list["f1"], batch_first=True, padding_value=np.nan).numpy()
         ff1s_questions = np.nanmean(ff1s_matrix, axis=1)  # Because it's macro avg, we first avg each question.
 
-        fems_matrix = pad_sequence(fems_list, batch_first=True, padding_value=np.nan).numpy()
+        fems_matrix = pad_sequence(metric_value_list["em"], batch_first=True, padding_value=np.nan).numpy()
         fems_questions = np.nanmean(fems_matrix, axis=1)
 
         print("Question-level workers' first answer macro avg. F1 (FF1):"
