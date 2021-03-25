@@ -21,12 +21,8 @@ def parse_args() -> argparse.Namespace:
                         default="-")
 
     parser.add_argument("--compute-metrics", action="store_true")
-    parser.add_argument("--ignore-zero-scores", action="store_true")
 
     args = parser.parse_args()
-
-    assert not args.ignore_zero_scores or args.compute_metrics, "The flag --ignore-zero-scores needs the flag " \
-                                                                "--compute-metrics to be specified as well."
 
     args.input = sys.stdin if args.annotation_results_path_or_url == "-" \
         else cached_path(args.annotation_results_path_or_url)
@@ -60,9 +56,8 @@ def main() -> None:
 
         if args.compute_metrics and there_are_answers:
             ff1s, fems, precisions, recalls, decision_scores, (
-                std_ff1, std_fem, std_precision, std_recall, std_decision_score), ignored_workers = \
-                compute_annotation_metrics(instance["answers_by_worker"].values(), instance["label"],
-                                           args.ignore_zero_scores)
+                std_ff1, std_fem, std_precision, std_recall, std_decision_score) = \
+                compute_annotation_metrics(instance["answers_by_worker"].values(), instance["label"])
             df.insert(0, "FF1", ff1s * 100)
             df.insert(1, "FEM", fems * 100)
             df.insert(2, "Pre", precisions * 100)
@@ -79,7 +74,7 @@ def main() -> None:
 
             answer_level_metrics = compute_answer_level_annotation_metrics(instance["question"],
                                                                            instance["answers_by_worker"],
-                                                                           instance["label"], ignored_workers)
+                                                                           instance["label"])
 
             for worker_id, answer_stats in answer_level_metrics.items():
                 worker_stats[worker_id]["questions"] += 1

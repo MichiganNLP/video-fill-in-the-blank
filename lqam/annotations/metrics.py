@@ -83,9 +83,8 @@ def _compute_annotation_metrics_once(
 
 
 def compute_annotation_metrics(
-        answers: Iterator[Iterable[str]], std_answer: str, ignore_zero_scores: bool = False
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float, float],
-           Sequence[bool]]:
+        answers: Iterator[Iterable[str]], std_answer: str
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, Tuple[float, float, float, float, float]]:
     """Computes the metrics for an instance.
 
     If `ignore_zero_scores`, then it computes the scores again but ignores the workers whose decision score is 0.
@@ -101,14 +100,7 @@ def compute_annotation_metrics(
     ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics = _compute_annotation_metrics_once(answers,
                                                                                                             std_answer)
 
-    if ignore_zero_scores:
-        ignored_workers = [d == 0 for d in decision_scores]
-        ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics = _compute_annotation_metrics_once(
-            answers, std_answer, ignored_workers)
-    else:
-        ignored_workers = [False for _ in answers]
-
-    return ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics, ignored_workers
+    return ff1s, fems, precisions, recalls, decision_scores, std_answer_metrics
 
 
 def compute_np_value_by_answer(question: str, answers_map: Mapping[str, Sequence[str]]) -> Mapping[str, bool]:
@@ -127,10 +119,7 @@ def compute_np_value_by_answer(question: str, answers_map: Mapping[str, Sequence
 
 
 def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[str, Sequence[str]],
-                                            std_answer: str, ignored_workers: Optional[Sequence[bool]] = None
-                                            ) -> Mapping[str, Mapping[str, Mapping[str, Any]]]:
-    ignored_workers = ignored_workers or [False for _ in answers_map]
-
+                                            std_answer: str) -> Mapping[str, Mapping[str, Mapping[str, Any]]]:
     # `frozenset` so it's immutable thus hashable.
     answer_processed_map = {worker_id: [(answer, normalized_answer,
                                          frozenset(tokenize_answer_to_compute_metrics(normalized_answer)))
@@ -152,7 +141,7 @@ def compute_answer_level_annotation_metrics(question: str, answers_map: Mapping[
         other_workers_answers = [other_worker_answers
                                  for i, (other_worker_id,
                                          other_worker_answers) in enumerate(answer_processed_map.items())
-                                 if other_worker_id != worker_id and not ignored_workers[i]]
+                                 if other_worker_id != worker_id]
         other_answer_tokens = {tokens
                                for other_worker_answers in other_workers_answers
                                for _, _, tokens in other_worker_answers} | {std_answer}
