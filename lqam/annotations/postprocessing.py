@@ -136,3 +136,7 @@ def compute_instances_by_worker_id(
             instances_by_worker_id[worker_id].append(worker_instance)
 
     return instances_by_worker_id
+
+
+def unavailable_video_answer(answer: str) -> bool:
+    return "unavailable" in answer.lower() and "video" in answer.lower()

@@ -11,7 +11,8 @@ import pytorch_lightning as pl
 from lqam.annotations import AUTO_APPROVE_WORKER_ID_DENY_LIST, MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1, \
     MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2, \
     MIN_QUESTION_COUNT_FOR_THRESHOLD_2, REVIEW_SAMPLE_SIZE_PER_WORKER
-from lqam.annotations.postprocessing import compute_instances_by_worker_id, hits_to_instances, parse_hits
+from lqam.annotations.postprocessing import compute_instances_by_worker_id, hits_to_instances, parse_hits, \
+    unavailable_video_answer
 from lqam.core.metrics import normalize_answer
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
@@ -85,7 +86,7 @@ def main() -> None:
             "reviewer": "",
             # We can already annotate some:
             "correct?": "y" if (normalize_answer(answer) == normalize_answer(instance["label"])
-                                or ("unavailable" in answer.lower() and "video" in answer.lower())
+                                or unavailable_video_answer(answer)
                                 or worker_id in worker_ids_to_auto_accept) else "",
         }
         for worker_id, worker_instances in instances_by_worker_id.items()
