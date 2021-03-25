@@ -71,18 +71,18 @@ def compute_annotation_metrics(answers: Iterator[Iterable[str]],
 
 
 def compute_np_value_by_answer(question: str, answers_map: Mapping[str, Sequence[str]]) -> Mapping[str, bool]:
+    answers_flat = {answer for worker_answers in answers_map.values() for answer in worker_answers}
+
     # Workers can add extra punctuation, and this messes up with the parsing. So we remove it.
     # We could use `alignment_mode="contract"` if there's extra punctuation, however this doesn't prevent the parsing
     # from failing. So we remove the punctuation altogether.
     # We don't completely normalize because it may perform slightly worse when checking NPs.
-    answers_flat = {(answer, strip_punctuation(answer))
-                    for worker_answers in answers_map.values()
-                    for answer in worker_answers}
+    answers_flat = {(answer, strip_punctuation(answer)) for answer in answers_flat}
 
     question_with_answers = (question.replace("_____", clean_answer) for _, clean_answer in answers_flat)
 
-    return {answer: bool(clean_answer) and is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
-                                                                                 start + len(clean_answer)))
+    return {answer: clean_answer and is_noun_phrase_or_n_bar(doc.char_span((start := question.index("_____")),
+                                                                           start + len(clean_answer)))
             for (answer, clean_answer), doc in zip(answers_flat, SPACY_MODEL.pipe(question_with_answers))}
 
 
