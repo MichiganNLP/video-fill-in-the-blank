@@ -4,13 +4,13 @@ import operator
 import re
 import sys
 from collections import defaultdict
-from typing import Any, Mapping, MutableMapping, Sequence
+from typing import Any, Iterable, Iterator, Mapping, MutableMapping, Sequence
 
 import pandas as pd
 from pandas._typing import FilePathOrBuffer  # noqa
 from tqdm.auto import tqdm
 
-from lqam.annotations.metrics import compute_np_value_by_answer
+from lqam.annotations.metrics import compute_answer_level_metrics, compute_np_value_by_answer
 from lqam.core.metrics import RE_MULTIPLE_SPACES
 
 RE_ANSWER_KEY = re.compile(r"^answer-(?P<question_index>\d+)-(?P<answer_index>\d+)$")
@@ -140,3 +140,30 @@ def compute_instances_by_worker_id(
 
 def unavailable_video_answer(answer: str) -> bool:
     return "unavailable" in answer.lower() and "video" in answer.lower()
+
+
+def unavailable_video_instance(instance: Mapping[str, Any]) -> bool:
+    return any(unavailable_video_answer(answer)
+               for worker_answers in instance["answers_by_worker"].values()
+               for answer in worker_answers)
+
+
+def instance_has_annotated_answers(instance: Mapping[str, Any]) -> bool:
+    return any(instance["answers_by_worker"].values())
+
+
+def filter_and_process_annotated_instances(
+        instances: Iterable[MutableMapping[str, Any]]) -> Iterator[Mapping[str, Any]]:
+    for instance in tqdm(instances):
+        if instance_has_annotated_answers(instance) and not unavailable_video_instance(instance):
+            answer_level_metrics = compute_answer_level_metrics(instance["question"], instance["answers_by_worker"],
+                                                                instance["label"])
+
+            instance["np_answers"] = [result
+                                      for worker_id, worker_answers in answer_level_metrics.items()
+                                      if worker_id != "std_answer"
+                                      and (result := [answer
+                                                      for answer, metrics in worker_answers.items()
+                                                      if metrics["np"]])]
+
+            yield instance

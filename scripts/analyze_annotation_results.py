@@ -10,7 +10,7 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 
 from lqam.annotations.metrics import compute_answer_level_metrics
-from lqam.annotations.postprocessing import format_answer, hits_to_instances, parse_hits
+from lqam.annotations.postprocessing import format_answer, hits_to_instances, instance_has_annotated_answers, parse_hits
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
 
@@ -48,7 +48,7 @@ def main() -> None:
 
         pd.options.display.float_format = lambda x: f"{x: >3.0f}"
 
-        there_are_answers = any(instance["answers_by_worker"].values())
+        there_are_answers = instance_has_annotated_answers(instance)
 
         if args.compute_metrics and there_are_answers:
             # TODO: filter those that are unavailable? I'd be good for some stats to be computed after filtering.
