@@ -10,7 +10,8 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 
 from lqam.annotations.metrics import compute_answer_level_metrics
-from lqam.annotations.postprocessing import format_answer, hits_to_instances, instance_has_annotated_answers, parse_hits
+from lqam.annotations.postprocessing import format_answer, hits_to_instances, \
+    instance_can_be_used_in_annotated_dataset, parse_hits
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 from lqam.util.file_utils import cached_path
 
@@ -48,10 +49,10 @@ def main() -> None:
 
         pd.options.display.float_format = lambda x: f"{x: >3.0f}"
 
-        there_are_answers = instance_has_annotated_answers(instance)
+        instance_can_be_used = instance_can_be_used_in_annotated_dataset(instance)
 
-        if args.compute_metrics and there_are_answers:
-            # TODO: filter those that are unavailable? I'd be good for some stats to be computed after filtering.
+        if args.compute_metrics and instance_can_be_used:
+            # TODO: compute metrics after filtering NP.
 
             worker_answer_metrics = compute_answer_level_metrics(instance["question"], instance["answers_by_worker"],
                                                                  instance["label"])
@@ -102,8 +103,9 @@ def main() -> None:
                 metric_value_list[k].append(torch.from_numpy(v))
         else:
             std_answer_metrics_str = ""
-            aggregated_metrics_str = "\n\nWARNING: this question has no answers. Ignored for the metrics computation." \
-                if args.compute_metrics and not there_are_answers else ""
+            aggregated_metrics_str = "\n\nWARNING: this question wouldn't be used in a final dataset (i.e., " \
+                                     "no valid answers or unavailable video). Ignored for the metrics computation." \
+                if args.compute_metrics and not instance_can_be_used else ""
             answer_level_metrics_str = ""
 
         # Convert the index into a column. Otherwise, the index name and column names are output in different lines.
@@ -165,7 +167,8 @@ Worker answers:
         print("*** Aggregated metrics ***")
         print()
 
-        print(f"Questions: {len(next(iter(metric_value_list.values())))}")
+        print(f"Questions: {len(instances)}")
+        print(f"Questions that can be used: {len(next(iter(metric_value_list.values())))}")
 
         # Note the questions may have a different number of workers because it may be an unfinished annotation.
         ff1s_matrix = pad_sequence(metric_value_list["f1"], batch_first=True, padding_value=np.nan).numpy()
