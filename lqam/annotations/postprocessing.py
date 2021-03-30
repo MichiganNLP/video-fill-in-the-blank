@@ -10,7 +10,7 @@ import pandas as pd
 from pandas._typing import FilePathOrBuffer  # noqa
 from tqdm.auto import tqdm
 
-from lqam.annotations.metrics import compute_answer_level_metrics, compute_np_value_by_answer
+from lqam.annotations.metrics import compute_np_value_by_answer
 from lqam.core.metrics import RE_MULTIPLE_SPACES
 
 RE_ANSWER_KEY = re.compile(r"^answer-(?P<question_index>\d+)-(?P<answer_index>\d+)$")
@@ -152,18 +152,21 @@ def instance_has_annotated_answers(instance: Mapping[str, Any]) -> bool:
     return any(instance["answers_by_worker"].values())
 
 
+def instance_can_be_used_in_annotated_dataset(instance: Mapping[str, Any]) -> bool:
+    return instance_has_annotated_answers(instance) and not unavailable_video_instance(instance)
+
+
 def filter_and_process_annotated_instances(
         instances: Iterable[MutableMapping[str, Any]]) -> Iterator[Mapping[str, Any]]:
-    for instance in tqdm(instances):
-        if instance_has_annotated_answers(instance) and not unavailable_video_instance(instance):
-            answer_level_metrics = compute_answer_level_metrics(instance["question"], instance["answers_by_worker"],
-                                                                instance["label"])
+    for instance in tqdm(instances, desc="Filtering and processing instances"):
+        if instance_can_be_used_in_annotated_dataset(instance):
+            np_map = compute_np_value_by_answer(instance["question"], instance["answers_by_worker"])
 
-            instance["np_answers"] = [result
-                                      for worker_id, worker_answers in answer_level_metrics.items()
+            instance["np_answers"] = [worker_np_answers
+                                      for worker_id, worker_answers in instance["answers_by_worker"].items()
                                       if worker_id != "std_answer"
-                                      and (result := [answer
-                                                      for answer, metrics in worker_answers.items()
-                                                      if metrics["np"]])]
+                                      and (worker_np_answers := [answer
+                                                                 for answer in worker_answers
+                                                                 if np_map[answer]])]
 
             yield instance

@@ -17,7 +17,6 @@ def main() -> None:
     args = parse_args()
 
     instances = hits_to_instances(parse_hits(args.annotation_results_path)).values()
-    filtered_instances = filter_and_process_annotated_instances(instances)
 
     print(json.dumps([
         {
@@ -28,7 +27,7 @@ def main() -> None:
             "masked_caption": instance["question"],
             "label": instance["label"],
             "additional_answers": instance["np_answers"],
-        } for instance in filtered_instances
+        } for instance in filter_and_process_annotated_instances(instances)
     ]))
 
 
