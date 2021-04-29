@@ -15,6 +15,7 @@ from lqam.methods.t5_visual_module import T5AndVisual
 from lqam.methods.two_stream_module import TwoStream
 from lqam.util.argparse_with_defaults import ArgumentParserWithDefaults
 
+
 def _parse_args() -> argparse.Namespace:
     parser = ArgumentParserWithDefaults(description="Train and evaluate the T5-based baselines.")
 

@@ -1,18 +1,11 @@
 from unittest import TestCase
 
-from transformers import AutoTokenizer
-
 from lqam.methods.dataset import QGenDataset, URL_DATA_TEST, URL_DATA_TRAIN, URL_DATA_VAL
 
 
 class TestQGenDataset(TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        cls.tokenizer = AutoTokenizer.from_pretrained("t5-base")
-
     def test_dataset_format_train(self):
-        train_dataset = QGenDataset(URL_DATA_TRAIN, tokenizer=self.tokenizer)
+        train_dataset = QGenDataset(URL_DATA_TRAIN)
         train_expected_first_item = {
             "video_id": "Ptf_2VRj-V0",
             "video_start_time": 122,
@@ -24,7 +17,7 @@ class TestQGenDataset(TestCase):
         self.assertEqual(train_expected_first_item, train_actual_first_item)
 
     def test_dataset_format_val(self):
-        val_dataset = QGenDataset(URL_DATA_VAL, tokenizer=self.tokenizer)
+        val_dataset = QGenDataset(URL_DATA_VAL)
         val_expected_first_item = {
             "video_id": "cfBtVPEwqIo",
             "video_start_time": 5,
@@ -47,7 +40,7 @@ class TestQGenDataset(TestCase):
         self.assertEqual(val_expected_first_item, val_actual_first_item)
 
     def test_dataset_format_test(self):
-        test_train_dataset = QGenDataset(URL_DATA_TEST, tokenizer=self.tokenizer)
+        test_train_dataset = QGenDataset(URL_DATA_TEST)
         test_expected_first_item = {
             "video_id": "U2KnwEJkcXg",
             "video_start_time": 37,
