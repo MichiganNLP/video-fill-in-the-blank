@@ -1,39 +1,46 @@
-# LifeQA Methodology
+# Video Fill-in-the-Blank data and code
 
-This repo contains the annotation scheme, results and methods for the LifeQA project "qgen".
+This repo contains the data and code for the paper [Fill-in-the-blank as a Challenging Video Understanding Evaluation
+Framework](https://arxiv.org/abs/2104.04182).
+
+## Download the data
+
+* [train](https://www.dropbox.com/s/lc3e1ave94hz9tu/train.json)
+* [validation](https://www.dropbox.com/s/t1dpotaz2sjjtxk/val.json)
+* [test](https://www.dropbox.com/s/2nr7kooprjti975/test.json)
+
+The video features are available in [VATEX download page](https://eric-xw.github.io/vatex-website/download.html). 
+You should download the train, validation, and public test I3D video features and extract them in some folder (e.g., 
+`data/I3D_video_features`).
 
 ## Setup
 
-1. If you are a macOS user, then you need to comment out the CUDA-related lines in `environment.yml`:
+Follow this guide if you want to run the paper methods.
 
-    ```yaml
-    dependencies:
-      # ...
-      - cudatoolkit=...
-      - cudnn=...
-    ```
+If you are a macOS user, then you need to comment out the CUDA-related lines in `environment.yml`:
 
-2. With Conda installed:
+```yaml
+  dependencies:
+  # ...
+  - cudatoolkit=...
+  - cudnn=...
+```
 
-    ```bash
-    conda env create
-    conda activate lqam
-    spacy download en_core_web_trf
-    export PYTHONPATH=.
-    ```
+Run (having Conda installed):
 
-3. Put the data under `data/`. For example, in Great Lakes it can be a symlink:
+```bash
+conda env create
+conda activate lqam
+spacy download en_core_web_trf
+export PYTHONPATH=.
+```
 
-    ```bash
-    ln -s /scratch/mihalcea_root/mihalcea1/shared_data/qgen/VATEX data
-    ```
-
-NB: the scripts mentioned in the rest of this README generally accept many options. Try using the `--help` (or `-h`) 
+> NB: the scripts mentioned in the rest of this README generally accept many options. Try using the `--help` (or `-h`) 
 option or looking at their code for more information.
 
-## Dataset
+## Dataset Blank Generation
 
-You can skip these steps if the data is already generated.
+Follow these steps if you wanna re-generate the blanks dataset. Note you probably don't have to run this.
 
 1. Generate the blanked captions, for each
 [VATEX split JSON file](https://eric-xw.github.io/vatex-website/download.html) (replacing the variables with values):
@@ -63,14 +70,14 @@ You can skip these steps if the data is already generated.
       $GENERATED_JSON_FILE > $GENERATED_JSON_FILTERED_FILE
     ```
 
-## Annotation
+## Data Annotation
 
-See [Annotation](annotation.md).
+See [Annotation](annotation.md). Note you probably don't need to do this.
 
 ## Download the videos
 
-In case you want to download the video, given a file with one YouTube video ID per line (such as 
-`$AVAILABLE_VIDEO_IDS_FILE`):
+In case you want to download the video (which you likely won't because there are video features already available), 
+given a file with one YouTube video ID per line (such as `$AVAILABLE_VIDEO_IDS_FILE`):
 
 ```bash
 youtube-dl -f "best[ext=mp4]/best" -o "videos/%(id)s.%(ext)s" --batch-file FILE
@@ -82,8 +89,6 @@ youtube-dl -f "best[ext=mp4]/best" -o "videos/%(id)s.%(ext)s" --batch-file FILE
 ./scripts/run_model.py --train
 ```
 
-See the available options using the flag `--help`.
-
 ## Evaluation
 
 Evaluate the T5 text-only baseline:
@@ -91,5 +96,3 @@ Evaluate the T5 text-only baseline:
 ```bash
 ./scripts/run_model.py
 ```
-
-See the available options using the flag `--help`.
