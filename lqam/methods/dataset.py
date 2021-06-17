@@ -52,7 +52,7 @@ class QGenDataset(Dataset):
             self.instances = json.load(file)
         if train:
             l = len(self.instances)
-            self.instances = self.instances[:int(l*0.5)]
+            self.instances = self.instances[:int(l*0.75)]
         self.tokenizer = tokenizer
         self.t5_format = t5_format
         self.visual_data_dir = Path(visual_data_dir) if visual_data_dir else None
