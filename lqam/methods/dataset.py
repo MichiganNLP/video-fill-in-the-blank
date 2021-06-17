@@ -112,7 +112,7 @@ class QGenDataset(Dataset):
             # batch["visual"] = pad_sequence(visual_list, batch_first=True)
 
             # For analysis purpose, we only used the first I3D feature in each video
-            visual_list = [feature[0].unsqueeze(0) for feature in batch["visual"]]
+            visual_list = [feature[feature.shape[0]//2].unsqueeze(0) for feature in batch["visual"]]
             batch["visual"] = pad_sequence(visual_list, batch_first=True)
 
             lengths = torch.as_tensor([visual_instance.size(0) for visual_instance in visual_list])
