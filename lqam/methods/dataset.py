@@ -45,11 +45,14 @@ def get_mask_from_sequence_lengths(lengths: torch.Tensor) -> torch.Tensor:
 
 
 class QGenDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: Optional[PreTrainedTokenizerBase] = None, t5_format: bool = True,
+    def __init__(self, data_path: str, tokenizer: Optional[PreTrainedTokenizerBase] = None, t5_format: bool = True, train:bool = True,
                  visual_data_dir: Optional[str] = None) -> None:
         super().__init__()
         with open(cached_path(data_path)) as file:
             self.instances = json.load(file)
+        if train:
+            l = len(self.instances)
+            self.instances = self.instances[:int(l*0.25)]
         self.tokenizer = tokenizer
         self.t5_format = t5_format
         self.visual_data_dir = Path(visual_data_dir) if visual_data_dir else None
@@ -108,12 +111,12 @@ class QGenDataset(Dataset):
                 batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
 
         if "visual" in keys:
-            # visual_list = batch["visual"]
-            # batch["visual"] = pad_sequence(visual_list, batch_first=True)
+            visual_list = batch["visual"]
+            batch["visual"] = pad_sequence(visual_list, batch_first=True)
 
             # For analysis purpose, we only used the first I3D feature in each video
-            visual_list = [feature[10 if feature.shape[0] > 10 else -1].unsqueeze(0) for feature in batch["visual"]]
-            batch["visual"] = pad_sequence(visual_list, batch_first=True)
+            # visual_list = [feature[10 if feature.shape[0] > 10 else -1].unsqueeze(0) for feature in batch["visual"]]
+            # batch["visual"] = pad_sequence(visual_list, batch_first=True)
 
             lengths = torch.as_tensor([visual_instance.size(0) for visual_instance in visual_list])
             batch["visual_attention_mask"] = get_mask_from_sequence_lengths(lengths)
@@ -137,7 +140,7 @@ class QGenDataModule(pl.LightningDataModule):  # noqa
         self.visual_data_dir = visual_data_dir
 
     def _dataloader(self, data_path: str, batch_size: int, train: bool) -> DataLoader:
-        dataset = QGenDataset(data_path, tokenizer=self.tokenizer, visual_data_dir=self.visual_data_dir)
+        dataset = QGenDataset(data_path, tokenizer=self.tokenizer, visual_data_dir=self.visual_data_dir, train=train)
         # TODO: bucket-batching could make training faster, and consume less memory.
         return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,
                           pin_memory=True, collate_fn=None if batch_size is None else dataset.collate_fn)
