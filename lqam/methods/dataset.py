@@ -108,7 +108,11 @@ class QGenDataset(Dataset):
                 batch[f"{k}_attention_mask"] = tokenization_output["attention_mask"]
 
         if "visual" in keys:
-            visual_list = batch["visual"]
+            # visual_list = batch["visual"]
+            # batch["visual"] = pad_sequence(visual_list, batch_first=True)
+
+            # For analysis purpose, we only used the first I3D feature in each video
+            visual_list = [feature[0].unsqueeze(0) for feature in batch["visual"]]
             batch["visual"] = pad_sequence(visual_list, batch_first=True)
 
             lengths = torch.as_tensor([visual_instance.size(0) for visual_instance in visual_list])
