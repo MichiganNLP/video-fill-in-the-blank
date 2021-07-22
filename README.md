@@ -96,3 +96,16 @@ Evaluate the T5 text-only baseline:
 ```bash
 ./scripts/run_model.py
 ```
+
+## Citation
+
+```bibtex
+@misc{castro2021fillintheblank,
+      title={Fill-in-the-blank as a Challenging Video Understanding Evaluation Framework}, 
+      author={Santiago Castro and Ruoyao Wang and Pingxuan Huang and Ian Stewart and Nan Liu and Jonathan Stroud and Rada Mihalcea},
+      year={2021},
+      eprint={2104.04182},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
