@@ -17,7 +17,6 @@ dependencies:
   - botocore=1.19.29
   - cudatoolkit=11.0.221
   - conda-forge::cupy>=5.0.0b4,<9.0.0  # For spaCy.
-  - conda-forge::cudnn=8.0.5
   - jq=1.6
   - jupyter=1.0.0
   - matplotlib=3.3.2
