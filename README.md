@@ -1,8 +1,5 @@
 # Video Fill-in-the-Blank data and code
 
-This repo contains the data and code for the paper [Fill-in-the-blank as a Challenging Video Understanding Evaluation
-Framework](https://arxiv.org/abs/2104.04182).
-
 ## Download the data
 
 * [train](https://www.dropbox.com/s/lc3e1ave94hz9tu/train.json)
@@ -94,17 +91,4 @@ Evaluate the T5 text-only baseline:
 
 ```bash
 ./scripts/run_model.py
-```
-
-## Citation
-
-```bibtex
-@misc{castro2021fillintheblank,
-      title={Fill-in-the-blank as a Challenging Video Understanding Evaluation Framework}, 
-      author={Santiago Castro and Ruoyao Wang and Pingxuan Huang and Ian Stewart and Nan Liu and Jonathan Stroud and Rada Mihalcea},
-      year={2021},
-      eprint={2104.04182},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
-}
 ```
