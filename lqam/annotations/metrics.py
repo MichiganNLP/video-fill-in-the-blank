@@ -51,7 +51,13 @@ def compute_answer_level_metrics(question: str, answers_map: Mapping[str, Iterab
 
     for worker_id, worker_answers in answers_map.items():
         for answer in worker_answers:
-            results[worker_id][answer]["np"] = np_map[answer]
+            if (is_np := np_map[answer]) or worker_id == "std_answer":
+                results[worker_id][answer]["np"] = is_np
+
+    answer_processed_map = {worker_id: [(answer, normalized_answer, tokens)
+                                        for answer, normalized_answer, tokens in worker_answers
+                                        if np_map[answer] or worker_id == "std_answer"]
+                            for worker_id, worker_answers in answer_processed_map.items()}
 
     for worker_id, worker_answers in answer_processed_map.items():
         other_workers_answers = [other_worker_answers
@@ -65,8 +71,12 @@ def compute_answer_level_metrics(question: str, answers_map: Mapping[str, Iterab
                                     for _, normalized_answer, _ in other_worker_answers}
 
         for answer, normalized_answer, tokens in worker_answers:
-            results[worker_id][answer]["f1"] = compute_token_level_f1_many(tokens, other_workers_answer_tokens)
-            results[worker_id][answer]["em"] = any(normalized_answer == other_normalized_answer
-                                                   for other_normalized_answer in other_normalized_answers)
+            if other_normalized_answers:
+                results[worker_id][answer]["f1"] = compute_token_level_f1_many(tokens, other_workers_answer_tokens)
+                results[worker_id][answer]["em"] = any(normalized_answer == other_normalized_answer
+                                                       for other_normalized_answer in other_normalized_answers)
+            else:
+                import numpy as np
+                results[worker_id][answer]["f1"] = results[worker_id][answer]["em"] = np.nan
 
     return results

@@ -57,6 +57,8 @@ def main() -> None:
             worker_answer_metrics = compute_answer_level_metrics(instance["question"], instance["answers_by_worker"],
                                                                  instance["label"])
 
+            # FIXME: should filter out "std_answer" out of the workers?
+
             metric_keys = next(iter(next(iter(worker_answer_metrics.values())).values()))
 
             worker_first_answer_metrics = [
@@ -178,19 +180,19 @@ Worker answers:
         fems_questions = np.nanmean(fems_matrix, axis=1)
 
         print("Question-level workers' first answer macro avg. F1 (FF1):"
-              f" {100 * ff1s_questions.mean():.1f}% +/- {100 * ff1s_questions.std():.1f}%")
+              f" {100 * np.nanmean(ff1s_questions):.1f}% +/- {100 * np.nanstd(ff1s_questions):.1f}%")
         print("Question-level workers' first answer macro avg. EM (FEM):"
-              f" {100 * fems_questions.mean():.1f}% +/- {100 * fems_questions.std():.1f}%")
+              f" {100 * np.nanmean(fems_questions):.1f}% +/- {100 * np.nanstd(fems_questions):.1f}%")
 
         if worker_stats:
-            total_stats = {k: sum(w_stats[k] for w_stats in worker_stats.values())
+            total_stats = {k: sum(w_stats[k] for w_stats in worker_stats.values() if not np.isnan(w_stats[k]))
                            for k in next(iter(worker_stats.values()))}
             f1_mean = total_stats["total_f1"] / total_stats["answers"]
             em_mean = total_stats["total_em"] / total_stats["answers"]
-            f1_std_dev = np.std([w_stats["total_f1"] / w_stats["answers"] for w_stats in worker_stats.values()])
-            em_std_dev = np.std([w_stats["total_em"] / w_stats["answers"] for w_stats in worker_stats.values()])
+            f1_std_dev = np.nanstd([w_stats["total_f1"] / w_stats["answers"] for w_stats in worker_stats.values()])
+            em_std_dev = np.nanstd([w_stats["total_em"] / w_stats["answers"] for w_stats in worker_stats.values()])
 
-            print(f"Avg. answers per question: {total_stats['answers'] / total_stats['questions']:.2f}")
+            print(f"Avg. answers per question per worker: {total_stats['answers'] / total_stats['questions']:.2f}")
             print(f"Answer-level avg. F1 Score: {100 * f1_mean:.1f}% +/- {100 * f1_std_dev:.1f}%")
             print(f"Answer-level avg. Exact Match (EM): {100 * em_mean:.1f}% +/- {100 * em_std_dev:.1f}%")
             print(f"Answer-level avg. Noun Phrases (NP): {100 * total_stats['total_np'] / total_stats['answers']:.1f}%")
