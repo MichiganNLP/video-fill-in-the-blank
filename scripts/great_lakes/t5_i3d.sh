@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 #SBATCH --job-name=t5_i3d
-#SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 #SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --gres=gpu:1

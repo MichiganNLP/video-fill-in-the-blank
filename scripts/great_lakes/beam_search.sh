@@ -6,7 +6,6 @@
 #SBATCH --mem=32G
 #SBATCH --gres=gpu:1
 #SBATCH --time=8:00:00
-#SBATCH --account=mihalcea1
 #SBATCH --partition=gpu
 
 source scripts/great_lakes/init.source
