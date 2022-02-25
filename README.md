@@ -15,23 +15,12 @@ You should download the train, validation, and public test I3D video features an
 
 ## Setup
 
-Follow this guide if you want to run the paper methods.
-
-If you are a macOS user, then you need to comment out the CUDA-related lines in `environment.yml`:
-
-```yaml
-  dependencies:
-  # ...
-  - cudatoolkit=...
-```
-
-Run (having Conda installed):
+With Conda installed (or preferably [mamba](https://github.com/mamba-org/mamba) for more speed), run:
 
 ```bash
 conda env create
 conda activate lqam
 spacy download en_core_web_trf
-export PYTHONPATH=.
 ```
 
 > NB: the scripts mentioned in the rest of this README generally accept many options. Try using the `--help` (or `-h`) 
@@ -39,7 +28,7 @@ option or looking at their code for more information.
 
 ## Dataset Blank Generation
 
-Follow these steps if you wanna re-generate the blanks dataset. Note you probably don't have to run this.
+Follow these steps if you wanna re-generate the blanks' dataset. Note you probably don't have to run this.
 
 1. Generate the blanked captions, for each
 [VATEX split JSON file](https://eric-xw.github.io/vatex-website/download.html) (replacing the variables with values):
