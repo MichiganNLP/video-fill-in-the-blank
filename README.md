@@ -103,7 +103,7 @@ Evaluate the T5 text-only baseline:
     booktitle = "Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
     month = may,
     year = "2022",
-    address = "Online and Dublin, Ireland"
+    address = "Online and Dublin, Ireland",
     publisher = "Association for Computational Linguistics",
 }
 ```
