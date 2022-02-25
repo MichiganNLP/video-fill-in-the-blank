@@ -1,6 +1,8 @@
 # Video Fill-in-the-Blank data and code
 
-This repo contains the data and code for the paper [Fill-in-the-blank as a Challenging Video Understanding Evaluation
+**News (Feb 24, 2022):** this paper was accepted to the ACL 2022 Main conference!
+
+This repo contains the data and code for the paper [Fill-in-the-Blank: A Challenging Video Understanding Evaluation
 Framework](https://arxiv.org/abs/2104.04182).
 
 ## Download the data
@@ -88,12 +90,20 @@ Evaluate the T5 text-only baseline:
 ## Citation
 
 ```bibtex
-@misc{castro2021fillintheblank,
-      title={Fill-in-the-blank as a Challenging Video Understanding Evaluation Framework}, 
-      author={Santiago Castro and Ruoyao Wang and Pingxuan Huang and Ian Stewart and Nan Liu and Jonathan Stroud and Rada Mihalcea},
-      year={2021},
-      eprint={2104.04182},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
+@inproceedings{castro-etal-2022-fill,
+    title = "Fill-in-the-Blank: A Challenging Video Understanding Evaluation Framework",
+    author = "Castro, Santiago  and
+      Wang, Ruoyao  and
+      Huang, Pingxuan  and
+      Stewart, Ian  and
+      Ignat, Oana  and
+      Liu, Nan  and
+      Stroud, Jonathan C.  and
+      Mihalcea, Rada",
+    booktitle = "Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+    month = may,
+    year = "2022",
+    address = "Online and Dublin, Ireland"
+    publisher = "Association for Computational Linguistics",
 }
 ```
