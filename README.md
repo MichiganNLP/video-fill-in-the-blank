@@ -108,7 +108,7 @@ Evaluate the T5 text-only baseline:
 }
 ```
 
-## Misc
+## Analyses from the paper
 
-[This Google Colab](https://colab.research.google.com/drive/1aNEg5meD9o8hjewtNO0dvPo55zPfTFXu?usp=sharing) generates 
-the plots for the analysis on when, where, and for how long the target (blanked out) entity is shown in the videos.
+Some analyses from the paper can be found under the [`notebooks/`](notebooks) and in [this Google
+Colab](https://colab.research.google.com/drive/1aNEg5meD9o8hjewtNO0dvPo55zPfTFXu?usp=sharing).
