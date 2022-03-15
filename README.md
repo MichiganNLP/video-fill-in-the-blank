@@ -110,5 +110,5 @@ Evaluate the T5 text-only baseline:
 
 ## Analyses from the paper
 
-Some analyses from the paper can be found under the [`notebooks/`](notebooks) and in [this Google
+Some analyses from the paper can be found under [`notebooks/`](notebooks), [`scripts/`](scripts), and in [this Google
 Colab](https://colab.research.google.com/drive/1aNEg5meD9o8hjewtNO0dvPo55zPfTFXu?usp=sharing).
