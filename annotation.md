@@ -2,9 +2,9 @@
 
 Follow these steps in case you need to have data annotated through Amazon Mechanical Turk.
 
-## Preparing the annotation
+## 1. Prepare the annotation
 
-### Remove already used instances
+### 1.1 Remove already used instances
 
 If you want to release a new annotation batch, but you want to avoid repeating previous instances, then you can 
 create a new file that doesn't consider the ones previously used:
@@ -20,7 +20,7 @@ jq \
 You can remove already used instances from multiple files by substituting `$ALREADY_USED_JSON_FILE` from the last
 command with: `<(jq --null-input '[inputs] | flatten' $ALREADY_USED_JSON_FILE1 $ALREADY_USED_JSON_FILE2 ...)`.
 
-### Subsample
+### 1.2 Subsample
 
 If you want to select a random sample of certain size (e.g., 1000; first make sure you have at least that many), run:
 
@@ -34,7 +34,7 @@ jq \
   > $GENERATED_JSON_FILTERED_FILE
 ```
 
-### Create the annotation input CSV file
+### 1.3 Create the annotation input CSV file
 
 Run:
 
@@ -42,7 +42,7 @@ Run:
 ./scripts/generate_annotation_input.py $GENERATED_JSON_FILTERED_FILE > $MTURK_INPUT_CSV_FILE
 ```
 
-## Previewing the annotation web page
+## 2. Previewing the annotation web page
 
 Run:
 
@@ -54,7 +54,11 @@ Then open
 [the annotation page locally](http://localhost:8000/annotation_page/amt_testing_page.html?templatePagePath=annotation.html&dataPath=../$MTURK_INPUT_CSV_FILE)
 .
 
-## Visualize the annotation results
+## 3. Annotate with AMT
+
+Use Amazon Mechanical Turk to annotate the instances and download the resulting CSV file.
+
+## 4. Visualize the annotation results
 
 Run:
 
@@ -62,7 +66,7 @@ Run:
 ./scripts/analyze_annotation_results.py --show-metrics $ANNOTATION_RESULTS_CSV_FILE_OR_URL > $OUTPUT_TXT_FILE
 ```
 
-## Prepare for a randomly sampled manual review
+## 5. Prepare for a randomly sampled manual review
 
 Run:
 
@@ -70,7 +74,7 @@ Run:
 ./scripts/prepare_to_review_workers.py $ANNOTATION_RESULTS_CSV_FILE_OR_URL > $OUTPUT_CSV_FILE
 ```
 
-## Incorporate the review
+## 6. Incorporate the review
 
 Run:
 
@@ -86,7 +90,7 @@ this, for each rejected one, put the following reason in the "Reject" column:
 
 For the rest, put an "x" in the "Approve" column. Then upload it to AMT.
 
-## Generate the dataset from the annotations
+## 7. Generate the dataset from the annotations
 
 Once the review has been sent (and processed) by AMT, download the results again, and run:
 
@@ -96,7 +100,7 @@ Once the review has been sent (and processed) by AMT, download the results again
 
 You should replace the dataset file in the Dropbox folder with this new one.
 
-## Pay the bonuses
+## 8. Pay the bonuses
 
 This should be done once all the instances have been annotated as for the bonus type 2 we need to have a HIT 
 completely annotated. We could send partial payments over time, however for simplicity we send them altogether at 
