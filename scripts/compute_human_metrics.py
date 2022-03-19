@@ -11,7 +11,7 @@ from lqam.util.file_utils import cached_path
 
 
 def parse_args() -> argparse.Namespace:
-    parser = ArgumentParserWithDefaults()
+    parser = ArgumentParserWithDefaults(description="Compute human accuracy metrics (esp. for the 'new humans').")
     parser.add_argument("annotation_results_path_or_url", metavar="ANNOTATION_RESULTS_FILE_OR_URL", nargs="?",
                         default="-")
 

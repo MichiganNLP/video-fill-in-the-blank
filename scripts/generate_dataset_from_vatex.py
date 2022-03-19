@@ -2,7 +2,8 @@
 import argparse
 import json
 import random
-from typing import Any, Iterable, Mapping
+from collections import Iterable, Mapping
+from typing import Any
 
 from tqdm.auto import tqdm
 

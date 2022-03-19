@@ -1,4 +1,6 @@
-from typing import Iterable, Iterator, Mapping, MutableMapping, Optional, Sequence, Union
+from __future__ import annotations
+
+from collections import Iterable, Iterator, Mapping, MutableMapping, Sequence
 
 import pytorch_lightning as pl
 import torch
@@ -22,7 +24,7 @@ class F1ScoreMany(pl.metrics.Metric):
 
     @overrides
     def update(self, preds: Sequence[str], labels: Sequence[str],
-               additional_answers_batch: Optional[Sequence[Sequence[Sequence[str]]]] = None) -> None:
+               additional_answers_batch: Sequence[Sequence[Sequence[str]]] | None = None) -> None:
         assert len(preds) == len(labels)
         answers_batch = flatten_all_answers(labels, additional_answers_batch)
         self.score_sum += sum(compute_token_level_f1_many(tokenize_answer_to_compute_metrics(pred),
@@ -43,7 +45,7 @@ class ExactMatchAccuracyMany(pl.metrics.Metric):
 
     @overrides
     def update(self, preds: Sequence[str], labels: Sequence[str],
-               additional_answers_batch: Optional[Sequence[Sequence[Sequence[str]]]] = None) -> None:  # noqa
+               additional_answers_batch: Sequence[Sequence[Sequence[str]]] | None = None) -> None:  # noqa
         assert len(preds) == len(labels)
         answers_batch = flatten_all_answers(labels, additional_answers_batch)
         self.correct += sum(exact_match_many(pred, answers) for pred, answers in zip(preds, answers_batch))
@@ -103,7 +105,7 @@ class Perplexity(pl.metrics.Metric):
 class AllMetrics:
     def __init__(self, compute_prob: bool = True) -> None:
         self.label_categories = load_label_categories()
-        self.metrics: MutableMapping[str, Union[pl.metrics.Metric, Iterable[pl.metrics.Metric]]] = {
+        self.metrics: MutableMapping[str, pl.metrics.Metric | Iterable[pl.metrics.Metric]] = {
             "accuracy": ExactMatchAccuracyMany(),
             "f1_score": F1ScoreMany(),
             "accuracy_label": ExactMatchAccuracyMany(),
@@ -128,8 +130,8 @@ class AllMetrics:
 
     def __call__(self, video_ids: Sequence[str], labels: Sequence[str],
                  additional_answers_batch: Sequence[Sequence[Sequence[str]]], preds: Sequence[str],
-                 label_prob: Optional[torch.Tensor] = None, label_probs: Optional[torch.Tensor] = None,
-                 perplexity_mask: Optional[torch.Tensor] = None) -> Mapping[str, torch.Tensor]:
+                 label_prob: torch.Tensor | None = None, label_probs: torch.Tensor | None = None,
+                 perplexity_mask: torch.Tensor | None = None) -> Mapping[str, torch.Tensor]:
         output = {
             "accuracy": self.metrics["accuracy"](preds, labels, additional_answers_batch),
             "f1_score": self.metrics["f1_score"](preds, labels, additional_answers_batch),

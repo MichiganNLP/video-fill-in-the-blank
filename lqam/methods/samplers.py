@@ -1,5 +1,5 @@
 # Update: there are many issues going on with this class, so we just don't use it (it's not worth it to fix it for now).
-# See the fix-me's below.
+# See the fix-mes below.
 # We don't use the one that's in torchtext because it substitutes `DataLoader` with "iterators" but they don't
 # provide some important things such as `num_workers`.
 # And there's also the
@@ -8,9 +8,12 @@
 #
 # File initially copied from https://github.com/pytorch/text/blob/33797c7/torchtext/experimental/utils/samplers.py
 # (pytorch/text#859).
+from __future__ import annotations
+
 import math
+from collections import Callable, Iterator, Sequence
 from heapq import heappop, heappush
-from typing import Callable, Iterator, List, Sequence, Tuple, TypeVar
+from typing import TypeVar
 
 import torch
 from torch.utils.data import IterableDataset
@@ -73,7 +76,7 @@ class BucketBatchSampler(Sampler):
         len_float = (len(self.data_source) + self.batch_size - 1) / self.batch_size  # FIXME: is this fine?
         return math.floor(len_float) if self.drop_last else math.ceil(len_float)
 
-    def _batch(self, mini_batch: List[Tuple[int, int]]) -> Iterator[List[int]]:
+    def _batch(self, mini_batch: list[tuple[int, int]]) -> Iterator[list[int]]:
         total_iter = (len(mini_batch) + self.batch_size - 1) // self.batch_size  # FIXME: consider drop_last.
         for _ in range(total_iter):
             max_steps = min(self.batch_size, len(mini_batch))

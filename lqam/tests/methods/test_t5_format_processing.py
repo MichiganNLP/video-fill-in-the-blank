@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from typing import Iterator, Mapping
+from collections import Iterator, Mapping
 from unittest import TestCase
 
 import torch
@@ -26,7 +25,7 @@ class T5FormatProcessingTest(TestCase):
     def _compare_iterators_of_dicts_of_tensors(self, actual_blank_map: Iterator[Mapping[int, torch.Tensor]],
                                                expected_blank_map: Iterator[Mapping[int, torch.Tensor]]) -> None:
         # For some reason, comparing these int tensors directly inside the list and dictionaries doesn't work.
-        # I think it's because internally it tries to convert the comparison result tensor into a bool and it fails.
+        # I think it's because internally it tries to convert the comparison result tensor into a bool, and it fails.
         for d1, d2 in zip(expected_blank_map, actual_blank_map):
             self.assertEqual(set(d1.keys()), set(d2.keys()))
             for k, v in d1.items():

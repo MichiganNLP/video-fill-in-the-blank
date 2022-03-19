@@ -1,6 +1,6 @@
-"""
-Utilities for working with the local dataset cache.
-"""
+"""Utilities for working with the local dataset cache."""
+from __future__ import annotations
+
 import glob
 import json
 import logging
@@ -9,11 +9,12 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+from collections import Callable, Iterable, Iterator
 from functools import wraps
 from hashlib import sha256
 from os import PathLike
 from pathlib import Path
-from typing import Callable, IO, Iterable, Iterator, List, Literal, Optional, Set, Tuple, Union
+from typing import IO, Literal
 from urllib.parse import urlparse
 from zipfile import ZipFile, is_zipfile
 
@@ -39,7 +40,8 @@ DEPRECATED_CACHE_DIRECTORY = str(CACHE_ROOT / "datasets")
 # all types of files (datasets, models, etc.)
 DATASET_CACHE = CACHE_DIRECTORY
 
-TIMEOUT = 3.05  # For HTTP, it's gonna be double because there's connect and read timeout. For S3 we only use connect.
+# For HTTP, it's going to be double because there's connect and read timeout. For S3 we only use connect.
+TIMEOUT = 3.05
 
 # Warn if the user is still using the deprecated cache directory.
 if os.path.exists(DEPRECATED_CACHE_DIRECTORY):
@@ -52,8 +54,7 @@ if os.path.exists(DEPRECATED_CACHE_DIRECTORY):
 def url_to_filename(url: str, etag: str = None) -> str:
     """
     Convert `url` into a hashed filename in a repeatable way.
-    If `etag` is specified, append its hash to the URL's, delimited
-    by a period.
+    If `etag` is specified, append its hash to the URL, delimited by a period.
     """
     url_bytes = url.encode("utf-8")
     url_hash = sha256(url_bytes)
@@ -67,7 +68,7 @@ def url_to_filename(url: str, etag: str = None) -> str:
     return filename
 
 
-def filename_to_url(filename: str, cache_dir: Union[str, Path] = None) -> Tuple[str, str]:
+def filename_to_url(filename: str, cache_dir: str | Path = None) -> tuple[str, str]:
     """
     Return the url and etag (which may be `None`) stored for `filename`.
     Raise `FileNotFoundError` if `filename` or its stored metadata do not exist.
@@ -77,11 +78,11 @@ def filename_to_url(filename: str, cache_dir: Union[str, Path] = None) -> Tuple[
 
     cache_path = os.path.join(cache_dir, filename)
     if not os.path.exists(cache_path):
-        raise FileNotFoundError("file {} not found".format(cache_path))
+        raise FileNotFoundError(f"file {cache_path} not found")
 
     meta_path = cache_path + ".json"
     if not os.path.exists(meta_path):
-        raise FileNotFoundError("file {} not found".format(meta_path))
+        raise FileNotFoundError(f"file {meta_path} not found")
 
     with open(meta_path) as meta_file:
         metadata = json.load(meta_file)
@@ -92,9 +93,9 @@ def filename_to_url(filename: str, cache_dir: Union[str, Path] = None) -> Tuple[
 
 
 def cached_path(
-        url_or_filename: Union[str, PathLike],
-        cache_dir: Union[str, Path] = None,
-        extract_archive: Union[bool, Literal["auto"]] = "auto",
+        url_or_filename: str | PathLike,
+        cache_dir: str | Path = None,
+        extract_archive: bool | Literal["auto"] = "auto",
         force_extract: bool = False,
 ) -> str:
     """
@@ -103,9 +104,9 @@ def cached_path(
     return the path to the cached file. If it's already a local path,
     make sure the file exists and then return the path.
     # Parameters
-    url_or_filename : `Union[str, Path]`
+    url_or_filename : `str | Path`
         A URL or local file to parse and possibly download.
-    cache_dir : `Union[str, Path]`, optional (default = `None`)
+    cache_dir : `str | Path`, optional (default = `None`)
         The directory to cache downloads.
     extract_archive : `bool`, optional (default = `"auto"`)
         If `True`, then zip or tar.gz archives will be automatically extracted.
@@ -113,7 +114,7 @@ def cached_path(
         In which case the directory is returned.
     force_extract : `bool`, optional (default = `False`)
         If `True` and the file is an archive file, it will be extracted regardless
-        of whether or not the extracted directory already exists.
+        of whether the extracted directory already exists.
     """
     if cache_dir is None:
         cache_dir = CACHE_DIRECTORY
@@ -146,7 +147,7 @@ def cached_path(
     parsed = urlparse(url_or_filename)
 
     file_path: str
-    extraction_path: Optional[str] = None
+    extraction_path: str | None = None
 
     if parsed.scheme in ("http", "https", "s3"):
         # URL, so get it from the cache (downloading if necessary)
@@ -172,11 +173,11 @@ def cached_path(
 
     elif parsed.scheme == "":
         # File, but it doesn't exist.
-        raise FileNotFoundError("file {} not found".format(url_or_filename))
+        raise FileNotFoundError(f"file {url_or_filename} not found")
 
     else:
         # Something unknown
-        raise ValueError("unable to parse {} as a URL or as a local path".format(url_or_filename))
+        raise ValueError(f"unable to parse {url_or_filename} as a URL or as a local path")
 
     if extraction_path is not None:
         # No need to extract again.
@@ -204,7 +205,7 @@ def cached_path(
     return file_path
 
 
-def is_url_or_existing_file(url_or_filename: Union[str, Path, None]) -> bool:
+def is_url_or_existing_file(url_or_filename: str | Path | None) -> bool:
     """
     Given something that might be a URL (or might be a local path),
     determine check if it's url or an existing file path.
@@ -216,11 +217,11 @@ def is_url_or_existing_file(url_or_filename: Union[str, Path, None]) -> bool:
     return parsed.scheme in ("http", "https", "s3") or os.path.exists(url_or_filename)
 
 
-def _split_s3_path(url: str) -> Tuple[str, str]:
+def _split_s3_path(url: str) -> tuple[str, str]:
     """Split a full s3 path into the bucket name and path."""
     parsed = urlparse(url)
     if not parsed.netloc or not parsed.path:
-        raise ValueError("bad s3 path {}".format(url))
+        raise ValueError(f"bad s3 path {url}")
     bucket_name = parsed.netloc
     s3_path = parsed.path
     # Remove '/' at beginning of path.
@@ -241,7 +242,7 @@ def _s3_request(func: Callable):
             return func(url, *args, **kwargs)
         except ClientError as exc:
             if int(exc.response["Error"]["Code"]) == 404:
-                raise FileNotFoundError("file {} not found".format(url))
+                raise FileNotFoundError(f"file {url} not found")
             else:
                 raise
 
@@ -259,7 +260,7 @@ def _get_s3_resource():
 
 
 @_s3_request
-def _s3_etag(url: str) -> Optional[str]:
+def _s3_etag(url: str) -> str | None:
     """Check ETag on S3 object."""
     s3_resource = _get_s3_resource()
     bucket_name, s3_path = _split_s3_path(url)
@@ -304,19 +305,20 @@ def _session_with_backoff() -> requests.Session:
     """
     We ran into an issue where http requests to s3 were timing out,
     possibly because we were making too many requests too quickly.
-    This helper function returns a requests session that has retry-with-backoff
+    This helper function returns a requests' session that has retry-with-backoff
     built in. See
     <https://stackoverflow.com/questions/23267409/how-to-implement-retry-mechanism-into-python-requests-library>.
     """
     session = requests.Session()
     retries = Retry(total=1, backoff_factor=1, status_forcelist=[502, 503, 504])
+    # noinspection HttpUrlsUsage
     session.mount("http://", HTTPAdapter(max_retries=retries))
     session.mount("https://", HTTPAdapter(max_retries=retries))
 
     return session
 
 
-def _http_etag(url: str) -> Optional[str]:
+def _http_etag(url: str) -> str | None:
     with _session_with_backoff() as session:
         response = session.head(url, allow_redirects=True, timeout=TIMEOUT)
     if response.status_code != 200:
@@ -338,16 +340,16 @@ def _http_get(url: str, temp_file: IO) -> None:
         progress.close()
 
 
-def _find_latest_cached(url: str, cache_dir: Union[str, Path]) -> Optional[str]:
+def _find_latest_cached(url: str, cache_dir: str | Path) -> str | None:
     filename = url_to_filename(url)
     cache_path = os.path.join(cache_dir, filename)
-    candidates: List[Tuple[str, float]] = []
+    candidates: list[tuple[str, float]] = []
     for path in glob.glob(cache_path + "*"):
         if path.endswith((".json", ".lock", "-extracted")):
             continue
         mtime = os.path.getmtime(path)
         candidates.append((path, mtime))
-    # Sort candidates by modification time, newest first.
+    # Sort candidates by modification time, the newest first.
     candidates.sort(key=lambda x: x[1], reverse=True)
     if candidates:
         return candidates[0][0]
@@ -357,21 +359,17 @@ def _find_latest_cached(url: str, cache_dir: Union[str, Path]) -> Optional[str]:
 class CacheFile:
     """
     This is a context manager that makes robust caching easier.
-    On `__enter__`, an IO handle to a temporarily file is returned, which can
+    On `__enter__`, an IO handle to a temporary file is returned, which can
     be treated as if it's the actual cache file.
-    On `__exit__`, the temporarily file is renamed to the cache file. If anything
+    On `__exit__`, the temporary file is renamed to the cache file. If anything
     goes wrong while writing to the temporary file, it will be removed.
     """
 
-    def __init__(self, cache_filename: Union[Path, str], mode="w+b") -> None:
-        self.cache_filename = (
-            cache_filename if isinstance(cache_filename, Path) else Path(cache_filename)
-        )
+    def __init__(self, cache_filename: Path | str, mode: str = "w+b") -> None:
+        self.cache_filename = cache_filename if isinstance(cache_filename, Path) else Path(cache_filename)
         self.cache_directory = os.path.dirname(self.cache_filename)
         self.mode = mode
-        self.temp_file = tempfile.NamedTemporaryFile(
-            self.mode, dir=self.cache_directory, delete=False, suffix=".tmp"
-        )
+        self.temp_file = tempfile.NamedTemporaryFile(self.mode, dir=self.cache_directory, delete=False, suffix=".tmp")
 
     def __enter__(self):
         return self.temp_file
@@ -393,7 +391,7 @@ class CacheFile:
 
 
 # TODO(joelgrus): do we want to do checksums or anything like that?
-def get_from_cache(url: str, cache_dir: Union[str, Path] = None) -> str:
+def get_from_cache(url: str, cache_dir: str | Path | None = None) -> str:
     """
     Given a URL, look for the corresponding dataset in the local cache.
     If it's not there, download it. Then return the path to the cached file.
@@ -481,13 +479,13 @@ def get_from_cache(url: str, cache_dir: Union[str, Path] = None) -> str:
     return cache_path
 
 
-def read_set_from_file(filename: str) -> Set[str]:
+def read_set_from_file(filename: str) -> set[str]:
     """
     Extract a de-duped collection (set) of text from a file.
     Expected file format is one item per line.
     """
     collection = set()
-    with open(filename, "r") as file_:
+    with open(filename) as file_:
         for line in file_:
             collection.add(line.rstrip())
     return collection
@@ -499,9 +497,7 @@ def get_file_extension(path: str, dot=True, lower: bool = True):
     return ext.lower() if lower else ext
 
 
-def open_compressed(
-        filename: Union[str, Path], mode: str = "rt", encoding: Optional[str] = "UTF-8", **kwargs
-):
+def open_compressed(filename: str | Path, mode: str = "rt", encoding: str | None = "UTF-8", **kwargs):
     if isinstance(filename, Path):
         filename = str(filename)
     open_fn: Callable = open
@@ -517,7 +513,7 @@ def open_compressed(
     return open_fn(filename, mode=mode, encoding=encoding, **kwargs)
 
 
-def text_lines_from_file(filename: Union[str, Path], strip_lines: bool = True) -> Iterator[str]:
+def text_lines_from_file(filename: str | Path, strip_lines: bool = True) -> Iterator[str]:
     with open_compressed(filename, "rt", encoding="UTF-8", errors="replace") as p:
         if strip_lines:
             for line in p:
@@ -526,5 +522,5 @@ def text_lines_from_file(filename: Union[str, Path], strip_lines: bool = True) -
             yield from p
 
 
-def json_lines_from_file(filename: Union[str, Path]) -> Iterable[Union[list, dict]]:
+def json_lines_from_file(filename: str | Path) -> Iterable[list | dict]:
     return (json.loads(line) for line in text_lines_from_file(filename))

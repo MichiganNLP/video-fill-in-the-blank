@@ -2,7 +2,7 @@
 import fileinput
 import itertools
 import os
-from typing import Iterable, Iterator
+from collections import Iterable, Iterator
 
 import pyyoutube
 from tqdm.auto import tqdm

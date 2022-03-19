@@ -25,12 +25,13 @@ dependencies:
   - conda-forge::overrides=3
   -              pandas=1
   -              pip=22
-  -              python=3.8
+  -              python=3.9
   -     pytorch::pytorch=1.7*=*cuda*
   - conda-forge::pytorch-lightning=1.1
   - conda-forge::rarfile=4
   -              seaborn=0.11
   -              scikit-learn=1
+  -              scikit-learn-intelex
   - conda-forge::sentence-transformers=2.2
   - conda-forge::spacy=3
   - conda-forge::tensorboard=2

@@ -1,6 +1,9 @@
+from __future__ import annotations
+
+from collections import Iterable, Mapping, Sequence
 import inspect
 import types
-from typing import Any, Iterable, Literal, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Literal
 
 import pytorch_lightning as pl
 import torch
@@ -10,9 +13,7 @@ from torch.nn import functional as F
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler  # noqa
 from transformers import AdamW, LogitsProcessor, LogitsProcessorList, MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING, \
-    PreTrainedModel, \
-    PreTrainedTokenizerBase, \
-    get_linear_schedule_with_warmup
+    PreTrainedModel, PreTrainedTokenizerBase, get_linear_schedule_with_warmup
 from transformers.modeling_outputs import BaseModelOutput, Seq2SeqLMOutput
 
 from lqam.core.noun_phrases import create_spacy_model
@@ -37,9 +38,9 @@ def _patched_get_logits_processor(self, *args, **kwargs) -> LogitsProcessorList:
 # Some things were copied from https://github.com/huggingface/transformers/blob/8062fa6/examples/rag/finetune_rag.py#L94
 class T5FillerModel(pl.LightningModule):
     def __init__(self, t5_like_pretrained_model: PreTrainedModel, tokenizer: PreTrainedTokenizerBase,
-                 only_noun_phrases: bool = False, generate_kwargs: Optional[Mapping[str, Any]] = None,
+                 only_noun_phrases: bool = False, generate_kwargs: Mapping[str, Any] | None = None,
                  lr: float = 1e-3, weight_decay: float = 0,  # noqa
-                 lr_scheduler: Optional[Literal["linear_with_warmup"]] = "linear_with_warmup") -> None:  # noqa
+                 lr_scheduler: Literal["linear_with_warmup"] | None = "linear_with_warmup") -> None:  # noqa
         super().__init__()
 
         frame = inspect.currentframe()
@@ -96,8 +97,8 @@ class T5FillerModel(pl.LightningModule):
         self.all_metrics.reset()
 
     @overrides
-    def forward(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: Optional[torch.Tensor] = None,
-                label_ids: Optional[torch.Tensor] = None, **kwargs) -> Seq2SeqLMOutput:
+    def forward(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: torch.Tensor | None = None,
+                label_ids: torch.Tensor | None = None, **kwargs) -> Seq2SeqLMOutput:
         # Note that passing a mask for the `label_ids` isn't necessary because the decoding is left to right (thus
         # the padding embeddings can only affect the next padding to be generating) and because they are not computed
         # in the loss value if using the `-100` value.
@@ -129,8 +130,8 @@ class T5FillerModel(pl.LightningModule):
 
     def _generative_step(self, masked_caption_ids: torch.Tensor, masked_caption_attention_mask: torch.Tensor,
                          label_ids: torch.Tensor, masked_caption: Sequence[str], label: Sequence[str],
-                         additional_answers: Sequence[Sequence[str]], video_id: Optional[Sequence[str]],
-                         video_start_time: Optional[Sequence[int]], video_end_time: Optional[Sequence[int]],
+                         additional_answers: Sequence[Sequence[str]], video_id: Sequence[str] | None,
+                         video_start_time: Sequence[int] | None, video_end_time: Sequence[int] | None,
                          log_prefix: str = "", **kwargs) -> None:
         self.write_prediction("video_id", video_id)
         self.write_prediction("video_start_time", video_start_time)
@@ -238,7 +239,7 @@ class T5FillerModel(pl.LightningModule):
         self._on_epoch_end(log_prefix="test_")
 
     @overrides
-    def configure_optimizers(self) -> Union[Iterable[Optimizer], Tuple[Iterable[Optimizer], Iterable[_LRScheduler]]]:
+    def configure_optimizers(self) -> Iterable[Optimizer] | tuple[Iterable[Optimizer], Iterable[_LRScheduler]]:
         optimizer = AdamW(self.parameters(), lr=self.hparams.lr, weight_decay=self.hparams.weight_decay)
 
         if self.hparams.lr_scheduler and (epochs := self.trainer.max_epochs):

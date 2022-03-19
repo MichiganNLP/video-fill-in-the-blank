@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import itertools
 import string
-from collections import defaultdict
-from typing import Any, Iterable, Mapping
+from collections import defaultdict, Iterable, Mapping
+from typing import Any
 
 from lqam.core.metrics import compute_token_level_f1_many, normalize_answer, tokenize_answer_to_compute_metrics
 from lqam.core.noun_phrases import create_spacy_model, is_noun_phrase_or_n_bar

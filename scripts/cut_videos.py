@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf-8
 import fileinput
 import os
 import time
@@ -10,7 +9,7 @@ from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 
 
 def main():
-    df = pd.read_csv(fileinput.input())
+    df = pd.read_csv(fileinput.input())  # noqa
 
     video_dict = defaultdict(list)
     for row in df.itertuples():

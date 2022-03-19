@@ -12,8 +12,10 @@ It's possible that it contains extra token IDs that aren't present in the input 
 
 See https://huggingface.co/transformers/model_doc/t5.html for more info.
 """
+from __future__ import annotations
+
 import itertools
-from typing import Iterator, Mapping, Optional
+from collections import Iterator, Mapping
 
 import torch
 from transformers import PreTrainedTokenizerBase
@@ -26,7 +28,7 @@ from lqam.util import iterable_utils
 
 # Another consideration is to avoid doing id-token-string conversions as much as we can.
 # So the input and output types for these functions are the ones that are most convenient to minimize
-# these conversations from inside the functions but also from outside of them (at least for the use-case that they were
+# these conversations from inside the functions but also from outside them (at least for the use-case that they were
 # created).
 
 TYPE_BLANK_MAP = Mapping[int, torch.Tensor]
@@ -38,7 +40,7 @@ def is_extra_token(token_id: int, tokenizer: PreTrainedTokenizerBase) -> bool:
 
 
 def compute_blank_map_instance(generated_ids: torch.Tensor, tokenizer: PreTrainedTokenizerBase,
-                               masked_caption_ids: Optional[torch.Tensor] = None) -> TYPE_BLANK_MAP:
+                               masked_caption_ids: torch.Tensor | None = None) -> TYPE_BLANK_MAP:
     # Use a primitive type for the key so `in` and `__getitem__` work.
     extra_id_to_position = {id_.item(): i
                             for i, id_ in enumerate(generated_ids)
@@ -51,7 +53,7 @@ def compute_blank_map_instance(generated_ids: torch.Tensor, tokenizer: PreTraine
 
 
 def compute_blank_map(generated_ids: Iterator[torch.Tensor], tokenizer: PreTrainedTokenizerBase,
-                      masked_caption_ids: Optional[torch.Tensor] = None) -> Iterator[TYPE_BLANK_MAP]:
+                      masked_caption_ids: torch.Tensor | None = None) -> Iterator[TYPE_BLANK_MAP]:
     """
     Converts the output of a T5-like pretrained model into a mapping.
 
@@ -67,7 +69,7 @@ def compute_blank_map(generated_ids: Iterator[torch.Tensor], tokenizer: PreTrain
 def compute_first_blank_instance(generated_ids: torch.Tensor, decoder_start_token_id: int, extra_id_0: int,
                                  extra_id_1: int) -> torch.Tensor:
     extra_id_0_i = 1 if generated_ids[0] == decoder_start_token_id else 0
-    # FIXME: This assertion can't be satisfied during training validation
+    # FIXME: This assertion can't be satisfied during the training sanity check.
     # assert generated_ids[extra_id_0_i] == extra_id_0
     if generated_ids[extra_id_0_i] == extra_id_0:
         extra_id_1_i = next(iter((generated_ids == extra_id_1).nonzero(as_tuple=True)[0]), len(generated_ids))  # noqa

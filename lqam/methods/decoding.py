@@ -1,4 +1,5 @@
-from typing import Iterator, Literal, Sequence
+from collections import Iterator, Sequence
+from typing import Literal
 
 import spacy
 import torch

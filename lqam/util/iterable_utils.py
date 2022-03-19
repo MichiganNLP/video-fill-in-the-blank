@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 import itertools
-from typing import Iterable, Iterator, Tuple, TypeVar, Union
+from collections import Iterable, Iterator
+from typing import TypeVar
 
 T = TypeVar("T")
 
 
 # From https://stackoverflow.com/a/5434936/1165181
-def pairwise(iterable: Iterable[T]) -> Iterable[Tuple[T, T]]:
+def pairwise(iterable: Iterable[T]) -> Iterable[tuple[T, T]]:
     """s -> (s0,s1), (s1,s2), (s2, s3), ..."""
     a, b = itertools.tee(iterable)
     next(b, None)
@@ -13,7 +16,7 @@ def pairwise(iterable: Iterable[T]) -> Iterable[Tuple[T, T]]:
 
 
 # Some ideas copied from `spacy.util.minibatch`.
-def chunks(iterable: Iterable[T], n: Union[int, Iterable[int]]) -> Iterator[Tuple[T, ...]]:
+def chunks(iterable: Iterable[T], n: int | Iterable[int]) -> Iterator[tuple[T, ...]]:
     iterator = iter(iterable)
 
     sizes = n if hasattr(n, "__iter__") else itertools.repeat(n)

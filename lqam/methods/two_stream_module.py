@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Union
+from __future__ import annotations
 
 import torch
 import torch.nn as nn
@@ -22,8 +22,8 @@ class TwoStreamEncoder(T5Stack):
 
     @overrides
     def forward(self, text_input_ids: torch.Tensor, visual: torch.Tensor,  # noqa
-                attention_mask: Optional[torch.Tensor] = None, visual_attention_mask: Optional[torch.Tensor] = None,
-                **kwargs) -> Union[BaseModelOutputWithPastAndCrossAttentions, Tuple[torch.Tensor, ...]]:
+                attention_mask: torch.Tensor | None = None, visual_attention_mask: torch.Tensor | None = None,
+                **kwargs) -> BaseModelOutputWithPastAndCrossAttentions | tuple[torch.Tensor, ...]:
         text_feature = self.text_stream(text_input_ids, attention_mask=attention_mask).last_hidden_state
 
         visual_embedding = self.embed_video(visual)

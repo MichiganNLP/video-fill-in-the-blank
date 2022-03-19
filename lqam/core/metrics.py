@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import itertools
 import re
 import string
-from typing import Iterable, Iterator, Optional, Set
+from collections import Iterable, Iterator
 
 RE_A_AN_THE_OR_PUNCTUATION = re.compile(rf"\b(?:an?|the)\b|[{re.escape(string.punctuation)}]")
 RE_MULTIPLE_SPACES = re.compile(r"\s{2,}")
@@ -19,7 +21,7 @@ def tokenize_answer_to_compute_metrics(normalized_answer: str) -> Iterator[str]:
     return normalized_answer.split()
 
 
-def compute_token_level_f1(answer1_tokens: Set[str], answer2_tokens: Set[str]) -> float:
+def compute_token_level_f1(answer1_tokens: set[str], answer2_tokens: set[str]) -> float:
     # Note it ignore the repeated words.
     true_positives = len(answer1_tokens & answer2_tokens)
     false_count_in_1 = len(answer1_tokens - answer2_tokens)
@@ -43,12 +45,12 @@ def exact_match_many(unnormalized_predicted_answer: str, unnormalized_ground_tru
                for unnormalized_ground_truth_answer in unnormalized_ground_truth_answers)
 
 
-def flatten_additional_answers(additional_answers: Iterable[Iterable[str]]) -> Set[str]:
+def flatten_additional_answers(additional_answers: Iterable[Iterable[str]]) -> set[str]:
     return {answer for worker_answers in additional_answers for answer in worker_answers}
 
 
 def flatten_all_answers(
-        labels: Iterable[str], additional_answers_batch: Optional[Iterable[Iterable[Iterable[str]]]] = None
+        labels: Iterable[str], additional_answers_batch: Iterable[Iterable[Iterable[str]]] | None = None
 ) -> Iterable[Iterable[str]]:
     additional_answers_batch = additional_answers_batch or itertools.repeat([])
     return [flatten_additional_answers(additional_answers) | {label}

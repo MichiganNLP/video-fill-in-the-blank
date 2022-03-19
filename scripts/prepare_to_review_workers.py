@@ -2,15 +2,13 @@
 import argparse
 import random
 import sys
-from collections import defaultdict
-from typing import Iterable
+from collections import defaultdict, Iterable
 
 import pandas as pd
 import pytorch_lightning as pl
 
 from lqam.annotations import AUTO_APPROVE_WORKER_ID_DENY_LIST, MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_1, \
-    MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2, \
-    MIN_QUESTION_COUNT_FOR_THRESHOLD_2, REVIEW_SAMPLE_SIZE_PER_WORKER
+    MIN_ACCEPTABLE_ANSWERS_PER_QUESTION_2, MIN_QUESTION_COUNT_FOR_THRESHOLD_2, REVIEW_SAMPLE_SIZE_PER_WORKER
 from lqam.annotations.postprocessing import compute_instances_by_worker_id, hits_to_instances, parse_hits, \
     unavailable_video_answer
 from lqam.core.metrics import normalize_answer

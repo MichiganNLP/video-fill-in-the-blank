@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import html
 import json
 import operator
 import re
 import sys
-from collections import defaultdict
-from typing import Any, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from collections import defaultdict, Iterable, Iterator, Mapping, MutableMapping, Sequence
+from typing import Any
 
 import pandas as pd
-from pandas._typing import FilePathOrBuffer  # noqa
+from pandas._typing import FilePath, ReadCsvBuffer
 from tqdm.auto import tqdm
 
 from lqam.annotations.metrics import compute_np_value_by_answer
@@ -40,7 +42,7 @@ def order_worker_answers_by_question(worker_answers: Mapping[str, str]) -> Seque
             for _, i_and_question_answers in sorted(answers_by_question.items(), key=operator.itemgetter(0))]
 
 
-def parse_hits(filepath_or_buffer: FilePathOrBuffer, include_accepted: bool = True,
+def parse_hits(filepath_or_buffer: FilePath | ReadCsvBuffer[bytes] | ReadCsvBuffer[str], include_accepted: bool = True,
                include_rejected: bool = False) -> Mapping[str, Mapping[str, Any]]:
     df = pd.read_csv(filepath_or_buffer, converters={"Answer.taskAnswers": json.loads})
 

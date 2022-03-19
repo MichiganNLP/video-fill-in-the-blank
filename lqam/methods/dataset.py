@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import itertools
 import json
+from collections import Iterable, Mapping, MutableMapping
 from pathlib import Path
-from typing import Any, Iterable, Mapping, MutableMapping, Optional
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -45,8 +48,8 @@ def get_mask_from_sequence_lengths(lengths: torch.Tensor) -> torch.Tensor:
 
 
 class QGenDataset(Dataset):
-    def __init__(self, data_path: str, tokenizer: Optional[PreTrainedTokenizerBase] = None, t5_format: bool = True,
-                 visual_data_dir: Optional[str] = None) -> None:
+    def __init__(self, data_path: str, tokenizer: PreTrainedTokenizerBase | None = None, t5_format: bool = True,
+                 visual_data_dir: str | None = None) -> None:
         super().__init__()
         with open(cached_path(data_path)) as file:
             self.instances = json.load(file)
@@ -118,10 +121,10 @@ class QGenDataset(Dataset):
 
 
 class QGenDataModule(pl.LightningDataModule):  # noqa
-    def __init__(self, tokenizer: Optional[PreTrainedTokenizerBase] = None, batch_size: Optional[int] = 32,
-                 eval_batch_size: Optional[int] = None, num_workers: int = 0, train_data_path: str = URL_DATA_TRAIN,
+    def __init__(self, tokenizer: PreTrainedTokenizerBase | None = None, batch_size: int | None = 32,
+                 eval_batch_size: int | None = None, num_workers: int = 0, train_data_path: str = URL_DATA_TRAIN,
                  val_data_path: str = URL_DATA_VAL, test_data_path: str = URL_DATA_TEST,
-                 visual_data_dir: Optional[str] = None) -> None:
+                 visual_data_dir: str | None = None) -> None:
         super().__init__()
         self.tokenizer = tokenizer
         self.num_workers = num_workers
@@ -132,7 +135,7 @@ class QGenDataModule(pl.LightningDataModule):  # noqa
         self.test_data_path = test_data_path
         self.visual_data_dir = visual_data_dir
 
-    def _dataloader(self, data_path: str, batch_size: Optional[int], train: bool) -> DataLoader:
+    def _dataloader(self, data_path: str, batch_size: int | None, train: bool) -> DataLoader:
         dataset = QGenDataset(data_path, tokenizer=self.tokenizer, visual_data_dir=self.visual_data_dir)
         # TODO: bucket-batching could make training faster, and consume less memory.
         return DataLoader(dataset, shuffle=train, batch_size=batch_size, num_workers=self.num_workers,

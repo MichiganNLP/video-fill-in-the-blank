@@ -1,4 +1,7 @@
-from typing import Any, Mapping, Optional, Tuple, Union
+from __future__ import annotations
+
+from collections import Mapping
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -8,8 +11,8 @@ from transformers.modeling_outputs import BaseModelOutputWithPastAndCrossAttenti
 from transformers.models.t5.modeling_t5 import T5Stack
 
 
-def _combine_attention_masks(text_attention_mask: Optional[torch.Tensor] = None,
-                             visual_attention_mask: Optional[torch.Tensor] = None) -> Optional[torch.Tensor]:
+def _combine_attention_masks(text_attention_mask: torch.Tensor | None = None,
+                             visual_attention_mask: torch.Tensor | None = None) -> torch.Tensor | None:
     if text_attention_mask is not None and visual_attention_mask is not None:
         text_batch_size = text_attention_mask.shape[0]
         visual_batch_size = visual_attention_mask.shape[0]
@@ -30,8 +33,8 @@ class TextVisualEncoder(T5Stack):
 
     @overrides
     def forward(self, text_token_ids: torch.Tensor, visual: torch.Tensor,  # noqa
-                attention_mask: Optional[torch.Tensor] = None, visual_attention_mask: Optional[torch.Tensor] = None,
-                **kwargs) -> Union[BaseModelOutputWithPastAndCrossAttentions, Tuple[torch.Tensor, ...]]:
+                attention_mask: torch.Tensor | None = None, visual_attention_mask: torch.Tensor | None = None,
+                **kwargs) -> BaseModelOutputWithPastAndCrossAttentions | tuple[torch.Tensor, ...]:
         text_embedding = self.embed_tokens(text_token_ids)
         visual_embedding = self.embed_video(visual)
         embedding = torch.cat([text_embedding, visual_embedding], dim=1)
@@ -44,11 +47,11 @@ class TextVisualEncoder(T5Stack):
 class T5AndVisual(T5ForConditionalGeneration):
     def __init__(self, config: T5Config, visual_size: int) -> None:
         super().__init__(config)
-        self.encoder = TextVisualEncoder(self.encoder, visual_size)
+        self.encoder = TextVisualEncoder(self.encoder, visual_size)  # noqa
 
     @overrides
-    def prepare_inputs_for_generation(self, input_ids: torch.Tensor, visual: Optional[torch.Tensor] = None,
-                                      visual_attention_mask: Optional[torch.Tensor] = None,
+    def prepare_inputs_for_generation(self, input_ids: torch.Tensor, visual: torch.Tensor | None = None,
+                                      visual_attention_mask: torch.Tensor | None = None,
                                       **kwargs) -> Mapping[str, Any]:
         output = super().prepare_inputs_for_generation(input_ids, **kwargs)  # noqa
         output["visual"] = visual
@@ -56,9 +59,9 @@ class T5AndVisual(T5ForConditionalGeneration):
         return output
 
     @overrides
-    def forward(self, masked_caption_ids: Optional[torch.Tensor] = None, visual: Optional[torch.Tensor] = None,
-                attention_mask: Optional[torch.Tensor] = None, visual_attention_mask: Optional[torch.Tensor] = None,
-                labels: Optional[torch.Tensor] = None, **kwargs) -> Union[Seq2SeqLMOutput, Tuple[torch.Tensor, ...]]:
+    def forward(self, masked_caption_ids: torch.Tensor | None = None, visual: torch.Tensor | None = None,
+                attention_mask: torch.Tensor | None = None, visual_attention_mask: torch.Tensor | None = None,
+                labels: torch.Tensor | None = None, **kwargs) -> Seq2SeqLMOutput | tuple[torch.Tensor, ...]:
         if "encoder_outputs" not in kwargs:
             kwargs["encoder_outputs"] = self.encoder(masked_caption_ids, visual=visual, attention_mask=attention_mask,
                                                      visual_attention_mask=visual_attention_mask, **kwargs)
@@ -66,7 +69,7 @@ class T5AndVisual(T5ForConditionalGeneration):
         # The attention mask used in the encoder (the combined mask) is actually necessary for the decoder even when
         # providing "encoder_outputs". We could compute it once in the encoder, return it as one of its fields and use
         # it here. However, in `T5FillerModel.generative_step` we input the encoder outputs but without the mask
-        # since its constructed from the `generate` output which in turn only returns certain fields (not the mask).
+        # since it's constructed from the `generate` output which in turn only returns certain fields (not the mask).
         attention_mask = _combine_attention_masks(attention_mask, visual_attention_mask)
 
         return super().forward(attention_mask=attention_mask, labels=labels, **kwargs)  # noqa
