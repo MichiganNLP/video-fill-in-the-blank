@@ -26,8 +26,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    data_module = QGenDataModule(batch_size=None)
-    data_loader = data_module.val_dataloader()
+    data_loader = QGenDataModule(batch_size=None).val_dataloader()
 
     dataset_instance_map = {(instance["video_id"], instance["video_start_time"], instance["video_end_time"],
                              instance["masked_caption"]): instance
