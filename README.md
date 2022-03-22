@@ -1,9 +1,7 @@
-# Video Fill-in-the-Blank data and code
+# FIBER data and code
 
-**News (Feb 24, 2022):** this paper was accepted to the ACL 2022 Main conference!
-
-This repo contains the data and code for the paper [FIBER: Fill-in-the-Blanks as a Challenging Video Understanding
-Evaluation Framework](https://arxiv.org/abs/2104.04182).
+This repo contains the data and code for ACL 2022 the paper [FIBER: Fill-in-the-Blanks as a Challenging Video 
+Understanding Evaluation Framework](https://arxiv.org/abs/2104.04182).
 
 ## Download the data
 
