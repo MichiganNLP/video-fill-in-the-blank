@@ -2,8 +2,8 @@
 
 **News (Feb 24, 2022):** this paper was accepted to the ACL 2022 Main conference!
 
-This repo contains the data and code for the paper [Fill-in-the-Blank: A Challenging Video Understanding Evaluation
-Framework](https://arxiv.org/abs/2104.04182).
+This repo contains the data and code for the paper [FIBER: Fill-in-the-Blanks as a Challenging Video Understanding
+Evaluation Framework](https://arxiv.org/abs/2104.04182).
 
 ## Download the data
 
@@ -91,7 +91,7 @@ Evaluate the T5 text-only baseline:
 
 ```bibtex
 @inproceedings{castro-etal-2022-fill,
-    title = "Fill-in-the-Blank: A Challenging Video Understanding Evaluation Framework",
+    title = "FIBER: Fill-in-the-Blanks as a Challenging Video Understanding Evaluation Framework",
     author = "Castro, Santiago  and
       Wang, Ruoyao  and
       Huang, Pingxuan  and
