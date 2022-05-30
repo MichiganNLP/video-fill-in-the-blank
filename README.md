@@ -1,7 +1,7 @@
 # FIBER data and code
 
 This repo contains the data and code for ACL 2022 the paper [FIBER: Fill-in-the-Blanks as a Challenging Video 
-Understanding Evaluation Framework](https://arxiv.org/abs/2104.04182).
+Understanding Evaluation Framework](https://aclanthology.org/2022.acl-long.209/).
 
 ## Download the data
 
@@ -89,7 +89,7 @@ Evaluate the T5 text-only baseline:
 
 ```bibtex
 @inproceedings{castro-etal-2022-fill,
-    title = "FIBER: Fill-in-the-Blanks as a Challenging Video Understanding Evaluation Framework",
+    title = "{FIBER}: Fill-in-the-Blanks as a Challenging Video Understanding Evaluation Framework",
     author = "Castro, Santiago  and
       Wang, Ruoyao  and
       Huang, Pingxuan  and
@@ -101,8 +101,10 @@ Evaluate the T5 text-only baseline:
     booktitle = "Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
     month = may,
     year = "2022",
-    address = "Online and Dublin, Ireland",
+    address = "Dublin, Ireland",
     publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2022.acl-long.209/",
+    pages = "2925--2940"
 }
 ```
 
