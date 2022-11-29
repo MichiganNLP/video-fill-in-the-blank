@@ -1,6 +1,6 @@
 # FIBER data and code
 
-This repo contains the data and code for ACL 2022 the paper [FIBER: Fill-in-the-Blanks as a Challenging Video 
+This repo contains the data and code for the ACL 2022 paper [FIBER: Fill-in-the-Blanks as a Challenging Video 
 Understanding Evaluation Framework](https://aclanthology.org/2022.acl-long.209/).
 
 ## Download the data
